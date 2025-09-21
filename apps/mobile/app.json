@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Gal\u00edni",
+    "slug": "galini",
+    "scheme": "galini",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "extra": {},
+    "plugins": []
+  }
+}
