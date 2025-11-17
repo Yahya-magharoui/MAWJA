@@ -7,5 +7,14 @@
   "dependencies": {
     "react": "18.2.0",
     "react-native": "0.74.3"
+  },
+  "workspaces": [
+    "app/*",
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build"
   }
 }

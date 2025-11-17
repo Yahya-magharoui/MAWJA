@@ -7,10 +7,11 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-  mood      MoodEntry[]
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String?   // <-- AJOUT
+  createdAt     DateTime @default(now())
+  mood          MoodEntry[]
 }
 
 model MoodEntry {

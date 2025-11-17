@@ -1,97 +1,243 @@
 'use client';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+/* —— slides —— */
+type Slide = {
+  id: string;
+  img: string;        // chemin public/...
+  alt: string;
+  title?: string;     // petit titre courbé
+  lines: string[];    // paragraphes (automatique en <p>)
+};
+
+const SLIDES: Slide[] = [
+  {
+    id: 'window',
+    img: '/intro/tolerance_ouverte.png',
+    alt: 'Fenêtre ouverte avec vague',
+    title: 'À PROPOS DE MAWJA',
+    lines: [
+      "La fenêtre de tolérance, c’est une zone dans laquelle tu te sens bien et en capacité de gérer tes émotions ainsi que les choses venant de l’extérieur de manière efficace.",
+      "Quand tu t’y trouves, tu es dans un état d’équilibre, calme et attentif au monde qui t’entoure.",
+    ],
+  },
+  {
+    id: 'hyper',
+    img: '/intro/hyper.png',
+    alt: 'Fenêtre avec flèche vers le haut',
+    title: 'À PROPOS DE MAWJA',
+    lines: [
+      "Quand tu dépasses ta fenêtre de tolérance par le haut, tu es en hyperactivation : ton corps réagit comme s’il y avait un danger imminent.",
+      "C’est une réponse automatique de protection (lutte ou fuite).",
+      "Tu peux ressentir : rythme cardiaque rapide, irritabilité, respiration rapide, tensions, sueurs, palpitations, anxiété, agitation, hypervigilance.",
+    ],
+  },
+  {
+    id: 'hypo',
+    img: '/intro/hypo.png',
+    alt: 'Fenêtre avec flèche vers le bas',
+    title: 'À PROPOS DE MAWJA',
+    lines: [
+      "Quand tu dépasses ta fenêtre de tolérance par le bas, tu entres dans l’hypoactivation : le système passe en mode « paralysie / dissociation » pour te protéger d’une surcharge émotionnelle.",
+      "Tu peux ressentir : paralysie, déconnexion, engourdissement, digestion perturbée, respiration impactée, déréalisation, apathie, retrait, confusion.",
+    ],
+  },
+  {
+    id: 'why',
+    img: '/intro/chemins.png',
+    alt: 'Transition entre fenêtres',
+    title: 'À PROPOS DE MAWJA',
+    lines: [
+      "Connaître ta fenêtre de tolérance t’aide à repérer l’hypoactivation et l’hyperactivation.",
+      "Quand tu identifies l’état dans lequel tu te trouves, tu peux utiliser des stratégies pour revenir dans ta fenêtre de tolérance et éviter de rester trop longtemps en déséquilibre.",
+    ],
+  },
+];
 
 export default function Home() {
   const router = useRouter();
   const params = useSearchParams();
   const name = params.get('name') ?? '';
 
-  // si un "guestId" existe déjà, on peut proposer un accès direct
+  /* état du carrousel */
+  const [i, setI] = useState(0);
+  const last = SLIDES.length - 1;
+
+  /* swipe */
+  const startX = useRef<number | null>(null);
+
   useEffect(() => {
-    // rien, juste un exemple si tu veux auto-redirect plus tard
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') next();
+      if (e.key === 'ArrowLeft') prev();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  function vibe(ms = 10) { try { (navigator as any)?.vibrate?.(ms); } catch {} }
+  function prev()  { if (i > 0) { vibe(); setI(i - 1); } }
+  function next()  { if (i < last) { vibe(); setI(i + 1); } }
+
+  function onTouchStart(e: React.TouchEvent) { startX.current = e.touches[0].clientX; }
+  function onTouchEnd(e: React.TouchEvent) {
+    const sx = startX.current; startX.current = null;
+    if (sx == null) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    if (Math.abs(dx) < 30) return;
+    if (dx < 0) next(); else prev();
+  }
+
+  /* CTA */
+  function rememberSeen() { localStorage.setItem('onboardingSeen', 'true'); }
   async function startGuest() {
-    // crée un identifiant invité (local-only)
+    rememberSeen();
     const existing = localStorage.getItem('guestId');
     const guestId = existing ?? crypto.randomUUID();
     localStorage.setItem('guestId', guestId);
-
-    // petite “fiche profil” locale
-    const profile = { id: guestId, role: 'guest', createdAt: new Date().toISOString() };
-    localStorage.setItem('guestProfile', JSON.stringify(profile));
-
-    // redirige vers une page d’accueil interne
-    router.push('/home');
+    localStorage.setItem('guestProfile', JSON.stringify({ id: guestId, role: 'guest', createdAt: new Date().toISOString() }));
+    router.push('/app');
   }
 
+  const slide = SLIDES[i];
+
   return (
-    <main
-      style={{
-        minHeight: '100dvh',
-        display: 'grid',
-        placeItems: 'center',
-        background: '#F6F7FE',
-        fontFamily: 'system-ui, sans-serif',
-      }}
-    >
-      <div style={{ textAlign: 'center', maxWidth: 520, width: '100%', padding: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginBottom: 8 }}>
-          <a href="#" onClick={(e)=>e.preventDefault()} style={{ fontSize:12, opacity:.8 }}>FR</a>
-          <a href="#" onClick={(e)=>e.preventDefault()} style={{ fontSize:12, opacity:.5 }}>EN</a>
+    <main style={styles.page}>
+      <header style={styles.langRow}>
+        <div />
+        <div style={styles.langs}>
+          <a href="#" onClick={(e)=>e.preventDefault()} style={styles.langActive}>FR</a>
+          <span style={{opacity:.35}}> / </span>
+          <a href="#" onClick={(e)=>e.preventDefault()} style={styles.lang}>EN</a>
+        </div>
+        <button
+          onClick={() => { rememberSeen(); router.push('/app'); }}
+          style={styles.skip}
+          aria-label="Passer l’introduction"
+        >
+          Passer
+        </button>
+      </header>
+
+      {/* Carrousel */}
+      <section
+        style={styles.carousel}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <div style={styles.titleArch}>{slide.title ?? ' '}</div>
+
+        <div style={styles.illustr}>
+          {/* Remplace les chemins par tes images /public/intro/... */}
+          <Image src={slide.img} alt={slide.alt} fill sizes="(max-width: 520px) 90vw, 520px" style={{objectFit:'contain'}} />
         </div>
 
-        <p style={{ fontSize: 20, margin: 0 }}>Bienvenue dans</p>
-        <h1 style={{ fontSize: 28, margin: '6px 0 10px', letterSpacing: 1 }}>MAWJA</h1>
-
-        <Image
-          src="/LogoMawja.png"
-          alt="Logo MAWJA"
-          width={220}
-          height={220}
-          style={{ margin: '6px auto 12px', height: 'auto' }}
-          priority
-        />
-        {name ? <p style={{ fontSize: 18, marginTop: 6 }}>Bonjour {name} !</p> : null}
-
-        <div style={{ display: 'grid', gap: 10, marginTop: 18 }}>
-          <a
-            href="/signup"
-            style={btnStyle}
-          >Créer un compte</a>
-
-          <a
-            href="/login"
-            style={{ ...btnStyle, background: '#fff' }}
-          >Se connecter</a>
-
-          <button
-            onClick={startGuest}
-            style={{ ...btnStyle, background: 'transparent', border: '1px dashed #bbb' }}
-          >
-            Continuer sans compte
-          </button>
+        <div style={styles.textBlock}>
+          {slide.lines.map((t, k) => (
+            <p key={k} style={styles.p}>{t}</p>
+          ))}
+          {name ? <p style={{...styles.p, marginTop:4}}>Bonjour {name} 👋</p> : null}
         </div>
 
-        <div style={{ marginTop: 18, fontSize: 12, color: '#555' }}>
-          <a href="/emergency" style={{ color: '#b91c1c', marginRight: 12 }}>Numéros d’urgence</a>
-          <a href="/privacy" style={{ marginRight: 12 }}>Confidentialité</a>
-          <a href="/terms">CGU</a>
+        {/* pagination + nav */}
+        <div style={styles.navRow}>
+          <button onClick={prev} disabled={i===0} style={styles.navBtn} aria-label="Précédent">◀</button>
+          <div style={styles.dots}>
+            {SLIDES.map((s, k) => (
+              <span key={s.id} style={{ ...styles.dot, opacity: k===i ? 1 : .3 }} />
+            ))}
+          </div>
+          <button onClick={next} disabled={i===last} style={styles.navBtn} aria-label="Suivant">▶</button>
         </div>
-      </div>
+      </section>
+
+      {/* CTAs */}
+      <section style={styles.ctas}>
+        <a href="/signup" style={styles.btnPrimary}>Créer un compte</a>
+        <a href="/login"  style={{ ...styles.btnPrimary, background:'#fff' }}>Se connecter</a>
+        {i === last ? (
+          <button onClick={startGuest} style={styles.btnGhost}>Commencer sans compte</button>
+        ) : (
+          <button onClick={() => setI(last)} style={styles.btnGhost}>Aller au dernier</button>
+        )}
+      </section>
+
+      <footer style={styles.footer}>
+        <a href="/emergency" style={{ color:'#b91c1c' }}>Numéros d’urgence</a>
+        <span style={{opacity:.4}}> • </span>
+        <a href="/privacy">Confidentialité</a>
+        <span style={{opacity:.4}}> • </span>
+        <a href="/terms">CGU</a>
+      </footer>
     </main>
   );
 }
 
-const btnStyle: React.CSSProperties = {
-  padding: '12px 16px',
-  borderRadius: 12,
-  border: '1px solid #ddd',
-  background: '#fafafa',
-  cursor: 'pointer',
-  textDecoration: 'none',
-  color: '#111',
-  display: 'inline-block',
+/* —— styles —— */
+const styles: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight:'100dvh',
+    display:'grid',
+    gridTemplateRows:'auto 1fr auto auto',
+    gap:10,
+    background:'#F6F7FE',
+    fontFamily:'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+    color:'#0f172a',
+  },
+  langRow: {
+    display:'grid',
+    gridTemplateColumns:'1fr auto 1fr',
+    alignItems:'center',
+    padding:'10px 16px 0',
+  },
+  langs: { justifySelf:'center', fontSize:12 },
+  lang: { color:'#111', textDecoration:'none', opacity:.5 },
+  langActive: { color:'#111', textDecoration:'none', fontWeight:700 },
+  skip: {
+    justifySelf:'end',
+    border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'6px 10px',
+    cursor:'pointer', fontSize:12,
+  },
+
+  carousel: {
+    maxWidth:520, width:'100%', justifySelf:'center',
+    display:'grid', gridTemplateRows:'auto 260px 1fr auto', gap:8, padding:'0 16px',
+  },
+  titleArch: {
+    textAlign:'center', fontWeight:900, letterSpacing:.6, fontSize:14,
+    transform:'rotate(-3deg)', opacity:.85, marginTop:2,
+  },
+  illustr: {
+    position:'relative', width:'100%', height:260, borderRadius:24,
+    overflow:'hidden',
+  },
+  textBlock: { marginTop:4 },
+  p: { margin:'6px 0 0', lineHeight:1.45, fontSize:14, textAlign:'center' },
+
+  navRow: { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center', marginTop:8 },
+  navBtn: {
+    border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 0',
+    cursor:'pointer', fontWeight:700,
+  },
+  dots: { display:'flex', gap:6, justifyContent:'center', alignItems:'center' },
+  dot: { width:8, height:8, background:'#6d28d9', borderRadius:'50%' },
+
+  ctas: {
+    display:'grid', gap:10, maxWidth:520, width:'100%', justifySelf:'center', padding:'0 16px',
+  },
+  btnPrimary: {
+    display:'block', textAlign:'center', padding:'12px 16px', borderRadius:12,
+    border:'1px solid #ddd', background:'#fafafa', color:'#111', textDecoration:'none', fontWeight:700,
+    boxShadow:'0 8px 18px rgba(0,0,0,.06)',
+  },
+  btnGhost: {
+    padding:'12px 16px', borderRadius:12, border:'1px dashed #bbb', background:'transparent',
+    cursor:'pointer', fontWeight:700,
+  },
+
+  footer: {
+    justifySelf:'center', display:'flex', gap:10, margin:'6px 0 18px', fontSize:12,
+  },
 };

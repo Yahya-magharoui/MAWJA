@@ -1,0 +1,94 @@
+'use client';
+import { useSearchParams } from 'next/navigation';
+import { useMemo } from 'react';
+
+function useOrigin() {
+  const sp = useSearchParams();
+  const from = (sp.get('from') === 'hypo' ? 'hypo' : 'hyper') as 'hyper' | 'hypo';
+  const backHref = from === 'hypo' ? '/hypoactivation' : '/hyperactivation';
+  const withFrom = (href: string) => href.includes('?') ? `${href}&from=${from}` : `${href}?from=${from}`;
+  return { from, backHref, withFrom };
+}
+
+export default function WakeBodyHome() {
+  const { backHref, withFrom } = useOrigin();
+
+  const color = '#A78BFA';
+  const bg = useMemo(
+    () => `radial-gradient(1200px 800px at 50% -10%, ${color}22 0%, #F6F7FE 55%)`,
+    [color]
+  );
+
+  function vibe(ms=15){ try{ (navigator as any)?.vibrate?.(ms) }catch{} }
+
+  return (
+    <main style={{ minHeight:'100dvh', background:bg, fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a' }}>
+      <style>{css}</style>
+
+      <header style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
+        <a href={backHref} aria-label="Retour" style={{ textDecoration:'none', color:'#111', fontSize:20 }}>←</a>
+        <h1 style={{ margin:0, fontSize:20 }}>Exercices pour réveiller le corps</h1>
+        <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button>
+      </header>
+
+      <p style={{ margin:'6px 20px 14px', opacity:.7, fontSize:14 }}>Sélectionne un exercice</p>
+
+      <section style={grid}>
+        <a
+          href={withFrom('/exercice/wake-body/mini')}
+          onMouseDown={()=>vibe()}
+          className="tile"
+          style={tile(color)}
+        >
+          <div style={{ fontSize:34, marginBottom:8 }}>
+            {/* affiche l'icône réelle depuis public/icons/exercices.svg */}
+            <img src="/icons/exercices.svg" alt="Mini exercices" width={48} height={48} style={{ display:'inline-block' }} />
+          </div>
+          <div style={{ fontWeight:700 }}>Mini exercices</div>
+        </a>
+
+        <a
+          href={withFrom('/exercice/wake-body/program')}
+          onMouseDown={()=>vibe()}
+          className="tile"
+          style={tile(color)}
+        >
+          <div style={{ fontSize:34, marginBottom:8 }}>
+            <img src="/icons/programme.svg" alt="Programme" width={48} height={48} style={{ display:'inline-block' }} />
+          </div>
+          <div style={{ fontWeight:700 }}>Programme</div>
+        </a>
+      </section>
+
+      <div style={{ textAlign:'center', margin:'18px 0 80px', opacity:.6, fontSize:12 }}>
+        Astuce : utilise un casque si tu actives les sons.
+      </div>
+    </main>
+  );
+}
+
+const gearBtn: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer' };
+
+const grid: React.CSSProperties = {
+  display:'grid',
+  gap:16,
+  gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))',
+  maxWidth: 700,
+  margin: '10px auto 0',
+  padding: '0 20px'
+};
+
+const tile = (c: string): React.CSSProperties => ({
+  display:'grid', placeItems:'center', gap:8,
+  borderRadius:22,
+  border:'1px solid rgba(0,0,0,.06)',
+  background:`linear-gradient(180deg, ${c}1f 0%, ${c}12 100%)`,
+  padding:'28px 18px',
+  textDecoration:'none',
+  color:'#0f172a',
+  boxShadow:'0 8px 18px rgba(0,0,0,.06)',
+});
+
+const css = `
+  .tile:active{ transform:scale(.98); filter:brightness(.98) }
+`;
