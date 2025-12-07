@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import BackLink from '../../../components/BackLink';
 
 type Card = { key:string; label:string; href:string };
 
@@ -28,7 +29,7 @@ export default function RoutinePage(){
   return (
     <main style={wrap}>
       <header style={hdr}>
-        <button onClick={() => router.back()} aria-label="Retour" style={backBtn}>←</button>
+        <BackLink href={null} onClick={() => router.back()} style={backBtn} />
         <h1 style={{ margin:0, fontSize:20 }}>Ma routine</h1>
         <div />
       </header>

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import BackLink from '../../../../components/BackLink';
 
 type Phase = 'inhale' | 'hold' | 'exhale' | 'stopped' | 'paused';
 
@@ -28,37 +29,19 @@ export default function AbdominalBreathing() {
 
   // fond doux (même palette que le reste)
   const bg = useMemo(
-    () => `radial-gradient(1200px 800px at 50% -10%, #A78BFA22 0%, #F6F7FE 55%)`,
+    () => `radial-gradient(1200px 800px at 50% -10%, rgba(var(--theme-color-rgb),0.13) 0%, #F6F7FE 55%)`,
     []
   );
 
   // démarrer / pause / stop
+  const [loopEnabled, setLoopEnabled] = useState(false);
+
   function start() {
-    // start fresh
     setPhase('inhale');
     setLoopI(0);
     setLeft(DUR.inhale);
     elapsedRef.current = 0;
     vibe(10);
-  }
-
-  function pause(){
-    if (phase === 'paused' || phase === 'stopped') return;
-    // compute elapsed so far and cancel RAF
-    if (stepStartRef.current) {
-      const now = performance.now();
-      elapsedRef.current = (now - stepStartRef.current) / 1000;
-    }
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
-    setPhase('paused');
-  }
-
-  function resume(){
-    if (phase !== 'paused') return;
-    // resume current phase (loopI holds the phase index)
-    setPhase(LOOP[loopI] as Phase);
-    // stepStart will be set in effect using elapsedRef
   }
 
   function stop(){
@@ -70,11 +53,9 @@ export default function AbdominalBreathing() {
     rafRef.current = null;
   }
 
-  // minuterie : gère inhale/hold/exhale cycles
   useEffect(() => {
     // only run when in a running phase
     if (phase === 'stopped' || phase === 'paused') {
-      // ensure raf canceled
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
@@ -94,10 +75,13 @@ export default function AbdominalBreathing() {
       setLeft(remain);
 
       if (elapsed >= total) {
-        // transition to next phase
         const nextI = (loopI + 1) % LOOP.length;
-        // reset elapsed for next phase so it starts fresh
+        const isCycleEnd = loopI === LOOP.length - 1;
         elapsedRef.current = 0;
+        if (isCycleEnd && !loopEnabled) {
+          stop();
+          return;
+        }
         setLoopI(nextI);
         setPhase(LOOP[nextI] as Phase);
         setLeft(DUR[LOOP[nextI] as keyof typeof DUR]);
@@ -122,7 +106,7 @@ export default function AbdominalBreathing() {
         rafRef.current = null;
       }
     };
-  }, [phase, loopI]);
+  }, [phase, loopI, loopEnabled]);
 
   // libellés
   const title = {
@@ -135,7 +119,6 @@ export default function AbdominalBreathing() {
 
   const isIdle  = phase==='stopped';
   const isRun   = phase==='inhale'||phase==='hold'||phase==='exhale';
-  const isPause = phase==='paused';
 
   // animation de la bulle (échelle/opacity)
   const bellyScale =
@@ -148,26 +131,37 @@ export default function AbdominalBreathing() {
     phase==='hold'   ? 0.9 :
     phase==='exhale' ? 0.65 : 0.0;
 
+  const waveHeight =
+    phase==='inhale' ? '62%' :
+    phase==='hold'   ? '52%' :
+    phase==='exhale' ? '34%' : '28%';
+
   return (
-    <main style={{ minHeight:'100dvh', background:bg, fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a' }}>
-      <header style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
-        <a href={backHrefWithFallback()} aria-label="Retour" style={{ textDecoration:'none', color:'#111', fontSize:20 }}>←</a>
-        <h1 style={{ margin:0, fontSize:20 }}>Respiration abdominale</h1>
-        <div />
+    <main style={{ minHeight:'100dvh', background:bg, fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 12px', display:'grid', gridTemplateRows:'auto auto 1fr auto', justifyItems:'center', gap:12 }}>
+      <header style={{ display:'grid', gridTemplateColumns:'auto 1fr', alignItems:'center', width:'100%', gap:8, justifySelf:'stretch', padding:'0 8px' }}>
+        <BackLink href={backHrefWithFallback()} style={{ justifySelf: 'start' }} />
+        <div>
+          <h1 style={{ margin:0, fontSize:18, textAlign:'left' }}>Respiration abdominale</h1>
+          <p style={{ margin: '2px 0 0', opacity:.7, fontSize:12, textAlign:'left' }}>
+            Cycle 6 – 4 – 6 (inspire, bloque, expire)
+          </p>
+        </div>
       </header>
 
-      <p style={{ margin:'4px auto 10px', textAlign:'center', opacity:.7 }}>
-        Cycle 6 – 4 – 6 (inspire, bloque, expire)
-      </p>
-
       {/* Scène */}
-      <section style={{ display:'grid', placeItems:'center' }}>
+      <section style={{ display:'grid', placeItems:'center', width:'100%' }}>
         <div style={sceneBox}>
           {/* Image patient : place tes fichiers dans /public/abdo/ */}
           {/* Variante simple : une seule illustration + bulle par-dessus le ventre */}
           <img src="/abdo/base.png" alt="" style={{ width:'100%', height:'auto', display:'block' }} />
 
-          {/* bulle violette sur le ventre */}
+          <div
+            aria-hidden
+            style={{
+              ...wave,
+              height: waveHeight
+            }}
+          />
           <div
             aria-hidden
             style={{
@@ -189,17 +183,24 @@ export default function AbdominalBreathing() {
       </section>
 
       {/* commandes */}
-      <div style={{ display:'flex', gap:10, justifyContent:'center', margin:'14px 0 28px' }}>
-        {isIdle  && <button onClick={start}  style={btnPrimary}>Démarrer</button>}
-        {isRun   && <button onClick={pause}  style={btn}>Pause</button>}
-        {isPause && <button onClick={resume} style={btnPrimary}>Reprendre</button>}
-        {!isIdle && <button onClick={stop} style={btnGhost}>Arrêter</button>}
+      <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap', width:'100%', maxWidth:420 }}>
+        <button
+          onClick={() => { isIdle ? start() : stop(); }}
+          style={btnPrimary}
+        >
+          {isIdle ? 'Début' : 'Stop'}
+        </button>
+        <button
+          onClick={() => setLoopEnabled(v => !v)}
+          style={{ ...btnLoop, background: loopEnabled ? 'var(--theme-color)' : '#fff', color: loopEnabled ? '#fff' : '#0f172a' }}
+        >
+          Loop {loopEnabled ? 'activé' : ''}
+        </button>
       </div>
 
       {/* aide */}
-      <div style={{ maxWidth:680, margin:'0 auto 26px', padding:'0 20px', fontSize:13, opacity:.7, textAlign:'center' }}>
-        L’air entre par le nez, gonfle le ventre (main du bas), puis tu bloques, et enfin tu
-        souffles par la bouche en rentrant doucement le ventre.
+      <div style={{ width:'100%', maxWidth:420, margin:'0 auto 12px', padding:'0 6px', fontSize:12, opacity:.7, textAlign:'center' }}>
+        L’air entre par le nez, gonfle le ventre (main du bas), puis tu bloques, et enfin tu souffles par la bouche en rentrant doucement le ventre.
       </div>
     </main>
   );
@@ -221,8 +222,8 @@ export default function AbdominalBreathing() {
 
 const sceneBox: React.CSSProperties = {
   position:'relative',
-  width:'min(520px, 92vw)',
-  aspectRatio:'3/4',
+  width:'min(360px, 92vw)',
+  aspectRatio:'2/3',
   borderRadius:24,
   overflow:'hidden',
   background:'#fff',
@@ -237,23 +238,33 @@ const belly: React.CSSProperties = {
   width:'34%',
   aspectRatio:'1/1',
   borderRadius:'50%',
-  background:'radial-gradient(60% 60% at 32% 28%, #F5F3FF 0%, #C4B5FD 45%, #A78BFA 85%)',
+  background:'radial-gradient(60% 60% at 32% 28%, #F5F3FF 0%, #C4B5FD 45%, var(--theme-color) 85%)',
   boxShadow:'0 18px 30px rgba(167,139,250,.35), inset 0 0 0 2px #EDE9FE',
   transition:'transform 600ms ease, opacity 300ms ease'
 };
 
+const wave: React.CSSProperties = {
+  position:'absolute',
+  left:0,
+  bottom:0,
+  width:'100%',
+  background:'linear-gradient(180deg, rgba(var(--theme-color-rgb),0.15), rgba(var(--theme-color-rgb),0.35))',
+  transition:'height 600ms ease',
+  opacity:0.8
+};
+
 const overlayText: React.CSSProperties = {
   position:'absolute',
-  top:12,
+  top:8,
   left:'50%',
   transform:'translateX(-50%)',
-  width:'90%',
+  width:'92%',
   textAlign:'center',
   background:'linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.65))',
   border:'1px solid rgba(0,0,0,.05)',
   borderRadius:12,
-  padding:'8px 10px',
-  fontSize:14
+  padding:'6px 8px',
+  fontSize:12
 };
 
 const btn: React.CSSProperties = {
@@ -262,10 +273,10 @@ const btn: React.CSSProperties = {
 };
 const btnPrimary: React.CSSProperties = {
   padding:'10px 16px', borderRadius:12, border:'1px solid #8B5CF6',
-  background:'#A78BFA', color:'#fff', fontWeight:800, cursor:'pointer',
+  background:'var(--theme-color)', color:'#fff', fontWeight:800, cursor:'pointer',
   boxShadow:'0 10px 20px rgba(167,139,250,.28)'
 };
-const btnGhost: React.CSSProperties = {
-  padding:'10px 14px', borderRadius:12, border:'1px solid #fecaca',
-  background:'#fee2e2', color:'#991b1b', fontWeight:800, cursor:'pointer'
+const btnLoop: React.CSSProperties = {
+  padding:'10px 16px', borderRadius:12, border:'1px solid rgba(0,0,0,.08)',
+  background:'#fff', fontWeight:700, cursor:'pointer', boxShadow:'0 6px 12px rgba(0,0,0,.08)'
 };

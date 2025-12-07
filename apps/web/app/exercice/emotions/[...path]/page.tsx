@@ -1,5 +1,6 @@
 'use client';
 import { useMemo } from 'react';
+import BackLink from '../../../../components/BackLink';
 
 /** ——— Données de base (mêmes couleurs que la 1ère roue) ——— */
 const PRIMARY = {
@@ -278,7 +279,7 @@ export default function EmotionDetailPage({ params }: { params: { path: string[]
   return (
     <main style={styles.page(bg(theme.color))}>
       <header style={styles.header}>
-        <a href={backHref} aria-label="Retour" style={styles.back}>←</a>
+        <BackLink href={backHref} style={styles.back} />
         <h1 style={styles.h1}>{title}</h1>
         <div />
       </header>
@@ -320,10 +321,12 @@ export default function EmotionDetailPage({ params }: { params: { path: string[]
                     fill={tint(theme.color, 0.35)}
                     stroke="#fff"
                     strokeWidth={1}
-                    style={{ cursor: 'pointer', transition: 'filter .12s ease' }}
+                    className="emotion-slice"
+                    style={styles.slicePath}
                     role="link"
                     tabIndex={0}
                     onMouseDown={press}
+                    onFocus={() => press()}
                     onClick={() => (window.location.href = destFor(it))}
                   />
                   <text
@@ -425,7 +428,7 @@ const styles = {
     alignItems: 'center',
     marginBottom: 6,
   } as React.CSSProperties,
-  back: { textDecoration: 'none', color: '#111', fontSize: 20 } as React.CSSProperties,
+  back: { justifySelf: 'start' } as React.CSSProperties,
   h1: { margin: 0, textAlign: 'center', fontSize: 22, letterSpacing: .2 } as React.CSSProperties,
   crumbs: { display: 'flex', alignItems: 'center', gap: 0, margin: '6px 0 12px' } as React.CSSProperties,
   wheelWrap: { position: 'relative', marginTop: 6 } as React.CSSProperties,
@@ -435,6 +438,7 @@ const styles = {
     boxShadow: '0 12px 28px rgba(0,0,0,.08)',
     background: '#fff',
   } as React.CSSProperties,
+  slicePath: { cursor: 'pointer', outline: 'none', transition: 'filter .12s ease' } as React.CSSProperties,
   footer: { display: 'flex', gap: 10, margin: '12px 0 8px' } as React.CSSProperties,
 };
 
@@ -470,4 +474,3 @@ const btnPlain: React.CSSProperties = {
   textDecoration: 'none',
   fontWeight: 600,
 };
-

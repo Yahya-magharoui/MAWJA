@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import BackLink from '../../../components/BackLink';
 
 type Phase = 'inhale' | 'hold' | 'exhale';
 
@@ -21,9 +22,8 @@ export default function StimulatingBreathPage() {
   const { backHref } = useOrigin();
 
   // thème doux
-  const color = '#A78BFA';
   const bg = useMemo(
-    () => `radial-gradient(1200px 800px at 50% -10%, ${color}22 0%, #F6F7FE 55%)`,
+    () => `radial-gradient(1200px 800px at 50% -10%, rgba(var(--theme-color-rgb),0.13) 0%, #F6F7FE 55%)`,
     []
   );
 
@@ -125,7 +125,7 @@ export default function StimulatingBreathPage() {
 
       {/* Top bar */}
       <header style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
-        <a href={backHref} aria-label="Retour" style={{ textDecoration:'none', color:'#111', fontSize:20 }}>←</a>
+        <BackLink href={backHref} style={{ justifySelf: 'start' }} />
         <h1 style={{ margin:0, fontSize:20 }}>Respiration stimulante</h1>
         <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button>
       </header>
@@ -218,7 +218,7 @@ const chip: React.CSSProperties = {
 };
 
 const primaryBtn: React.CSSProperties = {
-  padding:'12px 18px', borderRadius:14, border:'none', background:'#A78BFA', color:'#fff', fontWeight:800, cursor:'pointer',
+  padding:'12px 18px', borderRadius:14, border:'none', background:'var(--theme-color)', color:'#fff', fontWeight:800, cursor:'pointer',
   boxShadow:'0 10px 22px rgba(0,0,0,.10)'
 };
 

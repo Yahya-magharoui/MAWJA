@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import BackLink from '../../../components/BackLink';
 
 type Track = {
   id: string;
@@ -115,7 +116,7 @@ export default function MindfulAudiosPage() {
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <a href="/hyperactivation" aria-label="Retour" style={styles.back}>←</a>
+        <BackLink href="/hyperactivation" style={styles.back} />
         <h1 style={styles.h1}>Audios de pleine conscience</h1>
         <button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button>
       </header>
@@ -178,7 +179,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '16px 20px 28px',
   },
   header: { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center' },
-  back: { textDecoration:'none', color:'#111', fontSize:20 },
+  back: { justifySelf: 'start' },
   h1: { margin:0, fontSize:20, fontWeight:800, textAlign:'center' },
   gear: {
     justifySelf:'end', border:'1px solid #e5e7eb', background:'#fff',
@@ -202,14 +203,14 @@ const styles: Record<string, React.CSSProperties> = {
     border:'1px solid rgba(0,0,0,.06)',
     borderRadius:20,
     padding:'18px 10px 12px',
-    background:'linear-gradient(180deg, #A78BFA22 0%, #A78BFA12 100%)',
+    background:'linear-gradient(180deg, rgba(var(--theme-color-rgb),0.133) 0%, rgba(var(--theme-color-rgb),0.07) 100%)',
     boxShadow:'0 10px 22px rgba(0,0,0,.08)',
     cursor:'pointer',
     transition:'transform .12s ease, box-shadow .12s ease, filter .12s ease',
   },
   bubbleActive: {
-    outline:'2px solid #A78BFA',
-    boxShadow:'0 14px 28px rgba(167,139,250,.35)',
+    outline:'2px solid var(--theme-color)',
+    boxShadow:'0 14px 28px rgba(var(--theme-color-rgb),.35)',
   },
 
   iconWrap: {
@@ -219,8 +220,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 14,
-    background: 'rgba(255,255,255,0.9)',
-    boxShadow: 'inset 0 -6px 12px rgba(0,0,0,0.02)',
+    background: 'transparent',
     marginBottom: 4,
   },
 
@@ -239,7 +239,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   btnPrimary: {
-    background:'#A78BFA', color:'#fff', border:'none',
+    background:'var(--theme-color)', color:'#fff', border:'none',
     padding:'10px 14px', borderRadius:12, fontWeight:700,
     boxShadow:'0 8px 18px rgba(0,0,0,.12)', cursor:'pointer'
   },

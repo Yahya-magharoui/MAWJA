@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import BackLink from '../../../components/BackLink';
+import { tintColor, useThemeColor, withAlpha } from '../../../components/theme';
 
 type Goal = {
   id: string;
@@ -16,12 +18,12 @@ function vibe(ms = 12) {
 }
 
 export default function ObjectifsPage() {
-  const theme = '#A78BFA';
+  const theme = useThemeColor();
 
   // fond doux comme le reste de l’app
   const bg = useMemo(
-    () => `radial-gradient(1200px 800px at 50% -10%, ${theme}22 0%, #F6F7FE 55%)`,
-    []
+    () => `radial-gradient(1200px 800px at 50% -10%, ${withAlpha(theme, 0.13)} 0%, #F6F7FE 55%)`,
+    [theme]
   );
 
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -99,7 +101,7 @@ export default function ObjectifsPage() {
     <main style={{ minHeight:'100dvh', background:bg, fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a' }}>
       {/* header */}
       <header style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
-        <a href="/tolerance" aria-label="Retour" style={{ textDecoration:'none', color:'#111', fontSize:20 }}>←</a>
+        <BackLink href="/tolerance" style={{ justifySelf: 'start' }} />
         <div>
           <h1 style={{ margin:0, fontSize:20 }}>Mes Objectifs</h1>
           <p style={{ margin:'4px 0 0', fontSize:13, opacity:.7 }}>Note quelques objectifs sur lesquels tu souhaites travailler</p>

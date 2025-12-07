@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import BackLink from '../../../../components/BackLink';
 
 const QUESTIONS = [
   "De quelle couleur est-il ?",
@@ -37,7 +38,7 @@ export default function ObjectSenses() {
   return (
     <main style={wrap}>
       <header style={hdr}>
-        <a href="/exercice/anchoring" aria-label="Retour" style={back}>←</a>
+        <BackLink href="/exercice/anchoring" style={back} />
         <h1 style={{ margin:0, fontSize:20 }}>Ancrage sensoriel</h1>
         <button aria-label="Paramètres" title="Paramètres" style={gear}>⚙️</button>
       </header>
@@ -45,7 +46,7 @@ export default function ObjectSenses() {
       {!started ? (
         <>
           <p style={{ opacity:.7, fontSize:14, margin:'6px 0 14px' }}>
-            Attrape un objet près de toi. Quand tu es prêt·e, lance l’exercice puis réponds mentalement à chaque question.
+            Attrape un objet près de toi. Quand tu es prêt·e, lance l’exercice. On va essayer de le décrire en répondant à chaque question.
           </p>
           <div style={{ display:'grid', placeItems:'center', margin:'30px 0' }}>
             <button onClick={() => { setStarted(true); vibe(); }} style={startBtn}>Début</button>
@@ -83,12 +84,12 @@ export default function ObjectSenses() {
 /* styles */
 const wrap: React.CSSProperties = { minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 20px' };
 const hdr: React.CSSProperties  = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center' };
-const back: React.CSSProperties = { textDecoration:'none', color:'#111', fontSize:20 };
+const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer' };
 
 const bubble = (active:boolean): React.CSSProperties => ({
   border:'1px solid rgba(0,0,0,.06)',
-  background: active ? '#A78BFA55' : '#fff',
+  background: active ? 'rgba(var(--theme-color-rgb),0.33)' : '#fff',
   color:'#0f172a',
   borderRadius:16,
   boxShadow:'0 8px 18px rgba(0,0,0,.06)',
@@ -99,7 +100,7 @@ const bubble = (active:boolean): React.CSSProperties => ({
 
 const startBtn: React.CSSProperties = {
   padding:'10px 16px', borderRadius:999, border:'1px solid rgba(0,0,0,.08)',
-  background:'#A78BFA', color:'#fff', fontWeight:700, boxShadow:'0 8px 18px rgba(0,0,0,.12)', cursor:'pointer'
+  background:'var(--theme-color)', color:'#fff', fontWeight:700, boxShadow:'0 8px 18px rgba(0,0,0,.12)', cursor:'pointer'
 };
 const linkSecondary: React.CSSProperties = {
   padding:'10px 14px', borderRadius:12, border:'1px solid #e5e7eb', background:'#fff', color:'#0f172a', textDecoration:'none', fontWeight:600

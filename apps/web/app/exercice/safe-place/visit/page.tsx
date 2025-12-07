@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import BackLink from '../../../../components/BackLink';
 
 type SafePlace = { id:string; name:string; answers:string[]; createdAt:number };
 
@@ -50,7 +51,7 @@ export default function VisitSafePlace() {
       <style>{css}</style>
 
       <header style={hdr}>
-        <a href="/exercice/safe-place" aria-label="Retour" style={back}>←</a>
+        <BackLink href="/exercice/safe-place" style={back} />
         <h1 style={{ margin:0, fontSize:20 }}>Mon lieu sûr</h1>
         <a href="/exercice/safe-place/build" style={newBtn} onMouseDown={()=>vibe()}>+ Nouveau</a>
       </header>
@@ -136,20 +137,20 @@ export default function VisitSafePlace() {
 /* styles */
 const wrap:React.CSSProperties={ minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 20px' };
 const hdr:React.CSSProperties={ display:'grid', gridTemplateColumns:'40px 1fr auto', alignItems:'center' };
-const back:React.CSSProperties={ textDecoration:'none', color:'#111', fontSize:20 };
+const back:React.CSSProperties={ justifySelf:'start' };
 
-const newBtn:React.CSSProperties={ padding:'8px 12px', borderRadius:12, background:'#A78BFA', color:'#fff', textDecoration:'none', fontWeight:700, border:'1px solid rgba(0,0,0,.08)', boxShadow:'0 6px 14px rgba(0,0,0,.12)' };
+const newBtn:React.CSSProperties={ padding:'8px 12px', borderRadius:12, background:'var(--theme-color)', color:'#fff', textDecoration:'none', fontWeight:700, border:'1px solid rgba(0,0,0,.08)', boxShadow:'0 6px 14px rgba(0,0,0,.12)' };
 
 const emptyCard:React.CSSProperties={ border:'1px solid rgba(0,0,0,.06)', borderRadius:18, padding:'16px', background:'#fff', boxShadow:'0 8px 18px rgba(0,0,0,.06)' };
-const primary:React.CSSProperties={ padding:'10px 14px', borderRadius:12, background:'#A78BFA', color:'#fff', textDecoration:'none', fontWeight:700 };
+const primary:React.CSSProperties={ padding:'10px 14px', borderRadius:12, background:'var(--theme-color)', color:'#fff', textDecoration:'none', fontWeight:700 };
 
 const card = (hl:boolean):React.CSSProperties => ({
   border:'1px solid rgba(0,0,0,.06)', borderRadius:22, background:'#fff',
-  boxShadow: hl ? '0 12px 26px rgba(167,139,250,.35)' : '0 8px 18px rgba(0,0,0,.06)',
+  boxShadow: hl ? '0 12px 26px rgba(var(--theme-color-rgb),.35)' : '0 8px 18px rgba(0,0,0,.06)',
   padding:'14px 14px 12px'
 });
 const headerRow:React.CSSProperties={ display:'flex', alignItems:'center', gap:12, marginBottom:10 };
-const circle:React.CSSProperties={ width:44, height:44, borderRadius:'50%', display:'grid', placeItems:'center', background:'#A78BFA33', fontWeight:800 };
+const circle:React.CSSProperties={ width:44, height:44, borderRadius:'50%', display:'grid', placeItems:'center', background:'rgba(var(--theme-color-rgb),0.2)', fontWeight:800 };
 
 const chipsWrap:React.CSSProperties={ display:'flex', flexWrap:'wrap', gap:8 };
 const chip:React.CSSProperties={ padding:'8px 10px', borderRadius:999, background:'#F1F0FF', border:'1px solid #E6E3FF', fontSize:13 };

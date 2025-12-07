@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import BackLink from '../../components/BackLink';
 
 export default function EmergencyPage() {
   const vibe = useCallback(() => {
@@ -10,7 +11,7 @@ export default function EmergencyPage() {
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <a href="/hyperactivation" aria-label="Retour" style={styles.back}>←</a>
+        <BackLink href="/hyperactivation" style={styles.back} />
         <h1 style={styles.h1}>J’ai besoin d’aide</h1>
         <button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button>
       </header>
@@ -76,7 +77,7 @@ const styles: Record<string, React.CSSProperties> = {
     gridTemplateColumns: '40px 1fr 40px',
     alignItems: 'center',
   },
-  back: { textDecoration: 'none', color: '#111', fontSize: 20 },
+  back: { justifySelf: 'start' },
   h1: { margin: 0, fontSize: 22, fontWeight: 800, textAlign: 'center' },
   gear: {
     justifySelf: 'end',
@@ -109,7 +110,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#0f172a',
     border: '1px solid rgba(0,0,0,.06)',
     boxShadow: '0 8px 18px rgba(0,0,0,.08)',
-    background: 'linear-gradient(180deg, #A78BFA20 0%, #A78BFA12 100%)',
+    background: 'linear-gradient(180deg, rgba(var(--theme-color-rgb),0.125) 0%, rgba(var(--theme-color-rgb),0.07) 100%)',
     transition: 'transform .12s ease, box-shadow .12s ease, filter .12s ease',
   },
   cardTone: {},
@@ -121,9 +122,8 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 14,
-    background: 'rgba(255,255,255,0.95)',
+    background: 'transparent',
     marginBottom: 6,
-    boxShadow: 'inset 0 -6px 12px rgba(0,0,0,0.02)',
   },
   label: { fontWeight: 700, fontSize: 15, textAlign: 'center' },
 };

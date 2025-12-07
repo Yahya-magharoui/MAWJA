@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import BackLink from '../../../components/BackLink';
 
 /** données */
 const EMOTIONS = [
@@ -26,12 +27,16 @@ export default function EmotionWheel() {
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <a href="/hyperactivation" aria-label="Retour" style={styles.backLink}>←</a>
+        <BackLink href="/hyperactivation" style={styles.backLink} />
         <h1 style={styles.h1}>Roue des émotions</h1>
         <div />
       </header>
 
-      <p style={styles.subtitle}>Prends un instant et choisis l’émotion que tu ressens.</p>
+      <p style={styles.subtitle}>
+        Prends un instant, regarde la roue et identifie l’émotion que tu ressens.
+        <br />
+        Reconnaître ses émotions permet déjà de commencer à les apaiser (régulation émotionnelle).
+      </p>
 
       <div style={styles.wheelWrap}>
         {/* étiquette centrale */}
@@ -60,27 +65,29 @@ export default function EmotionWheel() {
        onMouseLeave={() => setHovered(null)}>
 
       {/* secteur cliquable */}
-      <path
-        d={s.path}
-        fill={emo.color}
-        stroke="#fff"
-        strokeWidth={1}
-        style={{
-          cursor: 'pointer',
-          filter: isDim ? 'grayscale(.15) brightness(.98)' : 'none',
-          transition: 'filter .15s ease',
-        }}
-        role="link"
-        tabIndex={0}
-        onMouseDown={pressFeedback}
-        onClick={() => { window.location.href = href; }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            window.location.href = href;
-          }
-        }}
-      />
+          <path
+            d={s.path}
+            fill={emo.color}
+            stroke="#fff"
+            strokeWidth={1}
+            className="emotion-slice"
+            style={{
+              ...styles.slicePath,
+              filter: isDim ? 'grayscale(.15) brightness(.98)' : 'none',
+            }}
+            role="link"
+            tabIndex={0}
+            onMouseDown={pressFeedback}
+            onFocus={() => setHovered(emo)}
+            onBlur={() => setHovered(null)}
+            onClick={() => { window.location.href = href; }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                window.location.href = href;
+              }
+            }}
+          />
 
       {/* libellé centré */}
       <text
@@ -157,7 +164,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     marginBottom: 6,
   },
-  backLink: { textDecoration: 'none', color: '#111', fontSize: 20 },
+  backLink: { justifySelf: 'start' },
   h1: { margin: 0, textAlign: 'center', fontSize: 22, letterSpacing: .2 },
   subtitle: { margin: '8px 0 18px', opacity: .7, fontSize: 14, textAlign: 'center' },
 
@@ -183,5 +190,9 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 12,
     padding: '8px 12px',
     boxShadow: '0 4px 12px rgba(0,0,0,.06)',
+  },
+  slicePath: {
+    cursor: 'pointer',
+    outline: 'none'
   },
 };

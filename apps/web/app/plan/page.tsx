@@ -1,16 +1,10 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { tintColor, useThemeColor } from '../../components/theme';
+import BackLink from '../../components/BackLink';
 
 /** — thème — */
-function tint(hex: string, t: number) {
-  const h = hex.replace('#', '');
-  const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
-  const mix = (c: number) => Math.round(c + (255 - c) * t);
-  const to = (n: number) => n.toString(16).padStart(2, '0');
-  return `#${to(mix(r))}${to(mix(g))}${to(mix(b))}`;
-}
-
 /** — sections du plan — */
 type SectionId = 'signes' | 'actions' | 'personnes' | 'soignants';
 type PlanData = Record<SectionId, string[]>;
@@ -33,15 +27,9 @@ export default function CrisisPlanPage() {
   const router = useRouter();
 
   /** thème doux */
-  const [color, setColor] = useState('#A78BFA');
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('themeColor');
-      if (saved) setColor(saved);
-    } catch {}
-  }, []);
+  const color = useThemeColor();
   const bg = useMemo(
-    () => `radial-gradient(1200px 800px at 50% -10%, ${tint(color, 0.85)} 0%, #F6F7FE 55%)`,
+    () => `radial-gradient(1200px 800px at 50% -10%, ${tintColor(color, 0.85)} 0%, #F6F7FE 55%)`,
     [color]
   );
 
@@ -105,13 +93,7 @@ export default function CrisisPlanPage() {
           padding: '16px 20px',
         }}
       >
-        <button
-          onClick={goBack}
-          aria-label="Retour"
-          style={{ textDecoration: 'none', color: '#111', fontSize: 20, background: 'transparent', border: 'none', cursor: 'pointer' }}
-        >
-          ←
-        </button>
+        <BackLink href={null} onClick={goBack} style={{ justifySelf: 'start' }} />
         <div>
           <h1 style={{ margin: 0, fontSize: 20 }}>Plan de crise/sécurité</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, opacity: 0.7 }}>Tu peux le compléter ou l’actualiser !</p>

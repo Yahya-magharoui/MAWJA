@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import BackLink from '../../../../components/BackLink';
 
 type QA = { id: string; q: string };
 
@@ -20,10 +21,8 @@ function vibe(ms = 12) {
 }
 
 export default function GuidedQuestionsPage() {
-  const theme = '#A78BFA';
-
   const bg = useMemo(
-    () => `radial-gradient(1200px 800px at 50% -10%, ${theme}22 0%, #F6F7FE 55%)`,
+    () => `radial-gradient(1200px 800px at 50% -10%, rgba(var(--theme-color-rgb),0.13) 0%, #F6F7FE 55%)`,
     []
   );
 
@@ -79,13 +78,7 @@ export default function GuidedQuestionsPage() {
           padding: '16px 20px',
         }}
       >
-        <button
-          onClick={() => history.back()}
-          aria-label="Retour"
-          style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}
-        >
-          ←
-        </button>
+        <BackLink href={null} onClick={() => history.back()} style={{ justifySelf: 'start' }} />
         <div>
           <h1 style={{ margin: 0, fontSize: 20 }}>Questions guidées</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, opacity: 0.7 }}>
@@ -149,7 +142,7 @@ export default function GuidedQuestionsPage() {
                   style={ta}
                 />
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  <button onClick={() => saveCard(it.id)} style={btnPrimary(theme)}>
+                  <button onClick={() => saveCard(it.id)} style={btnPrimary}>
                     Enregistrer & retourner
                   </button>
                   <button onClick={closeCard} style={btnGhost}>
@@ -176,15 +169,15 @@ const ta: React.CSSProperties = {
   background: '#fff',
 };
 
-const btnPrimary = (c: string): React.CSSProperties => ({
+const btnPrimary: React.CSSProperties = {
   padding: '10px 12px',
   borderRadius: 12,
   border: 'none',
-  background: c,
+  background: 'var(--theme-color)',
   color: '#fff',
   fontWeight: 800,
   cursor: 'pointer',
-});
+};
 
 const btnGhost: React.CSSProperties = {
   padding: '10px 12px',
@@ -202,7 +195,7 @@ const css = `
 }
 .card{
   position:absolute; inset:0;
-  background:#E9D5FF55;
+  background:rgba(var(--theme-color-rgb),0.33);
   border:1px solid rgba(0,0,0,.06);
   border-radius:18px;
   box-shadow:0 8px 18px rgba(0,0,0,.06);

@@ -26,7 +26,6 @@ export default function Index() {
   const [color, setColor] = useState("#A78BFA");
 
   const theme = useMemo(() => {
-    // small helper to softly lighten hex colors
     const tint = (hex: string, t: number) => {
       const h = hex.replace("#", "");
       const to = (i: number) => parseInt(h.slice(i, i + 2), 16);

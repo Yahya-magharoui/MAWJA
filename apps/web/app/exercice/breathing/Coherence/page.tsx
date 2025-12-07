@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import BackLink from '../../../../components/BackLink';
 
 type Phase = 'inspire' | 'expire' | 'stopped' | 'paused';
 
@@ -106,7 +107,7 @@ export default function BreathingTube() {
       <style>{css}</style>
 
       <header style={hdr}>
-        <a href="/hyperactivation" aria-label="Retour" style={back}>←</a>
+        <BackLink href="/hyperactivation" style={back} />
         <h1 style={{ margin:0, fontSize:18, color:'#4B5563' }}>Cohérence cardiaque</h1>
         <button
           aria-label={muted ? 'Activer le son' : 'Couper le son'}
@@ -177,7 +178,7 @@ const hdr: React.CSSProperties = {
   alignItems:'center',
   padding:'12px 16px'
 };
-const back: React.CSSProperties = { textDecoration:'none', color:'#6D28D9', fontSize:20 };
+const back: React.CSSProperties = { justifySelf: 'start', color: '#6D28D9' };
 const muteBtn: React.CSSProperties = {
   justifySelf:'end',
   border:'none',
@@ -196,12 +197,12 @@ const tube: React.CSSProperties = {
 };
 const fill: React.CSSProperties = {
   position:'absolute', left:0, bottom:0, width:'100%', height:'100%',
-  background:'linear-gradient(180deg, #C4B5FD 0%, #A78BFA 100%)',
+  background:'linear-gradient(180deg, #C4B5FD 0%, var(--theme-color) 100%)',
   filter:'brightness(1.05)', transition:'transform 1s', willChange:'transform'
 };
 const bubble: React.CSSProperties = {
   position:'absolute', left:'50%', width:88, height:88, borderRadius:'50%',
-  background:'radial-gradient(60% 60% at 30% 30%, #EDE9FE 0%, #C4B5FD 50%, #A78BFA 90%)',
+  background:'radial-gradient(60% 60% at 30% 30%, #EDE9FE 0%, #C4B5FD 50%, var(--theme-color) 90%)',
   boxShadow:'0 8px 18px rgba(167,139,250,.35), inset 0 0 0 2px #DDD6FE',
   transform:'translate(-50%, 100%)', willChange:'transform'
 };
@@ -222,7 +223,7 @@ const btn: React.CSSProperties = {
 const btnPrimary: React.CSSProperties = {
   padding:'12px 18px', borderRadius:14,
   border:'1px solid #8B5CF6',
-  background:'#A78BFA', color:'#fff', fontWeight:700, cursor:'pointer',
+  background:'var(--theme-color)', color:'#fff', fontWeight:700, cursor:'pointer',
   boxShadow:'0 6px 16px rgba(167,139,250,.4)'
 };
 const btnDanger: React.CSSProperties = {

@@ -17,9 +17,9 @@ const SLIDES: Slide[] = [
     id: 'window',
     img: '/intro/tolerance_ouverte.png',
     alt: 'Fenêtre ouverte avec vague',
-    title: 'À PROPOS DE MAWJA',
+    title: 'À PROPOS DE KALYMA',
     lines: [
-      "La fenêtre de tolérance, c’est une zone dans laquelle tu te sens bien et en capacité de gérer tes émotions ainsi que les choses venant de l’extérieur de manière efficace.",
+      "La fenêtre de tolérance, c’est une zone où tu te sens suffisamment stable pour gérer tes émotions et les stimulations extérieures.",
       "Quand tu t’y trouves, tu es dans un état d’équilibre, calme et attentif au monde qui t’entoure.",
     ],
   },
@@ -27,9 +27,9 @@ const SLIDES: Slide[] = [
     id: 'hyper',
     img: '/intro/hyper.png',
     alt: 'Fenêtre avec flèche vers le haut',
-    title: 'À PROPOS DE MAWJA',
+    title: 'À PROPOS DE KALYMA',
     lines: [
-      "Quand tu dépasses ta fenêtre de tolérance par le haut, tu es en hyperactivation : ton corps réagit comme s’il y avait un danger imminent.",
+      "Quand tu dépasses ta fenêtre de tolérance vers l’hyperactivation ton corps réagit comme s’il y avait un danger imminent.",
       "C’est une réponse automatique de protection (lutte ou fuite).",
       "Tu peux ressentir : rythme cardiaque rapide, irritabilité, respiration rapide, tensions, sueurs, palpitations, anxiété, agitation, hypervigilance.",
     ],
@@ -38,9 +38,9 @@ const SLIDES: Slide[] = [
     id: 'hypo',
     img: '/intro/hypo.png',
     alt: 'Fenêtre avec flèche vers le bas',
-    title: 'À PROPOS DE MAWJA',
+    title: 'À PROPOS DE KALYMA',
     lines: [
-      "Quand tu dépasses ta fenêtre de tolérance par le bas, tu entres dans l’hypoactivation : le système passe en mode « paralysie / dissociation » pour te protéger d’une surcharge émotionnelle.",
+      "Quand tu dépasses ta fenêtre de tolérance vers l’hypoactivation le système passe en mode « paralysie / dissociation » pour te protéger d’une surcharge émotionnelle.",
       "Tu peux ressentir : paralysie, déconnexion, engourdissement, digestion perturbée, respiration impactée, déréalisation, apathie, retrait, confusion.",
     ],
   },
@@ -48,7 +48,7 @@ const SLIDES: Slide[] = [
     id: 'why',
     img: '/intro/chemins.png',
     alt: 'Transition entre fenêtres',
-    title: 'À PROPOS DE MAWJA',
+    title: 'À PROPOS DE KALYMA',
     lines: [
       "Connaître ta fenêtre de tolérance t’aide à repérer l’hypoactivation et l’hyperactivation.",
       "Quand tu identifies l’état dans lequel tu te trouves, tu peux utiliser des stratégies pour revenir dans ta fenêtre de tolérance et éviter de rester trop longtemps en déséquilibre.",
@@ -157,11 +157,7 @@ export default function Home() {
       <section style={styles.ctas}>
         <a href="/signup" style={styles.btnPrimary}>Créer un compte</a>
         <a href="/login"  style={{ ...styles.btnPrimary, background:'#fff' }}>Se connecter</a>
-        {i === last ? (
-          <button onClick={startGuest} style={styles.btnGhost}>Commencer sans compte</button>
-        ) : (
-          <button onClick={() => setI(last)} style={styles.btnGhost}>Aller au dernier</button>
-        )}
+        <button onClick={startGuest} style={styles.btnGhost}>Commencer sans compte</button>
       </section>
 
       <footer style={styles.footer}>
@@ -233,8 +229,8 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow:'0 8px 18px rgba(0,0,0,.06)',
   },
   btnGhost: {
-    padding:'12px 16px', borderRadius:12, border:'1px dashed #bbb', background:'transparent',
-    cursor:'pointer', fontWeight:700,
+    padding:'12px 16px', borderRadius:12, border:'1px solid rgba(0,0,0,.1)', background:'#fff',
+    cursor:'pointer', fontWeight:700, boxShadow:'0 6px 14px rgba(0,0,0,.05)'
   },
 
   footer: {

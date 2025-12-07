@@ -1,38 +1,60 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import BackLink from '../../components/BackLink';
+import { getStoredThemeColor, setThemeColor, tintColor, withAlpha } from '../../components/theme';
+import type { Lang } from '../../i18n';
 
 const PRESET = ['#A78BFA', '#93C5FD', '#A7F3D0', '#FDE68A', '#F9A8D4', '#D1D5DB'];
 
 export default function AppHome() {
   // thème
-  const [color, setColor] = useState('#A78BFA');
-  useEffect(() => {
-    const saved = localStorage.getItem('themeColor');
-    if (saved) setColor(saved);
-  }, []);
-  useEffect(() => localStorage.setItem('themeColor', color), [color]);
+  const [color, setColor] = useState(PRESET[0]);
+  const [openSettings, setOpenSettings] = useState(false);
+  const [accountStatus, setAccountStatus] = useState<'registered' | 'guest'>('guest');
+  const [readingEnabled, setReadingEnabled] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.localStorage.getItem('readingEnabled') !== 'false';
+  });
+  const [hapticsEnabled, setHapticsEnabled] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('hapticsEnabled') === 'true';
+  });
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.localStorage.getItem('soundEnabled') !== 'false';
+  });
+  const [language, setLanguage] = useState<Lang>(() => {
+    if (typeof window === 'undefined') return 'fr';
+    return (window.localStorage.getItem('lang') as Lang) || 'fr';
+  });
 
-  // util: éclaircir une couleur hex
-  function tint(hex: string, t: number) {
-    const h = hex.replace('#', '');
-    const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
-    const mix = (c: number) => Math.round(c + (255 - c) * t);
-    return `#${mix(r).toString(16).padStart(2, '0')}${mix(g).toString(16).padStart(2, '0')}${mix(b).toString(16).padStart(2, '0')}`;
-  }
+  useLayoutEffect(() => {
+    setColor(getStoredThemeColor());
+    if (typeof window !== 'undefined') {
+      const status = window.localStorage.getItem('accountStatus');
+      setAccountStatus(status === 'registered' ? 'registered' : 'guest');
+    }
+  }, []);
+  useEffect(() => {
+    setThemeColor(color);
+  }, [color]);
+  useEffect(() => { window.localStorage.setItem('readingEnabled', String(readingEnabled)); }, [readingEnabled]);
+  useEffect(() => { window.localStorage.setItem('hapticsEnabled', String(hapticsEnabled)); }, [hapticsEnabled]);
+  useEffect(() => { window.localStorage.setItem('soundEnabled', String(soundEnabled)); }, [soundEnabled]);
 
   const theme = useMemo(() => ({
-    bg: `radial-gradient(1200px 800px at 50% -10%, ${tint(color, 0.82)} 0%, #F6F7FE 55%)`,
+    bg: `radial-gradient(1200px 800px at 50% -10%, ${tintColor(color, 0.82)} 0%, #F6F7FE 55%)`,
     hyper: {
-      bg: `linear-gradient(180deg, ${tint(color, 0.25)} 0%, ${tint(color, 0.06)} 100%)`,
-      shadow: `0 12px 28px ${tint(color, 0.7)}`
+      bg: `linear-gradient(180deg, ${tintColor(color, 0.25)} 0%, ${tintColor(color, 0.06)} 100%)`,
+      shadow: `0 12px 28px ${withAlpha(color, 0.35)}`
     },
     window: {
-      bg: `linear-gradient(180deg, ${tint(color, 0.45)} 0%, ${tint(color, 0.22)} 100%)`,
-      shadow: `0 10px 22px ${tint(color, 0.78)}`
+      bg: `linear-gradient(180deg, ${tintColor(color, 0.45)} 0%, ${tintColor(color, 0.22)} 100%)`,
+      shadow: `0 10px 22px ${withAlpha(color, 0.3)}`
     },
     hypo: {
-      bg: `linear-gradient(180deg, ${tint(color, 0.72)} 0%, ${tint(color, 0.48)} 100%)`,
-      shadow: `0 8px 18px ${tint(color, 0.86)}`
+      bg: `linear-gradient(180deg, ${tintColor(color, 0.72)} 0%, ${tintColor(color, 0.48)} 100%)`,
+      shadow: `0 8px 18px ${withAlpha(color, 0.25)}`
     }
   }), [color]);
 
@@ -42,9 +64,14 @@ export default function AppHome() {
 
       {/* barre de haut minimaliste */}
       <header style={styles.header}>
-        <div aria-hidden />
-        <h1 style={styles.h1}>Comment te sens-tu&nbsp;?</h1>
-        <button style={styles.gearBtn} aria-label="Paramètres (bientôt)" title="Paramètres">
+        <BackLink href="/" style={styles.backBtn} aria-label="Retour à l’accueil" />
+        <h1 style={styles.h1}>Comment te sens-tu maintenant&nbsp;?</h1>
+        <button
+          style={styles.gearBtn}
+          aria-label="Paramètres"
+          title="Paramètres"
+          onClick={() => setOpenSettings(true)}
+        >
           ⚙️
         </button>
       </header>
@@ -53,19 +80,19 @@ export default function AppHome() {
       <section className="fade-in" style={styles.stack}>
         <Card
           title="Hyperactivation"
-          caption="rythme élevé, agitation"
+          caption="Fuite / Lutte, Rythme cardiaque rapide, Irritabilité, Respiration rapide, Tension musculaire, Sueurs, Palpitations, Colère, Anxiété, Agitation, Hypervigilance"
           styleExtra={{ ...styles.top, background: theme.hyper.bg, boxShadow: theme.hyper.shadow }}
           onClick={() => (window.location.href = '/hyperactivation')}
         />
         <Card
           title="Fenêtre de tolérance"
-          caption="zone d’équilibre"
+          caption="Fenêtre d’activation optimale, Équilibre, calme, attentif"
           styleExtra={{ background: theme.window.bg, boxShadow: theme.window.shadow }}
           onClick={() => (window.location.href = '/tolerance')}
         />
         <Card
           title="Hypoactivation"
-          caption="ralentissement, fatigue"
+          caption="Paralysie, Sensation de déconnexion, D’engourdissement, Digestion perturbée, Respiration impactée, Déréalisation, Apathie, Retrait, Confusion"
           styleExtra={{ ...styles.bottom, background: theme.hypo.bg, boxShadow: theme.hypo.shadow }}
           onClick={() => (window.location.href = '/hypoactivation')}
         />
@@ -112,6 +139,92 @@ export default function AppHome() {
           </label>
         </div>
       </footer>
+
+      {openSettings && (
+        <div style={styles.settingsOverlay} role="dialog" aria-modal="true">
+          <div style={styles.settingsCard}>
+            <button onClick={() => setOpenSettings(false)} style={styles.closeBtn} aria-label="Fermer">✕</button>
+
+            <button
+              style={styles.settingRow}
+              onClick={() => (window.location.href = accountStatus === 'registered' ? '/app' : '/login')}
+            >
+              <span style={styles.settingIcon}>👤</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600 }}>Compte</div>
+                <div style={{ fontSize: 12, opacity: 0.6 }}>{accountStatus === 'registered' ? 'Profil synchronisé' : 'Connecte-toi pour sauvegarder'}</div>
+              </div>
+              <span style={{ fontSize: 13, opacity: 0.7 }}>{accountStatus === 'registered' ? 'Enregistré' : 'Non connecté'}</span>
+            </button>
+
+            <button style={styles.settingRow} onClick={() => (window.location.href = '/about')}>
+              <span style={styles.settingIcon}>ℹ️</span>
+              <div>À propos</div>
+              <span aria-hidden>›</span>
+            </button>
+
+            <div style={styles.settingSection}>
+              <div style={styles.sectionTitle}>Personnaliser le thème</div>
+              <div style={styles.bubbles}>
+                {PRESET.map((c) => (
+                  <button
+                    key={`modal-${c}`}
+                    aria-label={`Choisir ${c}`}
+                    style={{ ...styles.bubble, background: c, outline: color === c ? '3px solid rgba(0,0,0,.12)' : 'none' }}
+                    onClick={() => setColor(c)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div style={styles.settingSection}>
+              <div style={styles.sectionTitle}>Langue</div>
+              <div style={styles.langRow}>
+                {(['fr', 'en'] as Lang[]).map((lng) => (
+                  <button
+                    key={lng}
+                    onClick={() => {
+                      setLanguage(lng);
+                      window.localStorage.setItem('lang', lng);
+                      window.location.reload();
+                    }}
+                    style={{ ...styles.langBtn, background: language === lng ? 'var(--theme-color)' : '#f5f5f5', color: language === lng ? '#fff' : '#111' }}
+                  >
+                    {lng.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button style={styles.settingRow} onClick={() => setReadingEnabled(v => !v)}>
+              <span style={styles.settingIcon}>🔊</span>
+              <div>Lecture des consignes</div>
+              <span style={{ fontSize: 13, opacity: 0.7 }}>{readingEnabled ? 'Activé' : 'Désactivé'}</span>
+            </button>
+            <button style={styles.settingRow} onClick={() => setHapticsEnabled(v => !v)}>
+              <span style={styles.settingIcon}>📳</span>
+              <div>Retour haptique</div>
+              <span style={{ fontSize: 13, opacity: 0.7 }}>{hapticsEnabled ? 'Activé' : 'Désactivé'}</span>
+            </button>
+            <button style={styles.settingRow} onClick={() => setSoundEnabled(v => !v)}>
+              <span style={styles.settingIcon}>🎵</span>
+              <div>Effet sonore</div>
+              <span style={{ fontSize: 13, opacity: 0.7 }}>{soundEnabled ? 'Activé' : 'Désactivé'}</span>
+            </button>
+
+            <button style={styles.settingRow} onClick={() => (window.location.href = '/help')}>
+              <span style={styles.settingIcon}>❓</span>
+              <div>Aide</div>
+              <span aria-hidden>›</span>
+            </button>
+            <button style={styles.settingRow} onClick={() => (window.location.href = '/privacy')}>
+              <span style={styles.settingIcon}>🛡️</span>
+              <div>Politique de confidentialité</div>
+              <span aria-hidden>›</span>
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
@@ -160,6 +273,9 @@ const styles = {
     gridTemplateColumns: '1fr auto 1fr',
     alignItems: 'center',
     padding: '16px 20px',
+  } as React.CSSProperties,
+  backBtn: {
+    justifySelf: 'start'
   } as React.CSSProperties,
   h1: { margin: 0, fontSize: 18, textAlign: 'center', letterSpacing: .2 } as React.CSSProperties,
   gearBtn: {
@@ -214,6 +330,15 @@ const styles = {
   bubble: { width: 34, height: 34, borderRadius: 999, border: '1px solid rgba(0,0,0,.06)', cursor: 'pointer' } as React.CSSProperties,
   hexWrap: { marginLeft: 4 } as React.CSSProperties,
   hexInput: { width: 110, padding: '8px 10px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, outline: 'none' } as React.CSSProperties,
+  settingsOverlay: { position:'fixed', inset:0, background:'rgba(15,23,42,.35)', display:'grid', placeItems:'center', padding:20, zIndex:50 } as React.CSSProperties,
+  settingsCard: { width:'min(420px,100%)', background:'#fff', borderRadius:24, padding:'22px 12px 12px', boxShadow:'0 24px 40px rgba(15,23,42,.25)', display:'grid', gap:4, position:'relative' } as React.CSSProperties,
+  closeBtn: { position:'absolute', right:12, top:12, border:'none', background:'transparent', fontSize:20, cursor:'pointer' } as React.CSSProperties,
+  settingRow: { display:'flex', alignItems:'center', gap:12, border:'none', background:'transparent', padding:'10px 8px', borderRadius:12, cursor:'pointer', textAlign:'left' } as React.CSSProperties,
+  settingIcon: { width:28, textAlign:'center', fontSize:18 } as React.CSSProperties,
+  settingSection: { padding:'6px 8px', borderRadius:14, border:'1px solid rgba(0,0,0,.04)', background:'#fafaff', margin:'4px 0 6px' } as React.CSSProperties,
+  sectionTitle: { fontWeight:600, fontSize:13, marginBottom:6 } as React.CSSProperties,
+  langRow: { display:'flex', gap:8 } as React.CSSProperties,
+  langBtn: { flex:1, padding:'8px 10px', borderRadius:12, border:'1px solid rgba(0,0,0,.08)', fontWeight:600, cursor:'pointer' } as React.CSSProperties,
 } as const;
 
 /* animations douces + accessibilité */

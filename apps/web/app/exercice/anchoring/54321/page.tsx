@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import BackLink from '../../../../components/BackLink';
 
 type SenseRow = { icon: string; label: string; target: number; key: string };
 
@@ -81,7 +82,7 @@ export default function FiveFourThreeTwoOne() {
   return (
     <main style={wrap}>
       <header style={hdr}>
-        <a href="/exercice/anchoring" aria-label="Retour" style={back}>←</a>
+        <BackLink href="/exercice/anchoring" style={back} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Ancrage sensoriel 5-4-3-2-1</h1>
         <button onClick={resetAll} style={resetBtn}>Recommencer</button>
       </header>
@@ -127,19 +128,19 @@ export default function FiveFourThreeTwoOne() {
 /* styles */
 const wrap: React.CSSProperties = { minHeight: '100dvh', background: '#F6F7FE', fontFamily: 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color: '#0f172a', padding: '16px 20px' };
 const hdr: React.CSSProperties = { display: 'grid', gridTemplateColumns: '40px 1fr auto', alignItems: 'center', gap: 10 };
-const back: React.CSSProperties = { textDecoration: 'none', color: '#111', fontSize: 20 };
+const back: React.CSSProperties = { justifySelf: 'start' };
 const resetBtn: React.CSSProperties = { border: '1px solid #e5e7eb', background: '#fff', padding: '8px 10px', borderRadius: 12, cursor: 'pointer', fontWeight: 600 };
 
 const row: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 12, border: '1px solid rgba(0,0,0,.06)', borderRadius: 18, padding: '12px 14px', background: '#fff', boxShadow: '0 8px 18px rgba(0,0,0,.06)' };
 const left: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10 };
 // wrapper d'icône (carré coloré)
-const icon: React.CSSProperties = { width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#A78BFA33' };
+const icon: React.CSSProperties = { width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(var(--theme-color-rgb),0.2)' };
 // inner pour centrer l'<img> proprement
 const iconInner: React.CSSProperties = { width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const counter = (ok: boolean): React.CSSProperties => ({
   minWidth: 64, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(0,0,0,.08)',
-  background: ok ? '#A7F3D0' : '#A78BFA', color: '#fff', fontWeight: 800, cursor: 'pointer',
-  boxShadow: '0 8px 18px rgba(0,0,0,.10)',
+  background: ok ? '#A7F3D0' : 'var(--theme-color)', color: '#fff', fontWeight: 800, cursor: 'pointer',
+  boxShadow: ok ? '0 8px 18px rgba(0,0,0,.10)' : '0 8px 18px rgba(var(--theme-color-rgb),.25)',
 });
 
 const css = `.counter:active{ transform:scale(.97) }`;

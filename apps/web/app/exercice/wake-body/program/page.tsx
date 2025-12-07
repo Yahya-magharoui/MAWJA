@@ -24,10 +24,9 @@ function vibe(ms = 15) {
 
 export default function WakeProgram() {
   const chooserHref = useChooserHref();
-  const color = '#A78BFA';
   const bg = useMemo(
-    () => `radial-gradient(1200px 800px at 50% -10%, ${color}22 0%, #F6F7FE 55%)`,
-    [color]
+    () => `radial-gradient(1200px 800px at 50% -10%, rgba(var(--theme-color-rgb),0.13) 0%, #F6F7FE 55%)`,
+    []
   );
 
   const [index, setIndex] = useState(0);
@@ -107,7 +106,7 @@ export default function WakeProgram() {
           <h1 style={{ fontSize: 22 }}>Programme terminé</h1>
           <p style={{ opacity: 0.7 }}>Bravo ! Tu as réveillé ton corps en douceur.</p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 10 }}>
-            <button onClick={resetAll} style={btnPrimary(color)}>Refaire</button>
+            <button onClick={resetAll} style={btnPrimary}>Refaire</button>
             <a href={chooserHref} style={btnGhost}>Retour</a>
           </div>
         </div>
@@ -120,16 +119,10 @@ export default function WakeProgram() {
       style={{
         minHeight: '100dvh',
         background: bg,
-        fontFamily: "'Fredoka One', Inter, system-ui, sans-serif",
+        fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
         color: '#0f172a',
       }}
     >
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;700&display=swap"
-        rel="stylesheet"
-      />
 
       <header
         style={{
@@ -140,13 +133,13 @@ export default function WakeProgram() {
         }}
       >
         <a href={chooserHref} style={{ textDecoration: 'none', color: '#111', fontSize: 20 }}>←</a>
-        <h1 style={{ margin: 0, fontSize: 20 }}>Programme complet</h1>
+        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Programme complet</h1>
         <div />
       </header>
 
       <div style={{ maxWidth: 560, margin: '8px auto 0', padding: '0 20px' }}>
         <div style={{ height: 8, borderRadius: 999, background: '#e5e7eb', overflow: 'hidden', marginBottom: 12 }}>
-          <div style={{ width: `${progress}%`, height: '100%', background: color }} />
+          <div style={{ width: `${progress}%`, height: '100%', background: 'var(--theme-color)' }} />
         </div>
 
         <article style={card}>
@@ -167,7 +160,7 @@ export default function WakeProgram() {
           </div>
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-            <button onClick={startPause} style={btnPrimary(color)}>
+            <button onClick={startPause} style={btnPrimary}>
               {running ? 'Pause' : 'Démarrer'}
             </button>
             <button onClick={nextStep} style={btnGhost}>Suivant</button>
@@ -209,18 +202,18 @@ const icon: React.CSSProperties = {
   borderRadius: 16,
   display: 'grid',
   placeItems: 'center',
-  background: '#A78BFA33',
+  background: 'rgba(var(--theme-color-rgb),0.2)',
 };
 
-const btnPrimary = (c: string): React.CSSProperties => ({
+const btnPrimary: React.CSSProperties = {
   padding: '12px 16px',
   borderRadius: 12,
   border: 'none',
-  background: c,
+  background: 'var(--theme-color)',
   color: '#fff',
   fontWeight: 800,
   cursor: 'pointer',
-});
+};
 
 const btnGhost: React.CSSProperties = {
   padding: '12px 14px',

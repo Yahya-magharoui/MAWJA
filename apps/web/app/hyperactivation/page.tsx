@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import BackLink from '../../components/BackLink';
+import { tintColor, useThemeColor, withAlpha } from '../../components/theme';
 
 type CardDef = { key: string; label: string; href: string; icon?: string };
 
@@ -17,21 +19,13 @@ const CARDS: CardDef[] = [
 ];
 
 export default function HyperactivationPage() {
-  const [color, setColor] = useState('#A78BFA');
-  useEffect(() => { const saved = localStorage.getItem('themeColor'); if (saved) setColor(saved); }, []);
+  const color = useThemeColor();
 
   const [favs, setFavs] = useState<string[]>([]);
   useEffect(() => { const saved = localStorage.getItem('hyperFavs'); if (saved) setFavs(JSON.parse(saved)); }, []);
   useEffect(() => { localStorage.setItem('hyperFavs', JSON.stringify(favs)); }, [favs]);
 
-  function tint(hex: string, t: number) {
-    const h = hex.replace('#', '');
-    const [r,g,b] = [0,2,4].map(i => parseInt(h.slice(i,i+2),16));
-    const mix = (c:number)=>Math.round(c+(255-c)*t);
-    const to  = (n:number)=>n.toString(16).padStart(2,'0');
-    return `#${to(mix(r))}${to(mix(g))}${to(mix(b))}`;
-  }
-  const bg = useMemo(() => `radial-gradient(1200px 800px at 50% -10%, ${tint(color,0.9)} 0%, #F6F7FE 55%)`, [color]);
+  const bg = useMemo(() => `radial-gradient(1200px 800px at 50% -10%, ${tintColor(color,0.9)} 0%, #F6F7FE 55%)`, [color]);
 
   function pressFeedback(){ try{ (navigator as any)?.vibrate?.(15) }catch{} }
   function toggleFav(key:string){ setFavs(p=>p.includes(key)?p.filter(k=>k!==key):[...p,key]); }
@@ -56,7 +50,7 @@ export default function HyperactivationPage() {
       <style>{css}</style>
 
       <header style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
-        <a href="/app" aria-label="Retour" style={{ textDecoration:'none', color:'#111', fontSize:20 }}>←</a>
+        <BackLink href="/app" style={{ justifySelf: 'start' }} />
         <h1 style={{ margin:0, fontSize:20, textAlign:'center' }}>Exercices hyperactivation</h1>
         <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button>
       </header>
@@ -74,7 +68,7 @@ export default function HyperactivationPage() {
             onMouseDown={pressFeedback}
             onTouchStart={pressFeedback}
             className="tile"
-            style={{ ...tile(color), position:'relative' }}
+          style={{ ...tile(color), position:'relative' }}
           >
             <span
               role="button"
@@ -111,7 +105,16 @@ export default function HyperactivationPage() {
 /* styles */
 const gearBtn: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer' };
 const grid: React.CSSProperties = { display:'grid', gap:16, gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', maxWidth:900, margin:'10px auto 0', padding:'0 20px' };
-const tile = (color:string): React.CSSProperties => ({ borderRadius:22, border:'1px solid rgba(0,0,0,.04)', background:`linear-gradient(180deg, ${color}1f 0%, ${color}0f 100%)`, boxShadow:'0 6px 14px rgba(0,0,0,.05)', textAlign:'center', padding:'28px 18px', transition:'transform .12s ease, box-shadow .12s ease, filter .12s ease', outline:'none' });
+const tile = (color:string): React.CSSProperties => ({
+  borderRadius:22,
+  border:'1px solid rgba(0,0,0,.04)',
+  background:`linear-gradient(180deg, ${withAlpha(color,0.12)} 0%, ${withAlpha(color,0.06)} 100%)`,
+  boxShadow:`0 6px 14px ${withAlpha(color,0.25)}`,
+  textAlign:'center',
+  padding:'28px 18px',
+  transition:'transform .12s ease, box-shadow .12s ease, filter .12s ease',
+  outline:'none'
+});
 const btnSecondary: React.CSSProperties = { padding:'12px 18px', borderRadius:16, border:'1px solid #e5e7eb', background:'#fff', color:'#0f172a', fontWeight:700, textDecoration:'none', boxShadow:'0 4px 10px rgba(0,0,0,.04)' };
 const fab = (c:string): React.CSSProperties => ({ position:'fixed', right:20, bottom:20, width:70, height:70, borderRadius:'50%', border:'none', background:c, color:'#fff', fontSize:26, cursor:'pointer', boxShadow:'0 12px 26px rgba(0,0,0,.18)' });
 const css = `

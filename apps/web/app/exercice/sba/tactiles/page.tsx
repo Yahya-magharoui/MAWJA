@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import BackLink from '../../../../components/BackLink';
 
 /**
  * SBA tactiles — point unique qui clignote uniquement
@@ -41,7 +42,7 @@ export default function SBATactiles() {
       <style>{pulseCss}</style>
 
       <header style={hdr}>
-        <a href="/exercice/sba" aria-label="Retour" style={back}>←</a>
+        <BackLink href="/exercice/sba" style={back} />
         <div>
           <h1 style={{ margin:0, fontSize:20 }}>Stimulation Bilatérales Alternées</h1>
           <p style={{ margin:'4px 0 0', opacity:.7, fontSize:13 }}>
@@ -100,8 +101,8 @@ function EndpointBody({ side }: { side: 'L' | 'R' }) {
 
       {/* épaules fixes (légère lueur) */}
       <g opacity=".25">
-        <circle cx={L.x} cy={L.y} r="20" fill="#A78BFA" />
-        <circle cx={R.x} cy={R.y} r="20" fill="#A78BFA" />
+        <circle cx={L.x} cy={L.y} r="20" fill="var(--theme-color)" />
+        <circle cx={R.x} cy={R.y} r="20" fill="var(--theme-color)" />
       </g>
 
       {/* point actif UNIQUEMENT sur l’extrémité courante */}
@@ -109,7 +110,7 @@ function EndpointBody({ side }: { side: 'L' | 'R' }) {
         key={side} /* relance l’anim à chaque alternance */
         className="pulseDot"
         cx={dot.x} cy={dot.y} r="18"
-        fill="#A78BFA"
+        fill="var(--theme-color)"
         stroke="#6D5BD0" strokeWidth="2"
       />
     </svg>
@@ -123,12 +124,12 @@ const wrap: React.CSSProperties = {
   color:'#0f172a', padding:'16px 20px', display:'flex', flexDirection:'column'
 };
 const hdr:  React.CSSProperties = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center', marginBottom:6 };
-const back: React.CSSProperties = { textDecoration:'none', color:'#111', fontSize:20 };
+const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { justifySelf:'end', border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'6px 8px', cursor:'pointer' };
 const stage: React.CSSProperties = { flex:1, display:'grid', placeItems:'center' };
 const foot:  React.CSSProperties = { display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:8 };
 const btnMain: React.CSSProperties = {
-  border:'none', padding:'12px 20px', borderRadius:14, background:'#A78BFA',
+  border:'none', padding:'12px 20px', borderRadius:14, background:'var(--theme-color)',
   color:'#fff', fontWeight:800, cursor:'pointer', boxShadow:'0 8px 18px rgba(0,0,0,.16)'
 };
 const mini: React.CSSProperties = {
@@ -141,8 +142,8 @@ const pulseCss = `
     animation: pulse 420ms ease-out;
   }
   @keyframes pulse {
-    from { transform: scale(.85); filter: drop-shadow(0 0 0 rgba(167,139,250,.0)); }
-    60% { transform: scale(1.06); filter: drop-shadow(0 6px 14px rgba(167,139,250,.55)); }
-    to   { transform: scale(1.00); filter: drop-shadow(0 4px 10px rgba(167,139,250,.35)); }
+    from { transform: scale(.85); filter: drop-shadow(0 0 0 rgba(var(--theme-color-rgb),0)); }
+    60% { transform: scale(1.06); filter: drop-shadow(0 6px 14px rgba(var(--theme-color-rgb),.55)); }
+    to   { transform: scale(1.00); filter: drop-shadow(0 4px 10px rgba(var(--theme-color-rgb),.35)); }
   }
 `;

@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import BackLink from '../../../../components/BackLink';
 
 const EXOS = [
   { key:'walk',    icon:'/icons/walk.svg',    label:'Marche pendant quelques instants si tu peux te lever', defaultSec:60 },
@@ -21,10 +22,9 @@ const isImageSrc = (s?: string) => !!s && (s.startsWith('/') || s.startsWith('ht
 
 export default function MiniWake() {
   const chooserHref = useChooserHref();
-  const color = '#A78BFA';
   const bg = useMemo(
-    () => `radial-gradient(1200px 800px at 50% -10%, ${color}22 0%, #F6F7FE 55%)`,
-    [color]
+    () => `radial-gradient(1200px 800px at 50% -10%, rgba(var(--theme-color-rgb),0.13) 0%, #F6F7FE 55%)`,
+    []
   );
 
   // runningKey = exo qui tourne
@@ -120,15 +120,12 @@ export default function MiniWake() {
   useEffect(() => () => clearTimer(), []);
 
   return (
-    <main style={{ minHeight:'100dvh', background:bg, fontFamily:`'Fredoka One', 'Inter', system-ui, sans-serif`, color:'#0f172a' }}>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-      <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+    <main style={{ minHeight:'100dvh', background:bg, fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a' }}>
       <style>{miniCss}</style>
 
       <header style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
-        <a href={chooserHref} aria-label="Retour" style={{ textDecoration:'none', color:'#111', fontSize:20 }}>←</a>
-        <h1 style={{ margin:0, fontSize:20, fontFamily:`'Fredoka One', sans-serif` }}>Mini exercices</h1>
+        <BackLink href={chooserHref} style={{ justifySelf: 'start' }} />
+        <h1 style={{ margin:0, fontSize:20, fontWeight:700 }}>Mini exercices</h1>
         <div />
       </header>
 
@@ -191,10 +188,10 @@ const card: React.CSSProperties = {
   border:'1px solid rgba(0,0,0,.06)', borderRadius:18, padding:'12px 14px', background:'#fff',
   boxShadow:'0 8px 18px rgba(0,0,0,.06)'
 };
-const icon: React.CSSProperties = { width:44, height:44, borderRadius:14, display:'grid', placeItems:'center', background:'#A78BFA33' };
+const icon: React.CSSProperties = { width:44, height:44, borderRadius:14, display:'grid', placeItems:'center', background:'rgba(var(--theme-color-rgb),0.2)' };
 const btnPrimary = (active:boolean): React.CSSProperties => ({
   padding:'10px 14px', borderRadius:12, border:'none',
-  background: active ? '#ef4444' : '#A78BFA',
+  background: active ? '#ef4444' : 'var(--theme-color)',
   color:'#fff', fontWeight:700, cursor:'pointer'
 });
 const btnGhost: React.CSSProperties = { padding:'10px 12px', borderRadius:12, border:'1px solid #e5e7eb', background:'#fff', cursor:'pointer' };
@@ -284,4 +281,3 @@ button { z-index: 2; }
   .overlay-card { padding: 22px; min-width: 220px; }
 }
 `;
-

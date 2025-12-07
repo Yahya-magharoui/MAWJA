@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import BackLink from '../../components/BackLink';
 
 type Emergency = {
   id: string;
@@ -169,9 +170,7 @@ export default function EmergencyPage() {
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <a href="/hyperactivation" aria-label="Retour" style={styles.back}>
-          ←
-        </a>
+        <BackLink href="/hyperactivation" style={styles.back} />
         <h1 style={styles.h1}>Numéros d’urgence</h1>
         <button style={styles.gear} title="Paramètres">⚙️</button>
       </header>
@@ -291,7 +290,7 @@ const styles: Record<string, React.CSSProperties> = {
     gridTemplateColumns: '40px 1fr 40px',
     alignItems: 'center',
   },
-  back: { textDecoration: 'none', color: '#111', fontSize: 20 },
+  back: { justifySelf: 'start' },
   gear: {
     justifySelf: 'end',
     border: '1px solid #e5e7eb',
@@ -404,4 +403,3 @@ function card(bg: string, fg = '#fff'): React.CSSProperties {
     boxShadow: '0 8px 18px rgba(0,0,0,.08)',
   };
 }
-

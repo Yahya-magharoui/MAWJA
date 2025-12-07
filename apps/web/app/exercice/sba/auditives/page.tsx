@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import BackLink from '../../../../components/BackLink';
 
 /** Un petit moteur SBA audio gauche↔︎droite via Web Audio */
 class SBABinaural {
@@ -244,7 +245,7 @@ export default function SBAAuditivesPage() {
   return (
     <main style={wrap}>
       <header style={hdr}>
-        <a href="/exercice/sba" aria-label="Retour" style={back}>←</a>
+        <BackLink href="/exercice/sba" style={back} />
         <div>
           <h1 style={{ margin:0, fontSize:20 }}>Stimulation Bilatérale Alternées</h1>
           <p style={{ margin:'4px 0 0', opacity:.7, fontSize:13 }}>
@@ -302,12 +303,12 @@ export default function SBAAuditivesPage() {
 /** styles */
 const wrap: React.CSSProperties = { minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 20px 24px' };
 const hdr:  React.CSSProperties = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center' };
-const back: React.CSSProperties = { textDecoration:'none', color:'#111', fontSize:20 };
+const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer', justifySelf:'end' };
 const grid: React.CSSProperties = { display:'grid', gridTemplateColumns:'repeat(2, minmax(140px,1fr))', gap:16, maxWidth:520, margin:'0 auto' };
 const bubble: React.CSSProperties = {
   display:'grid', placeItems:'center', gap:6, padding:'22px 10px',
-  borderRadius:18, background:'linear-gradient(180deg,#A78BFA20 0%, #A78BFA12 100%)',
+  borderRadius:18, background:'linear-gradient(180deg, rgba(var(--theme-color-rgb),0.125) 0%, rgba(var(--theme-color-rgb),0.07) 100%)',
   boxShadow:'0 8px 18px rgba(0,0,0,.08)', cursor:'pointer'
 };
 const mini: React.CSSProperties = { borderRadius:999, padding:'8px 16px', border:'1px solid #e5e7eb', background:'#fff', cursor:'pointer' };
@@ -319,9 +320,8 @@ const iconWrap: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   borderRadius: 12,
-  background: 'rgba(255,255,255,0.95)',
-  marginBottom: 6,
-  boxShadow: 'inset 0 -6px 12px rgba(0,0,0,0.02)'
+  background: 'transparent',
+  marginBottom: 6
 };
 const css = `
   .bubble:active { transform:scale(.98); filter:brightness(.98) }

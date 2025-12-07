@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import BackLink from '../../../components/BackLink';
 
 type StateType = 'Hyper' | 'Hypo' | 'Tolérance';
 type Row = {
@@ -83,9 +84,7 @@ export default function HistoryPage() {
   return (
     <main style={wrap}>
       <header style={hdr}>
-        <button onClick={() => router.back()} aria-label="Retour" style={backBtn}>
-          ←
-        </button>
+        <BackLink href={null} onClick={() => router.back()} style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Mon historique</h1>
         <div />
       </header>
@@ -172,7 +171,7 @@ const backBtn = {
 } as const;
 
 const pdfBtn = {
-  background: '#A78BFA',
+  background: 'var(--theme-color)',
   border: 'none',
   borderRadius: 10,
   color: '#fff',

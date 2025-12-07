@@ -1,6 +1,7 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import BackLink from '../../../../components/BackLink';
 
 type Note = { id:string; text:string };
 
@@ -27,7 +28,7 @@ export default function NoteDetail(){
   return (
     <main style={wrap}>
       <header style={hdr}>
-        <button onClick={() => router.back()} aria-label="Retour" style={backBtn}>←</button>
+        <BackLink href={null} onClick={() => router.back()} style={backBtn} />
         <h1 style={{ margin:0, fontSize:20 }}>Note</h1>
         <button onClick={del} title="Supprimer" style={trashBtn}>🗑️</button>
       </header>

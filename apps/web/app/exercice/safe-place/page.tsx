@@ -1,15 +1,22 @@
 'use client';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import BackLink from '../../../components/BackLink';
+import { useThemeColor, withAlpha } from '../../../components/theme';
 
 export default function SafePlaceHub() {
   const vibe = useCallback(() => {
     try { (navigator as any)?.vibrate?.(15); } catch {}
   }, []);
+  const themeColor = useThemeColor();
+  const cardBackground = useMemo(
+    () => `linear-gradient(180deg, ${withAlpha(themeColor, 0.12)} 0%, ${withAlpha(themeColor, 0.05)} 100%)`,
+    [themeColor]
+  );
 
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <a href="/hyperactivation" aria-label="Retour" style={styles.back}>←</a>
+        <BackLink href="/hyperactivation" style={styles.back} />
         <h1 style={styles.h1}>Sécurisation lieu sûr</h1>
         <button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button>
       </header>
@@ -21,7 +28,7 @@ export default function SafePlaceHub() {
           href="/exercice/safe-place/build"
           onMouseDown={vibe}
           className="tile"
-          style={{ ...styles.card, ...styles.cardTone }}
+          style={{ ...styles.card, background: cardBackground }}
       >
        <div style={styles.icon}>
          <img
@@ -37,7 +44,7 @@ export default function SafePlaceHub() {
         href="/exercice/safe-place/visit"
         onMouseDown={vibe}
         className="tile"
-        style={{ ...styles.card, ...styles.cardTone }}
+        style={{ ...styles.card, background: cardBackground }}
       >
         <div style={styles.icon}>
           <img
@@ -58,7 +65,7 @@ export default function SafePlaceHub() {
           window.location.href = paths[Math.floor(Math.random()*paths.length)];
         }}
         aria-label="Choix aléatoire"
-        style={styles.fab}
+        style={{ ...styles.fab, background: themeColor }}
       >
         Choix aléatoire
       </button>
@@ -77,7 +84,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '16px 20px 90px',
   },
   header: { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center' },
-  back: { textDecoration:'none', color:'#111', fontSize:20 },
+  back: { justifySelf: 'start' },
   h1: { margin:0, fontSize:20, fontWeight:800 },
   gear: { justifySelf:'end', border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer' },
   subtitle: { margin:'8px 0 22px', opacity:.7, fontSize:14 },
@@ -86,7 +93,7 @@ const styles: Record<string, React.CSSProperties> = {
     display:'grid', placeItems:'center', gap:8, padding:'22px 12px', borderRadius:22,
     textDecoration:'none', color:'#0f172a', border:'1px solid rgba(0,0,0,.06)',
     boxShadow:'0 8px 18px rgba(0,0,0,.08)',
-    background:'linear-gradient(180deg, #A78BFA20 0%, #A78BFA12 100%)',
+    background:'linear-gradient(180deg, rgba(var(--theme-color-rgb),0.125) 0%, rgba(var(--theme-color-rgb),0.07) 100%)',
     transition:'transform .12s ease, box-shadow .12s ease, filter .12s ease'
   },
   cardTone: {},
@@ -95,7 +102,7 @@ const styles: Record<string, React.CSSProperties> = {
   fab: {
     position:'fixed', left:'50%', transform:'translateX(-50%)',
     bottom:20, padding:'10px 16px', borderRadius:16,
-    border:'1px solid rgba(0,0,0,.08)', background:'#A78BFA', color:'#fff',
+    border:'1px solid rgba(0,0,0,.08)', background:'var(--theme-color)', color:'#fff',
     boxShadow:'0 10px 24px rgba(0,0,0,.15)', cursor:'pointer', fontWeight:700
   }
 };

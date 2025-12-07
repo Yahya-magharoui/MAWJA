@@ -1,5 +1,7 @@
 'use client';
 
+import BackLink from '../../../components/BackLink';
+
 type Card = { label: string; href: string; icon: string };
 
 const CARDS: Card[] = [
@@ -14,7 +16,7 @@ export default function SBAHome() {
   return (
     <main style={page}>
       <header style={hdr}>
-        <a href="/hyperactivation" style={back} aria-label="Retour">←</a>
+        <BackLink href="/hyperactivation" style={back} />
         <h1 style={{ margin:0, fontSize:20, textAlign:'center' }}>
           Stimulation Bilatérale Alternée
         </h1>
@@ -64,14 +66,14 @@ const page: React.CSSProperties = {
   padding:'16px 20px'
 };
 const hdr: React.CSSProperties  = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center' };
-const back: React.CSSProperties = { textDecoration:'none', color:'#111', fontSize:20 };
+const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer', justifySelf:'end' };
 const grid: React.CSSProperties  = { display:'grid', gap:16, gridTemplateColumns:'1fr', maxWidth:420, margin:'0 auto' };
 const card: React.CSSProperties  = {
   display:'grid', placeItems:'center', gap:8, padding:'26px 12px',
   borderRadius:22, textDecoration:'none', color:'#0f172a',
   border:'1px solid rgba(0,0,0,.06)', boxShadow:'0 8px 18px rgba(0,0,0,.08)',
-  background:'linear-gradient(180deg,#A78BFA20 0%, #A78BFA12 100%)'
+  background:'linear-gradient(180deg, rgba(var(--theme-color-rgb),0.125) 0%, rgba(var(--theme-color-rgb),0.07) 100%)'
 };
 const iconWrap: React.CSSProperties = {
   width: 64,
@@ -80,7 +82,7 @@ const iconWrap: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   borderRadius: 14,
-  background: 'rgba(255,255,255,0.95)',
+  background: 'transparent',
   marginBottom: 6
 };
 const css = `
