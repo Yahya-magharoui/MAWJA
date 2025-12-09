@@ -1,11 +1,11 @@
 'use client';
-import { useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import BackLink from '../../../components/BackLink';
+import { useQueryParam } from '../../../hooks/useQueryParam';
 
 function useOrigin() {
-  const sp = useSearchParams();
-  const from = (sp.get('from') === 'hypo' ? 'hypo' : 'hyper') as 'hyper' | 'hypo';
+  const fromParam = useQueryParam('from', 'hyper');
+  const from = (fromParam === 'hypo' ? 'hypo' : 'hyper') as 'hyper' | 'hypo';
   const backHref = from === 'hypo' ? '/hypoactivation' : '/hyperactivation';
   const withFrom = (href: string) => href.includes('?') ? `${href}&from=${from}` : `${href}?from=${from}`;
   return { from, backHref, withFrom };

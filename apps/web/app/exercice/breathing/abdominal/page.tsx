@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import BackLink from '../../../../components/BackLink';
+import { useQueryParam } from '../../../../hooks/useQueryParam';
 
 type Phase = 'inhale' | 'hold' | 'exhale' | 'stopped' | 'paused';
 
@@ -9,8 +9,8 @@ const DUR = { inhale: 6, hold: 4, exhale: 6 };           // secondes
 const LOOP = ['inhale','hold','exhale'] as const;
 
 function useOrigin() {
-  const sp = useSearchParams();
-  const from = (sp.get('from') === 'hyper' ? 'hyper' : 'app') as 'hyper'|'app';
+  const param = useQueryParam('from', 'app');
+  const from = (param === 'hyper' ? 'hyper' : 'app') as 'hyper' | 'app';
   return { backHref: from === 'hyper' ? '/hyperactivation/breathing' : '/app' };
 }
 function vibe(ms=10){ try{ (navigator as any)?.vibrate?.(ms) }catch{} }
@@ -139,7 +139,7 @@ export default function AbdominalBreathing() {
   return (
     <main style={{ minHeight:'100dvh', background:bg, fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 12px', display:'grid', gridTemplateRows:'auto auto 1fr auto', justifyItems:'center', gap:12 }}>
       <header style={{ display:'grid', gridTemplateColumns:'auto 1fr', alignItems:'center', width:'100%', gap:8, justifySelf:'stretch', padding:'0 8px' }}>
-        <BackLink href={backHrefWithFallback()} style={{ justifySelf: 'start' }} />
+        <BackLink href={backHref} style={{ justifySelf: 'start' }} />
         <div>
           <h1 style={{ margin:0, fontSize:18, textAlign:'left' }}>Respiration abdominale</h1>
           <p style={{ margin: '2px 0 0', opacity:.7, fontSize:12, textAlign:'left' }}>
@@ -204,18 +204,6 @@ export default function AbdominalBreathing() {
       </div>
     </main>
   );
-
-  // helper local : backHref peut provenir de query param "from"; on recrée rapidement ici pour éviter
-  // dépendance visuelle : si useSearchParams n'est pas disponible pour une raison X, on fallback to '/app'
-  function backHrefWithFallback() {
-    try {
-      const sp = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search);
-      const from = sp?.get('from') === 'hyper' ? 'hyper' : 'app';
-      return from === 'hyper' ? '/hyperactivation/breathing' : '/app';
-    } catch {
-      return '/app';
-    }
-  }
 }
 
 /* ——— Styles ——— */

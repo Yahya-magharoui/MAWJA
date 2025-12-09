@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import BackLink from '../../../components/BackLink';
+import { useQueryParam } from '../../../hooks/useQueryParam';
 
 type Phase = 'inhale' | 'hold' | 'exhale';
 
@@ -11,8 +11,8 @@ const EXHALE_S = 8;
 const CYCLES   = 4;
 
 function useOrigin() {
-  const sp = useSearchParams();
-  const from = sp.get('from') === 'hyper' ? 'hyper' : 'hypo';
+  const fromParam = useQueryParam('from', 'hyper');
+  const from = fromParam === 'hypo' ? 'hypo' : 'hyper';
   return { backHref: from === 'hyper' ? '/hyperactivation' : '/hypoactivation' };
 }
 

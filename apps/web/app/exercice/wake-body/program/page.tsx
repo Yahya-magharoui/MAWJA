@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import BackLink from '../../../../components/BackLink';
+import { useQueryParam } from '../../../../hooks/useQueryParam';
 
 type Step = { key: string; label: string; icon: string; seconds: number };
 
@@ -13,8 +14,8 @@ const STEPS: Step[] = [
 ];
 
 function useChooserHref() {
-  const sp = useSearchParams();
-  const from = (sp.get('from') === 'hyper' ? 'hyper' : 'hypo') as 'hyper' | 'hypo';
+  const param = useQueryParam('from', 'hypo');
+  const from = (param === 'hyper' ? 'hyper' : 'hypo') as 'hyper' | 'hypo';
   return `/exercice/wake-body?from=${from}`;
 }
 

@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useRef, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import BackLink from '../../../../components/BackLink';
+import { useQueryParam } from '../../../../hooks/useQueryParam';
 
 const EXOS = [
   { key:'walk',    icon:'/icons/walk.svg',    label:'Marche pendant quelques instants si tu peux te lever', defaultSec:60 },
@@ -12,8 +12,8 @@ const EXOS = [
 ];
 
 function useChooserHref() {
-  const sp = useSearchParams();
-  const from = (sp.get('from') === 'hyper' ? 'hyper' : 'hypo') as 'hyper'|'hypo';
+  const param = useQueryParam('from', 'hypo');
+  const from = (param === 'hyper' ? 'hyper' : 'hypo') as 'hyper' | 'hypo';
   return `/exercice/wake-body?from=${from}`;
 }
 function vibe(ms=15){ try{ (navigator as any)?.vibrate?.(ms) }catch{} }

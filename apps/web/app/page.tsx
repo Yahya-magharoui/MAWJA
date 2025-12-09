@@ -1,7 +1,8 @@
 'use client';
 import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryParam } from '../hooks/useQueryParam';
 
 /* —— slides —— */
 type Slide = {
@@ -58,8 +59,8 @@ const SLIDES: Slide[] = [
 
 export default function Home() {
   const router = useRouter();
-  const params = useSearchParams();
-  const name = params.get('name') ?? '';
+  const nameParam = useQueryParam('name', '');
+  const name = nameParam ?? '';
 
   /* état du carrousel */
   const [i, setI] = useState(0);
