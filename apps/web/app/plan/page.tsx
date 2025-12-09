@@ -93,7 +93,7 @@ export default function CrisisPlanPage() {
           padding: '16px 20px',
         }}
       >
-        <BackLink href={null} onClick={goBack} style={{ justifySelf: 'start' }} />
+        <BackLink onClick={goBack} style={{ justifySelf: 'start' }} />
         <div>
           <h1 style={{ margin: 0, fontSize: 20 }}>Plan de crise/sécurité</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, opacity: 0.7 }}>Tu peux le compléter ou l’actualiser !</p>
