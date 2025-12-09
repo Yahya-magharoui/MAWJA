@@ -10,7 +10,7 @@ import type {
 } from 'react';
 
 type Props = {
-  href?: string | null;
+  href?: string; // ← FIX ICI
   onClick?: MouseEventHandler<HTMLButtonElement>;
   onMouseDown?: (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void;
   onTouchStart?: (event: TouchEvent<HTMLAnchorElement | HTMLButtonElement>) => void;
@@ -40,11 +40,10 @@ export default function BackLink({
   style,
   className
 }: Props) {
-  if (href !== null) {
-    const target = href ?? '/';
+  if (href) {
     return (
       <Link
-        href={target}
+        href={{ pathname: href }}
         aria-label={label}
         className={className}
         style={{ ...baseStyle, ...style }}
