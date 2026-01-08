@@ -88,6 +88,7 @@ export default function FiveFourThreeTwoOne() {
       </header>
 
       <section style={{ maxWidth: 760, margin: '8px auto 0', display: 'grid', gap: 16, padding: '0 12px' }}>
+        <p style={{ fontWeight: 700, margin: '0 0 4px', fontSize: 15, textAlign: 'center' }}>Nomme autour de toi :</p>
         {ROWS.map((r) => {
           const cur = counts[r.key] || 0;
           const finished = cur >= r.target;

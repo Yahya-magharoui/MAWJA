@@ -42,6 +42,7 @@ export default function ObjectSenses() {
         <h1 style={{ margin:0, fontSize:20 }}>Ancrage sensoriel</h1>
         <button aria-label="Paramètres" title="Paramètres" style={gear}>⚙️</button>
       </header>
+      <div style={inner}>
 
       {!started ? (
         <>
@@ -77,12 +78,14 @@ export default function ObjectSenses() {
       </footer>
 
       <style>{css}</style>
+      </div>
     </main>
   );
 }
 
 /* styles */
 const wrap: React.CSSProperties = { minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 20px' };
+const inner: React.CSSProperties = { maxWidth:660, margin:'0 auto', width:'100%' };
 const hdr: React.CSSProperties  = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center' };
 const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer' };
@@ -94,7 +97,7 @@ const bubble = (active:boolean): React.CSSProperties => ({
   borderRadius:16,
   boxShadow:'0 8px 18px rgba(0,0,0,.06)',
   padding:'14px 16px',
-  textAlign:'center',
+  textAlign:'left',
   fontWeight:700,
 });
 

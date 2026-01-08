@@ -9,13 +9,34 @@ export default function SBAVisuelles() {
   const [dir, setDir] = useState(1); // 1 => droite, -1 => gauche
   const reqRef = useRef<number>();
   const ballRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [bounds, setBounds] = useState(0);
+
+  const BALL_SIZE = 28;
+
+  useEffect(() => {
+    const computeBounds = () => {
+      const width = containerRef.current?.clientWidth ?? window.innerWidth;
+      setBounds(Math.max(0, width - BALL_SIZE));
+    };
+
+    computeBounds();
+    const resize = () => computeBounds();
+    window.addEventListener('resize', resize);
+    const observer = new ResizeObserver(() => computeBounds());
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => {
+      window.removeEventListener('resize', resize);
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (!running) return;
     const animate = () => {
       setPos(prev => {
         let next = prev + dir * speed;
-        const max = window.innerWidth - 80; // marge écran
+        const max = Math.max(0, bounds);
         if (next <= 0) {
           next = 0;
           setDir(1);
@@ -29,7 +50,7 @@ export default function SBAVisuelles() {
     };
     reqRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(reqRef.current!);
-  }, [running, speed, dir]);
+  }, [running, speed, dir, bounds]);
 
   function toggle() {
     if (running) {
@@ -58,7 +79,7 @@ export default function SBAVisuelles() {
         <button style={gear}>⚙️</button>
       </header>
 
-      <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'flex-start' }}>
+      <div ref={containerRef} style={track}>
         <div
           ref={ballRef}
           style={{
@@ -69,12 +90,16 @@ export default function SBAVisuelles() {
       </div>
 
       <footer style={foot}>
-        <button onClick={toggle} style={btnMain}>
-          {running ? 'Pause' : 'Début'}
-        </button>
-        <div style={{ display:'flex', gap:8 }}>
-          <button onClick={() => adjust(+1)} style={mini}>＋</button>
-          <button onClick={() => adjust(-1)} style={mini}>−</button>
+        <div style={controlsRow}>
+          <button onClick={toggle} style={btnMain}>
+            {running ? 'Pause' : 'Début'}
+          </button>
+          <div style={speedWrap}>
+            <span style={speedLabel}>Vitesse</span>
+            <button onClick={() => adjust(-1)} style={mini}>−</button>
+            <span style={speedValue}>{speed}</span>
+            <button onClick={() => adjust(+1)} style={mini}>＋</button>
+          </div>
         </div>
       </footer>
     </main>
@@ -82,11 +107,16 @@ export default function SBAVisuelles() {
 }
 
 /** styles */
-const wrap: React.CSSProperties = { minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 20px', display:'flex', flexDirection:'column' };
+const wrap: React.CSSProperties = { minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 20px 32px', display:'flex', flexDirection:'column' };
 const hdr:  React.CSSProperties = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center', marginBottom:10 };
 const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'6px 8px', cursor:'pointer', justifySelf:'end' };
+const track: React.CSSProperties = { flex:1, display:'flex', alignItems:'center', justifyContent:'flex-start', width:'100%', margin:'0', position:'relative', paddingBottom:56 };
 const ball: React.CSSProperties = { width:28, height:28, borderRadius:'50%', background:'var(--theme-color)', boxShadow:'0 4px 12px rgba(0,0,0,.2)', transition:'transform 0.1s linear' };
-const foot: React.CSSProperties = { display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:20 };
+const foot: React.CSSProperties = { display:'flex', justifyContent:'flex-start', alignItems:'center', marginTop:8, paddingLeft:4, position:'sticky', bottom:16 };
+const controlsRow: React.CSSProperties = { display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' };
 const btnMain: React.CSSProperties = { border:'none', padding:'12px 20px', borderRadius:14, background:'var(--theme-color)', color:'#fff', fontWeight:700, cursor:'pointer', boxShadow:'0 4px 12px rgba(0,0,0,.2)' };
-const mini: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', padding:'8px 14px', borderRadius:999, cursor:'pointer' };
+const speedWrap: React.CSSProperties = { display:'flex', alignItems:'center', gap:6, flexWrap:'nowrap' };
+const speedLabel: React.CSSProperties = { fontWeight:600, fontSize:14, whiteSpace:'nowrap' };
+const speedValue: React.CSSProperties = { minWidth:32, textAlign:'center', fontWeight:700 };
+const mini: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', padding:'8px 12px', borderRadius:999, cursor:'pointer' };

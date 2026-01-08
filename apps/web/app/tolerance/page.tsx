@@ -18,6 +18,14 @@ export default function ToleranceHome() {
       </p>
 
       <section style={grid}>
+        <a href="/exercice/emotions" className="tile" style={tile}>
+         <img
+            src="/icons/emotion.svg"
+            alt="Roue des émotions"
+            style={{ width: 48, height: 48, objectFit: 'contain', display: 'block', margin: '0 auto 8px' }}
+            />
+        <span>Roue des émotions</span>
+        </a>
         <a href="/tolerance/objectifs" className="tile" style={tile}>
          <img
             src="/icons/objectif.svg"

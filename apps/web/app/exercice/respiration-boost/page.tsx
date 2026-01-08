@@ -133,7 +133,6 @@ export default function StimulatingBreathPage() {
       {/* INTRO */}
       {!started && (
         <section style={{ maxWidth:620, margin:'0 auto', padding:'8px 20px', display:'grid', gap:12 }}>
-          <p style={{ opacity:.7, margin:'0 0 6px' }}>Suis les consignes&nbsp;!</p>
 
           <div style={chip}>Assis-toi dans un endroit confortable ou allonge-toi.</div>
           <div style={chip}>Mets la langue au repos, la pointe juste derrière les dents du haut contre le palais.</div>
@@ -149,13 +148,7 @@ export default function StimulatingBreathPage() {
       {/* EXERCICE */}
       {started && (
         <section style={{ display:'grid', placeItems:'center', padding:'6px 20px' }}>
-          {/* vent/icons décoratifs */}
           <div style={{ position:'relative', width:360, height:360, maxWidth:'min(80vw, 360px)' }}>
-            <WindIcon style={{ left:'50%', top:0, transform:'translate(-50%,-20%)', opacity:.25 }} />
-            <WindIcon style={{ right:0, top:'50%', transform:'translate(20%,-50%) rotate(90deg)', opacity:.25 }} />
-            <WindIcon style={{ left:0, top:'50%', transform:'translate(-20%,-50%) rotate(-90deg)', opacity:.25 }} />
-            <WindIcon style={{ left:'50%', bottom:0, transform:'translate(-50%,20%) rotate(180deg)', opacity:.25 }} />
-
             {/* bulle */}
             <div
               style={{
@@ -187,18 +180,6 @@ export default function StimulatingBreathPage() {
         </section>
       )}
     </main>
-  );
-}
-
-/* ———— Petits composants de style ———— */
-function WindIcon({ style }: { style?: React.CSSProperties }) {
-  return (
-    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="1.5"
-      strokeLinecap="round" strokeLinejoin="round" style={{ position:'absolute', ...style }}>
-      <path d="M3 8h9a3 3 0 0 0 0-6 3 3 0 0 0-3 3" />
-      <path d="M3 16h13a3 3 0 0 1 0 6 3 3 0 0 1-3-3" />
-      <path d="M3 12h15" />
-    </svg>
   );
 }
 

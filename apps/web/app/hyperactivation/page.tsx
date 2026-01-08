@@ -13,7 +13,7 @@ const CARDS: CardDef[] = [
   { key: 'sba',        label: 'SBA lentes',               href: '/exercice/sba',        icon: '/icons/sba.svg' },
   { key: 'coherence',  label: 'Exercices de respiration',      href: '/exercice/breathing',  icon: '/icons/breathing.svg' },
   { key: 'abdominal',  label: 'Trousses de sécurité émotionnelle',   href: '/exercice/trousse',  icon: '/icons/trousse.svg' },
-  { key: 'help',       label: 'J’ai besoin d’aide',       href: '/emergency',           icon: '/icons/aide.svg' },
+  { key: 'plan',       label: 'Mon plan de crise',       href: '/plan',                icon: '/icons/plan.svg' },
 
 
 ];
@@ -94,7 +94,7 @@ export default function HyperactivationPage() {
       </section>
 
       <div style={{ display:'flex', gap:12, justifyContent:'center', margin:'10px 0 90px' }}>
-        <a href="/emergency" style={btnSecondary}>J’ai besoin d’aide</a>
+        <a href="/sos" style={btnSecondary}>J’ai besoin d’aide</a>
       </div>
 
       <button type="button" onClick={randomChoice} aria-label="Choix aléatoire" style={fab(color)}>🎲</button>

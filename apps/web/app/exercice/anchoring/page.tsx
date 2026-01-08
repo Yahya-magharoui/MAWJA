@@ -14,7 +14,7 @@ export default function AnchoringHub() {
       </header>
 
       <p style={{ opacity:.7, fontSize:14, margin:'8px 0 20px' }}>
-        Choisis un exercice.
+        Choisis un exercice d’ancrage. Une technique d’ancrage, c’est une méthode apaisante qui te permet de revenir dans l’ici et maintenant et de te reconnecter au moment présent.
       </p>
 
       <section style={grid}>

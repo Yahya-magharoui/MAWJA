@@ -80,19 +80,19 @@ export default function AppHome() {
       <section className="fade-in" style={styles.stack}>
         <Card
           title="Hyperactivation"
-          caption="Fuite / Lutte, Rythme cardiaque rapide, Irritabilité, Respiration rapide, Tension musculaire, Sueurs, Palpitations, Colère, Anxiété, Agitation, Hypervigilance"
+          caption="Fuite/lutte, rythme cardiaque rapide, irritabilité, respiration rapide, tension musculaire, sueurs, palpitations, colère, anxiété, agitation, hypervigilance"
           styleExtra={{ ...styles.top, background: theme.hyper.bg, boxShadow: theme.hyper.shadow }}
           onClick={() => (window.location.href = '/hyperactivation')}
         />
         <Card
           title="Fenêtre de tolérance"
-          caption="Fenêtre d’activation optimale, Équilibre, calme, attentif"
+          caption="Fenêtre d’activation optimale, équilibre, calme, attentif"
           styleExtra={{ background: theme.window.bg, boxShadow: theme.window.shadow }}
           onClick={() => (window.location.href = '/tolerance')}
         />
         <Card
           title="Hypoactivation"
-          caption="Paralysie, Sensation de déconnexion, D’engourdissement, Digestion perturbée, Respiration impactée, Déréalisation, Apathie, Retrait, Confusion"
+          caption="Paralysie, sensation de déconnexion, d’engourdissement, digestion perturbée, respiration impactée, déréalisation, apathie, retrait, confusion"
           styleExtra={{ ...styles.bottom, background: theme.hypo.bg, boxShadow: theme.hypo.shadow }}
           onClick={() => (window.location.href = '/hypoactivation')}
         />
@@ -100,7 +100,7 @@ export default function AppHome() {
 
       {/* actions claires et calmes */}
       <nav className="float-up" style={styles.actions}>
-        <button style={styles.secondary} onClick={() => (window.location.href = '/emergency')}>
+        <button style={styles.secondary} onClick={() => (window.location.href = '/sos')}>
           J’ai besoin d’aide
         </button>
       </nav>

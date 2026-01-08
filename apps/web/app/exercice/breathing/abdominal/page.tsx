@@ -137,13 +137,13 @@ export default function AbdominalBreathing() {
     phase==='exhale' ? '34%' : '28%';
 
   return (
-    <main style={{ minHeight:'100dvh', background:bg, fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 12px', display:'grid', gridTemplateRows:'auto auto 1fr auto', justifyItems:'center', gap:12 }}>
+    <main style={{ minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 12px', display:'grid', gridTemplateRows:'auto auto 1fr auto', justifyItems:'center', gap:12 }}>
       <header style={{ display:'grid', gridTemplateColumns:'auto 1fr', alignItems:'center', width:'100%', gap:8, justifySelf:'stretch', padding:'0 8px' }}>
         <BackLink href={backHref} style={{ justifySelf: 'start' }} />
         <div>
           <h1 style={{ margin:0, fontSize:18, textAlign:'left' }}>Respiration abdominale</h1>
           <p style={{ margin: '2px 0 0', opacity:.7, fontSize:12, textAlign:'left' }}>
-            Cycle 6 – 4 – 6 (inspire, bloque, expire)
+            Cycle 6 – 4 – 6 (inspire, bloque, expire). Inspire par le nez, gonfle le ventre (main du bas), bloque quelques instants, puis souffle par la bouche en rentrant doucement le ventre. Ta main sur la poitrine ne doit pas bouger&nbsp;: respire uniquement avec le ventre.
           </p>
         </div>
       </header>
@@ -183,25 +183,24 @@ export default function AbdominalBreathing() {
       </section>
 
       {/* commandes */}
-      <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap', width:'100%', maxWidth:420 }}>
-        <button
-          onClick={() => { isIdle ? start() : stop(); }}
-          style={btnPrimary}
-        >
-          {isIdle ? 'Début' : 'Stop'}
-        </button>
-        <button
-          onClick={() => setLoopEnabled(v => !v)}
-          style={{ ...btnLoop, background: loopEnabled ? 'var(--theme-color)' : '#fff', color: loopEnabled ? '#fff' : '#0f172a' }}
-        >
-          Loop {loopEnabled ? 'activé' : ''}
-        </button>
+      <div style={controlsWrap}>
+        <div style={controlsRow}>
+          <button
+            onClick={() => { isIdle ? start() : stop(); }}
+            style={btnPrimary}
+          >
+            {isIdle ? 'Début' : 'Stop'}
+          </button>
+          <button
+            onClick={() => setLoopEnabled(v => !v)}
+            style={{ ...btnLoop, background: loopEnabled ? 'var(--theme-color)' : '#fff', color: loopEnabled ? '#fff' : '#0f172a' }}
+          >
+            Loop {loopEnabled ? 'activé' : ''}
+          </button>
+        </div>
       </div>
 
       {/* aide */}
-      <div style={{ width:'100%', maxWidth:420, margin:'0 auto 12px', padding:'0 6px', fontSize:12, opacity:.7, textAlign:'center' }}>
-        L’air entre par le nez, gonfle le ventre (main du bas), puis tu bloques, et enfin tu souffles par la bouche en rentrant doucement le ventre.
-      </div>
     </main>
   );
 }
@@ -268,3 +267,9 @@ const btnLoop: React.CSSProperties = {
   padding:'10px 16px', borderRadius:12, border:'1px solid rgba(0,0,0,.08)',
   background:'#fff', fontWeight:700, cursor:'pointer', boxShadow:'0 6px 12px rgba(0,0,0,.08)'
 };
+const controlsWrap: React.CSSProperties = {
+  width:'100%', maxWidth:460, borderRadius:18, background:'rgba(255,255,255,0.85)', border:'1px solid rgba(0,0,0,0.05)',
+  boxShadow:'0 10px 24px rgba(15,23,42,0.08)', padding:'12px 16px', position:'sticky', bottom:12,
+  display:'flex', justifyContent:'center', zIndex:5
+};
+const controlsRow: React.CSSProperties = { display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center' };
