@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import type { Route } from 'next';
 import type {
   CSSProperties,
   MouseEventHandler,
@@ -46,7 +47,7 @@ export default function BackLink({
     onClick?.(event);
     if (event.defaultPrevented) return;
 
-    const fallback = href ?? '/';
+    const fallback = (href ?? '/') as Route;
 
     if (window.history.length > 1) {
       event.preventDefault();
