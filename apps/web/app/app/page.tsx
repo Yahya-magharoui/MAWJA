@@ -11,6 +11,7 @@ export default function AppHome() {
   const [color, setColor] = useState(PRESET[0]);
   const [openSettings, setOpenSettings] = useState(false);
   const [accountStatus, setAccountStatus] = useState<'registered' | 'guest'>('guest');
+  const [accountEmail, setAccountEmail] = useState<string | null>(null);
   const [readingEnabled, setReadingEnabled] = useState(() => {
     if (typeof window === 'undefined') return true;
     return window.localStorage.getItem('readingEnabled') !== 'false';
@@ -31,8 +32,20 @@ export default function AppHome() {
   useLayoutEffect(() => {
     setColor(getStoredThemeColor());
     if (typeof window !== 'undefined') {
-      const status = window.localStorage.getItem('accountStatus');
-      setAccountStatus(status === 'registered' ? 'registered' : 'guest');
+      const profileRaw = window.localStorage.getItem('guestProfile');
+      if (profileRaw) {
+        try {
+          const profile = JSON.parse(profileRaw);
+          setAccountEmail(profile.email ?? null);
+        } catch {
+          setAccountEmail(null);
+        }
+        setAccountStatus('registered');
+      } else {
+        const status = window.localStorage.getItem('accountStatus');
+        setAccountStatus(status === 'registered' ? 'registered' : 'guest');
+        setAccountEmail(null);
+      }
     }
   }, []);
   useEffect(() => {
@@ -57,6 +70,18 @@ export default function AppHome() {
       shadow: `0 8px 18px ${withAlpha(color, 0.25)}`
     }
   }), [color]);
+
+  function handleLogout() {
+    try {
+      localStorage.removeItem('guestProfile');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('accountStatus');
+    } catch {}
+    setAccountStatus('guest');
+    setAccountEmail(null);
+    setOpenSettings(false);
+    window.location.href = '/login';
+  }
 
   return (
     <main style={styles.page(theme.bg)}>
@@ -152,9 +177,17 @@ export default function AppHome() {
               <span style={styles.settingIcon}>👤</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 600 }}>Compte</div>
-                <div style={{ fontSize: 12, opacity: 0.6 }}>{accountStatus === 'registered' ? 'Profil synchronisé' : 'Connecte-toi pour sauvegarder'}</div>
+                <div style={{ fontSize: 12, opacity: 0.6 }}>
+                  {accountStatus === 'registered'
+                    ? accountEmail
+                      ? `Connecté : ${accountEmail}`
+                      : 'Profil synchronisé'
+                    : 'Connecte-toi pour sauvegarder'}
+                </div>
               </div>
-              <span style={{ fontSize: 13, opacity: 0.7 }}>{accountStatus === 'registered' ? 'Enregistré' : 'Non connecté'}</span>
+              <span style={{ fontSize: 13, opacity: 0.7 }}>
+                {accountStatus === 'registered' ? 'Connecté' : 'Non connecté'}
+              </span>
             </button>
 
             <button style={styles.settingRow} onClick={() => (window.location.href = '/about')}>
@@ -162,6 +195,14 @@ export default function AppHome() {
               <div>À propos</div>
               <span aria-hidden>›</span>
             </button>
+
+            {accountStatus === 'registered' && (
+              <button style={{ ...styles.settingRow, color: '#b91c1c' }} onClick={handleLogout}>
+                <span style={styles.settingIcon}>🚪</span>
+                <div style={{ flex: 1 }}>Se déconnecter</div>
+                <span aria-hidden>›</span>
+              </button>
+            )}
 
             <div style={styles.settingSection}>
               <div style={styles.sectionTitle}>Personnaliser le thème</div>

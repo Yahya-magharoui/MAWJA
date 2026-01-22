@@ -1,7 +1,8 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../../components/BackLink';
+import { useThemeColor, withAlpha } from '../../../components/theme';
 
 type StateType = 'Hyper' | 'Hypo' | 'Tolérance';
 type Row = {
@@ -15,6 +16,11 @@ type Row = {
 export default function HistoryPage() {
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
+  const theme = useThemeColor();
+  const bg = useMemo(
+    () => `radial-gradient(1200px 800px at 50% -10%, ${withAlpha(theme, 0.13)} 0%, #F6F7FE 55%)`,
+    [theme]
+  );
 
   useEffect(() => {
     // Données d’exemple
@@ -82,7 +88,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <main style={wrap}>
+    <main style={{ ...wrap, background: bg }}>
       <header style={hdr}>
         <BackLink href={null} onClick={() => router.back()} style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Mon historique</h1>
@@ -150,7 +156,6 @@ export default function HistoryPage() {
 /* --- Styles --- */
 const wrap = {
   minHeight: '100dvh',
-  background: '#F6F7FE',
   fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
   color: '#0f172a',
 } as const;

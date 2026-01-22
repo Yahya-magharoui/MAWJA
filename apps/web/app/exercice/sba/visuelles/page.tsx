@@ -61,7 +61,7 @@ export default function SBAVisuelles() {
   }
 
   function adjust(delta: number) {
-    setSpeed(s => Math.min(10, Math.max(1, s + delta)));
+    setSpeed(s => Math.min(20, Math.max(1, s + delta)));
     try { (navigator as any)?.vibrate?.(10); } catch {}
   }
 
@@ -107,13 +107,13 @@ export default function SBAVisuelles() {
 }
 
 /** styles */
-const wrap: React.CSSProperties = { minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 20px 32px', display:'flex', flexDirection:'column' };
-const hdr:  React.CSSProperties = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center', marginBottom:10 };
+const wrap: React.CSSProperties = { minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 0 32px', display:'flex', flexDirection:'column' };
+const hdr:  React.CSSProperties = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center', marginBottom:10, padding:'0 20px' };
 const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'6px 8px', cursor:'pointer', justifySelf:'end' };
 const track: React.CSSProperties = { flex:1, display:'flex', alignItems:'center', justifyContent:'flex-start', width:'100%', margin:'0', position:'relative', paddingBottom:56 };
 const ball: React.CSSProperties = { width:28, height:28, borderRadius:'50%', background:'var(--theme-color)', boxShadow:'0 4px 12px rgba(0,0,0,.2)', transition:'transform 0.1s linear' };
-const foot: React.CSSProperties = { display:'flex', justifyContent:'flex-start', alignItems:'center', marginTop:8, paddingLeft:4, position:'sticky', bottom:16 };
+const foot: React.CSSProperties = { display:'flex', justifyContent:'flex-start', alignItems:'center', marginTop:8, padding:'0 20px', position:'sticky', bottom:16 };
 const controlsRow: React.CSSProperties = { display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' };
 const btnMain: React.CSSProperties = { border:'none', padding:'12px 20px', borderRadius:14, background:'var(--theme-color)', color:'#fff', fontWeight:700, cursor:'pointer', boxShadow:'0 4px 12px rgba(0,0,0,.2)' };
 const speedWrap: React.CSSProperties = { display:'flex', alignItems:'center', gap:6, flexWrap:'nowrap' };

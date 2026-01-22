@@ -1,6 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import BackLink from '../../components/BackLink';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://mawja-back.onrender.com/api';
 
 export default function Signup() {
   const router = useRouter();
@@ -14,21 +17,44 @@ export default function Signup() {
     setBusy(true);
     setMsg(null);
 
-    // 🔹 Simulation pour l’instant (pas de backend)
-    setTimeout(() => {
-      setBusy(false);
-      setMsg('Compte créé (simulation) ✅');
-      // on sauvegarde un "fake user" local
+    try {
+      const res = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, "role":"PATIENT" }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || 'Création impossible. Essaie avec une autre adresse.');
+      }
+
+      if (data.access_token) {
+        localStorage.setItem('authToken', data.access_token);
+      }
       localStorage.setItem(
         'guestProfile',
-        JSON.stringify({ id: crypto.randomUUID(), email, role: 'user' })
+        JSON.stringify(data.user ?? { email, createdAt: new Date().toISOString() })
       );
-      router.push('/home');
-    }, 1000);
+      localStorage.setItem('accountStatus', 'registered');
+
+      setMsg('Compte créé ✅');
+      setTimeout(() => {
+        router.push('/login');
+      }, 600);
+    } catch (error) {
+      const err = error as Error;
+      setMsg(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <main style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', background: '#F6F7FE' }}>
+    <main style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', background: '#F6F7FE', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: 20, left: 20 }}>
+        <BackLink href="/" style={{ background: 'transparent', color: '#111' }} />
+      </div>
       <form
         onSubmit={handleSubmit}
         style={{
@@ -66,7 +92,6 @@ export default function Signup() {
         </button>
 
         {msg && <p style={{ margin: 0, color: '#065f46' }}>{msg}</p>}
-        <a href="/" style={{ textAlign: 'center', fontSize: 13, marginTop: 4 }}>↩︎ Retour</a>
       </form>
     </main>
   );

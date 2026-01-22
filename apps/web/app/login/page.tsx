@@ -1,6 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import BackLink from '../../components/BackLink';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://mawja-back.onrender.com/api';
 
 export default function Login() {
   const router = useRouter();
@@ -14,26 +17,43 @@ export default function Login() {
     setBusy(true);
     setMsg(null);
 
-    // 🔹 Simulation (pas de backend pour l'instant)
-    setTimeout(() => {
-      // on sauvegarde un "profil" local
-      localStorage.setItem(
-        'guestProfile',
-        JSON.stringify({
-          id: crypto.randomUUID(),
-          email,
-          role: 'user',
-          loggedInAt: new Date().toISOString(),
-        })
-      );
-      setBusy(false);
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || 'Connexion impossible. Vérifie tes informations.');
+      }
+
+      if (data.access_token) {
+        localStorage.setItem('authToken', data.access_token);
+      }
+      if (data.user || data.payload) {
+        localStorage.setItem('guestProfile', JSON.stringify(data.user ?? data.payload));
+      } else {
+        localStorage.setItem('guestProfile', JSON.stringify({ email, loggedInAt: new Date().toISOString() }));
+      }
+      localStorage.setItem('accountStatus', 'registered');
+
       setMsg('Connexion réussie ✅');
-      router.push('/home');
-    }, 700);
+      router.push('/app');
+    } catch (error) {
+      const err = error as Error;
+      setMsg(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <main style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', background: '#F6F7FE' }}>
+    <main style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', background: '#F6F7FE', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: 20, left: 20 }}>
+        <BackLink href="/" style={{ background: 'transparent', color: '#111' }} />
+      </div>
       <form onSubmit={handleSubmit}
         style={{ width: 340, display: 'grid', gap: 12, padding: 24, borderRadius: 16, background: '#fff',
                  boxShadow: '0 8px 24px rgba(0,0,0,.06)', border: '1px solid #eee' }}>
@@ -62,7 +82,6 @@ export default function Login() {
         </button>
 
         {msg && <p style={{ margin: 0, color: '#065f46' }}>{msg}</p>}
-        <a href="/" style={{ textAlign: 'center', fontSize: 13, marginTop: 4 }}>↩︎ Retour</a>
       </form>
     </main>
   );

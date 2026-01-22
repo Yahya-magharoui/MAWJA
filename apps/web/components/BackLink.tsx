@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type {
   CSSProperties,
   MouseEventHandler,
@@ -32,7 +32,7 @@ const baseStyle: CSSProperties = {
 };
 
 export default function BackLink({
-  href = '/',
+  href,
   onClick,
   onMouseDown,
   onTouchStart,
@@ -40,26 +40,31 @@ export default function BackLink({
   style,
   className
 }: Props) {
-  if (href) {
-    return (
-      <Link
-        href={href as any}
-        aria-label={label}
-        className={className}
-        style={{ ...baseStyle, ...style }}
-        onMouseDown={onMouseDown}
-        onTouchStart={onTouchStart}
-      >
-        ←
-      </Link>
-    );
-  }
+  const router = useRouter();
+
+  const handleClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+    onClick?.(event);
+    if (event.defaultPrevented) return;
+
+    const fallback = href ?? '/';
+
+    if (window.history.length > 1) {
+      event.preventDefault();
+      router.back();
+      return;
+    }
+
+    if (fallback) {
+      event.preventDefault();
+      router.push(fallback);
+    }
+  };
 
   return (
     <button
       type="button"
       aria-label={label}
-      onClick={onClick}
+      onClick={handleClick}
       onMouseDown={onMouseDown as MouseEventHandler<HTMLButtonElement> | undefined}
       onTouchStart={onTouchStart as TouchEventHandler<HTMLButtonElement> | undefined}
       className={className}

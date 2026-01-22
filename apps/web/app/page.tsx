@@ -57,6 +57,23 @@ const SLIDES: Slide[] = [
   },
 ];
 
+function ArcTitle({ text }: { text: string }) {
+  if (!text) return <div style={styles.titleArch} />;
+  const chars = text.split('');
+  const mid = (chars.length - 1) / 2;
+  const curve = 8; // degree spacing
+
+  return (
+    <div style={styles.titleArch} aria-hidden>
+      {chars.map((char, idx) => (
+        <span key={`${char}-${idx}`} style={{ padding:'0 1px' }}>
+          {char === ' ' ? '\u00A0' : char}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
   const nameParam = useQueryParam('name', '');
@@ -128,7 +145,7 @@ export default function Home() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        <div style={styles.titleArch}>{slide.title ?? ' '}</div>
+        <ArcTitle text={slide.title ?? ''} />
 
         <div style={styles.illustr}>
           {/* Remplace les chemins par tes images /public/intro/... */}
@@ -162,11 +179,11 @@ export default function Home() {
       </section>
 
       <footer style={styles.footer}>
-        <a href="/emergency" style={{ color:'#b91c1c' }}>Numéros d’urgence</a>
+        <a href="/sos" style={styles.footerLink}>Numéros d’urgence</a>
         <span style={{opacity:.4}}> • </span>
-        <a href="/privacy">Confidentialité</a>
+        <a href="/privacy" style={styles.footerLink}>Confidentialité</a>
         <span style={{opacity:.4}}> • </span>
-        <a href="/terms">CGU</a>
+        <a href="/terms" style={styles.footerLink}>CGU</a>
       </footer>
     </main>
   );
@@ -203,8 +220,17 @@ const styles: Record<string, React.CSSProperties> = {
     display:'grid', gridTemplateRows:'auto 260px 1fr auto', gap:8, padding:'0 16px',
   },
   titleArch: {
-    textAlign:'center', fontWeight:900, letterSpacing:.6, fontSize:14,
-    transform:'rotate(-3deg)', opacity:.85, marginTop:2,
+    display:'flex',
+    justifyContent:'center',
+    alignItems:'flex-end',
+    height:40,
+    fontWeight:900,
+    letterSpacing:.6,
+    fontSize:13,
+    opacity:.85,
+    marginTop:6,
+    gap:0,
+    lineHeight:1,
   },
   illustr: {
     position:'relative', width:'100%', height:260, borderRadius:24,
@@ -237,4 +263,8 @@ const styles: Record<string, React.CSSProperties> = {
   footer: {
     justifySelf:'center', display:'flex', gap:10, margin:'6px 0 18px', fontSize:12,
   },
+  footerLink: {
+    color:'#4f46e5',
+    textDecoration:'underline'
+  }
 };
