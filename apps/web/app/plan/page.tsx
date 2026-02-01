@@ -9,11 +9,11 @@ import BackLink from '../../components/BackLink';
 type SectionId = 'signes' | 'actions' | 'personnes' | 'soignants';
 type PlanData = Record<SectionId, string[]>;
 
-const SECTIONS: { id: SectionId; icon: string; title: string; helper?: string }[] = [
-  { id: 'signes',    icon: '🧾', title: "Signes annonciateurs d’une crise" },
-  { id: 'actions',   icon: '🧩', title: "Activités que je peux faire seul(e) pour traverser la crise" },
-  { id: 'personnes', icon: '👥', title: "Personnes que je peux appeler ou chez qui je peux aller" },
-  { id: 'soignants', icon: '🩺', title: "Soignants que je peux contacter ou services médicaux" },
+const SECTIONS: { id: SectionId; title: string; helper?: string }[] = [
+  { id: 'signes',    title: "Signes annonciateurs d’une crise" },
+  { id: 'actions',   title: "Activités que je peux faire seul(e) pour traverser la crise" },
+  { id: 'personnes', title: "Personnes que je peux appeler ou chez qui je peux aller" },
+  { id: 'soignants', title: "Soignants que je peux contacter ou services médicaux" },
 ];
 
 const EMPTY: PlanData = {
@@ -106,10 +106,7 @@ export default function CrisisPlanPage() {
         {SECTIONS.map(sec => (
           <article key={sec.id} style={card(color)} className="card">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <h2 style={{ margin: 0, fontSize: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={pillIcon}>{sec.icon}</span>
-                {sec.title}
-              </h2>
+              <h2 style={{ margin: 0, fontSize: 16 }}>{sec.title}</h2>
               <button onClick={() => resetSection(sec.id)} className="linkReset">Réinitialiser</button>
             </div>
 
@@ -154,15 +151,6 @@ const gearBtn: React.CSSProperties = {
   borderRadius: 12,
   padding: '8px 10px',
   cursor: 'pointer',
-};
-
-const pillIcon: React.CSSProperties = {
-  width: 28,
-  height: 28,
-  display: 'grid',
-  placeItems: 'center',
-  borderRadius: 8,
-  background: 'rgba(0,0,0,.04)',
 };
 
 const card = (c: string): React.CSSProperties => ({

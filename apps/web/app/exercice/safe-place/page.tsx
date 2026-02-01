@@ -57,7 +57,6 @@ export default function SafePlaceHub() {
       </a>
     </section>
 
-Ò
       <button
         onMouseDown={vibe}
         onClick={() => {
