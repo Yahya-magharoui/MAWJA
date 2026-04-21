@@ -1,6 +1,7 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import { logActivity } from '../../../../lib/patientTracking';
 
 /** ——— Données de base (mêmes couleurs que la 1ère roue) ——— */
 const PRIMARY = {
@@ -247,6 +248,7 @@ export default function EmotionDetailPage({ params }: { params: { path: string[]
   const root = (segs[0] as PrimaryKey) || 'joy';
   const level2Key = segs[1];
   const level3Key = segs[2];
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
 
   const theme = PRIMARY[root] ?? PRIMARY.joy;
   const backHref =
@@ -275,6 +277,32 @@ export default function EmotionDetailPage({ params }: { params: { path: string[]
   }
 
   const slices = useMemo(() => buildSlices(items.length || 1, 140), [items.length]);
+
+  async function handleItemClick(item: Item) {
+    if (pendingKey) return;
+
+    const href = destFor(item);
+
+    if (!level2Key || level3Key) {
+      window.location.href = href;
+      return;
+    }
+
+    setPendingKey(item.key);
+
+    try {
+      await logActivity({
+        category: 'EMOTION',
+        subType: `${labelOf(level2Key)}/${item.label}`,
+        detail: [PRIMARY[root]?.label ?? root, labelOf(level2Key), item.label].join('/'),
+        emotion: root.toUpperCase(),
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      window.location.href = href;
+    }
+  }
 
   return (
     <main style={styles.page(bg(theme.color))}>
@@ -324,10 +352,16 @@ export default function EmotionDetailPage({ params }: { params: { path: string[]
                     className="emotion-slice"
                     style={styles.slicePath}
                     role="link"
-                    tabIndex={0}
+                    tabIndex={pendingKey ? -1 : 0}
                     onMouseDown={press}
                     onFocus={() => press()}
-                    onClick={() => (window.location.href = destFor(it))}
+                    onClick={() => { void handleItemClick(it); }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        void handleItemClick(it);
+                      }
+                    }}
                   />
                   <text
                     x={s.labelPos.x}
@@ -356,7 +390,16 @@ export default function EmotionDetailPage({ params }: { params: { path: string[]
 
       <footer style={styles.footer}>
         <a href="/exercice/emotions" style={btnSecondary}>Réinitialiser</a>
-        <a href="/hyperactivation" style={btnPlain}>Accueil hyperactivation</a>
+        <a
+          href="/hyperactivation"
+          style={{
+            ...btnPlain,
+            pointerEvents: pendingKey ? 'none' : undefined,
+            opacity: pendingKey ? 0.6 : btnPlain.opacity,
+          }}
+        >
+          Accueil hyperactivation
+        </a>
       </footer>
     </main>
   );

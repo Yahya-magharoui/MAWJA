@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import BackLink from '../../components/BackLink';
 import { getStoredThemeColor, setThemeColor, tintColor, withAlpha } from '../../components/theme';
 import type { Lang } from '../../i18n';
+import { postHistoryEntry, type HistoryState } from '../../lib/patientTracking';
 
 const PRESET = ['#A78BFA', '#93C5FD', '#A7F3D0', '#FDE68A', '#F9A8D4', '#D1D5DB'];
 
@@ -10,6 +11,7 @@ export default function AppHome() {
   // thème
   const [color, setColor] = useState(PRESET[0]);
   const [openSettings, setOpenSettings] = useState(false);
+  const [selectionBusy, setSelectionBusy] = useState(false);
   const [accountStatus, setAccountStatus] = useState<'registered' | 'guest'>('guest');
   const [accountEmail, setAccountEmail] = useState<string | null>(null);
   const [readingEnabled, setReadingEnabled] = useState(() => {
@@ -83,6 +85,20 @@ export default function AppHome() {
     window.location.href = '/login';
   }
 
+  async function handleStateSelection(state: HistoryState, href: string) {
+    if (selectionBusy) return;
+
+    setSelectionBusy(true);
+    try {
+      await postHistoryEntry(state);
+      window.location.href = href;
+    } catch (error) {
+      console.error(error);
+      window.alert("L’état n’a pas pu être enregistré. Réessaie.");
+      setSelectionBusy(false);
+    }
+  }
+
   return (
     <main style={styles.page(theme.bg)}>
       <style>{css}</style>
@@ -107,19 +123,22 @@ export default function AppHome() {
           title="Hyperactivation"
           caption="Fuite/lutte, rythme cardiaque rapide, irritabilité, respiration rapide, tension musculaire, sueurs, palpitations, colère, anxiété, agitation, hypervigilance"
           styleExtra={{ ...styles.top, background: theme.hyper.bg, boxShadow: theme.hyper.shadow }}
-          onClick={() => (window.location.href = '/hyperactivation')}
+          disabled={selectionBusy}
+          onClick={() => handleStateSelection('HYPER', '/hyperactivation')}
         />
         <Card
           title="Fenêtre de tolérance"
           caption="Fenêtre d’activation optimale, équilibre, calme, attentif"
           styleExtra={{ background: theme.window.bg, boxShadow: theme.window.shadow }}
-          onClick={() => (window.location.href = '/tolerance')}
+          disabled={selectionBusy}
+          onClick={() => handleStateSelection('TOLERANCE', '/tolerance')}
         />
         <Card
           title="Hypoactivation"
           caption="Paralysie, sensation de déconnexion, d’engourdissement, digestion perturbée, respiration impactée, déréalisation, apathie, retrait, confusion"
           styleExtra={{ ...styles.bottom, background: theme.hypo.bg, boxShadow: theme.hypo.shadow }}
-          onClick={() => (window.location.href = '/hypoactivation')}
+          disabled={selectionBusy}
+          onClick={() => handleStateSelection('HYPO', '/hypoactivation')}
         />
       </section>
 
@@ -275,21 +294,30 @@ function Card({
   title,
   caption,
   styleExtra,
+  disabled = false,
   onClick,
 }: {
   title: string;
   caption: string;
   styleExtra?: React.CSSProperties;
-  onClick?: () => void;        // ← ajouté
+  disabled?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <article
       role="button"
-      tabIndex={0}
+      tabIndex={disabled ? -1 : 0}
       aria-label={title}
-      style={{ ...styles.card, ...styleExtra }}
-      onClick={onClick}        
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.currentTarget as any).click?.()}
+      aria-disabled={disabled}
+      style={{ ...styles.card, ...(disabled ? styles.cardDisabled : null), ...styleExtra }}
+      onClick={disabled ? undefined : onClick}
+      onKeyDown={(e) => {
+        if (disabled) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
     >
       <div style={styles.cardInner}>
         <h2 style={styles.cardTitle}>{title}</h2>
@@ -337,6 +365,10 @@ const styles = {
     outlineOffset: 4,
     transition: 'transform .2s ease, box-shadow .2s ease',
     cursor: 'pointer'
+  } as React.CSSProperties,
+  cardDisabled: {
+    opacity: 0.7,
+    cursor: 'wait'
   } as React.CSSProperties,
   top: { borderTopLeftRadius: 120, borderTopRightRadius: 120 } as React.CSSProperties,
   bottom: { borderBottomLeftRadius: 120, borderBottomRightRadius: 120 } as React.CSSProperties,

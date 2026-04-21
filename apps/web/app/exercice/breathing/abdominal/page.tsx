@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import { useQueryParam } from '../../../../hooks/useQueryParam';
+import { logActivity } from '../../../../lib/patientTracking';
 
 type Phase = 'inhale' | 'hold' | 'exhale' | 'stopped' | 'paused';
 
@@ -42,6 +43,11 @@ export default function AbdominalBreathing() {
     setLeft(DUR.inhale);
     elapsedRef.current = 0;
     vibe(10);
+    void logActivity({
+      category: 'BREATHING',
+      subType: 'Respiration abdominale',
+      detail: '6-4-6',
+    }).catch(console.error);
   }
 
   function stop(){

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import { logActivity } from '../../../../lib/patientTracking';
 
 /**
  * SBA tactiles — point unique qui clignote uniquement
@@ -33,7 +34,20 @@ export default function SBATactiles() {
     return () => { if (timer.current) clearInterval(timer.current); timer.current = null; };
   }, [running, halfPeriodMs]);
 
-  function toggle() { setRunning((v) => !v); try { (navigator as any)?.vibrate?.(8); } catch {} }
+  function toggle() {
+    setRunning((v) => {
+      const next = !v;
+      if (next) {
+        void logActivity({
+          category: 'SBA',
+          subType: 'Tactile',
+          detail: `${hz.toFixed(1)} Hz`,
+        }).catch(console.error);
+      }
+      return next;
+    });
+    try { (navigator as any)?.vibrate?.(8); } catch {}
+  }
   function plus()  { setHz((v) => Math.min(3, +(v + 0.1).toFixed(2))); }
   function minus() { setHz((v) => Math.max(0.5, +(v - 0.1).toFixed(2))); }
 
@@ -70,64 +84,41 @@ export default function SBATactiles() {
 
 /** Corps + point qui n’apparaît qu’aux extrémités */
 function EndpointBody({ side }: { side: 'L' | 'R' }) {
-  const W = 360, H = 300;
-
-  // épaules bien écartées
-  const L = { x: 95,  y: 200 };
-  const R = { x: 265, y: 200 };
-
-  const dot = side === 'L' ? L : R;
-
+  const bubble = side === 'L' ? styles.bubbleLeft : styles.bubbleRight;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="min(560px, 92vw)" height="auto"
-         style={{ filter:'drop-shadow(0 10px 24px rgba(0,0,0,.08))' }}>
-      {/* sol/halo */}
-      <ellipse cx={(L.x+R.x)/2} cy={L.y+35} rx={115} ry={20} fill="rgba(0,0,0,.06)" />
-
-      {/* tête */}
-      <circle cx="180" cy="70" r="30" fill="#fff" stroke="#0f172a" strokeWidth="5" />
-
-      {/* clavicule */}
-      <path d={`M ${L.x-25} ${L.y-55} Q ${(L.x+R.x)/2} ${L.y-75} ${R.x+25} ${R.y-55}`}
-            fill="none" stroke="#6b7280" strokeWidth="6" strokeLinecap="round" />
-
-      {/* torse */}
-      <path d={`M ${L.x-5} ${L.y+22} Q ${(L.x+R.x)/2} ${L.y-22} ${R.x+5} ${R.y+22}`}
-            fill="#fff" stroke="#0f172a" strokeWidth="6" strokeLinecap="round" />
-
-      {/* bras épais */}
-      <path d={`M ${L.x} ${L.y} Q ${(L.x+R.x)/2} ${L.y-38} ${R.x} ${R.y}`}
-            fill="none" stroke="#0f172a" strokeWidth="16" strokeLinecap="round" />
-
-      {/* épaules fixes (légère lueur) */}
-      <g opacity=".25">
-        <circle cx={L.x} cy={L.y} r="20" fill="var(--theme-color)" />
-        <circle cx={R.x} cy={R.y} r="20" fill="var(--theme-color)" />
-      </g>
-
-      {/* point actif UNIQUEMENT sur l’extrémité courante */}
-      <circle
-        key={side} /* relance l’anim à chaque alternance */
-        className="pulseDot"
-        cx={dot.x} cy={dot.y} r="18"
-        fill="var(--theme-color)"
-        stroke="#6D5BD0" strokeWidth="2"
+    <div style={{ position:'relative', width:'min(360px, 75vw)', maxWidth:360 }}>
+      <img
+        src="/icons/hug.png"
+        alt="Bras croisés sur les épaules"
+        style={{ width:'100%', height:'auto', display:'block', filter:'drop-shadow(0 14px 32px rgba(15,23,42,.15))' }}
       />
-    </svg>
+      <span key={side} className="shoulderBubble" style={bubble} />
+    </div>
   );
 }
 
 /* ===== styles ===== */
 const wrap: React.CSSProperties = {
-  minHeight:'100dvh', background:'#F6F7FE',
+  minHeight:'100vh',
+  background:'#F6F7FE',
   fontFamily:'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-  color:'#0f172a', padding:'16px 20px', display:'flex', flexDirection:'column'
+  color:'#0f172a',
+  padding:'16px 20px 18px',
+  display:'grid',
+  gridTemplateRows:'auto 1fr auto',
+  gap:10
 };
 const hdr:  React.CSSProperties = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center', marginBottom:6 };
 const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { justifySelf:'end', border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'6px 8px', cursor:'pointer' };
-const stage: React.CSSProperties = { flex:1, display:'grid', placeItems:'center' };
-const foot:  React.CSSProperties = { display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:8 };
+const stage: React.CSSProperties = { display:'grid', placeItems:'center', padding:'4px 0', minHeight:0 };
+const foot:  React.CSSProperties = {
+  display:'flex',
+  justifyContent:'space-between',
+  alignItems:'center',
+  gap:16,
+  flexWrap:'wrap'
+};
 const btnMain: React.CSSProperties = {
   border:'none', padding:'12px 20px', borderRadius:14, background:'var(--theme-color)',
   color:'#fff', fontWeight:800, cursor:'pointer', boxShadow:'0 8px 18px rgba(0,0,0,.16)'
@@ -135,15 +126,33 @@ const btnMain: React.CSSProperties = {
 const mini: React.CSSProperties = {
   border:'1px solid #e5e7eb', background:'#fff', padding:'8px 14px', borderRadius:999, cursor:'pointer', fontSize:16
 };
+const styles = {
+  bubbleLeft: {
+    left: '18%',
+    top: '62%',
+    transform: 'translate(-50%, -50%)'
+  },
+  bubbleRight: {
+    left: '82%',
+    top: '44%',
+    transform: 'translate(-50%, -50%)'
+  }
+} satisfies Record<string, React.CSSProperties>;
 
 const pulseCss = `
-  .pulseDot {
-    transform-origin: center;
-    animation: pulse 420ms ease-out;
+  .shoulderBubble {
+    position:absolute;
+    width:78px;
+    height:78px;
+    border-radius:999px;
+    background:var(--theme-color);
+    border:2px solid #6D5BD0;
+    animation:pulse 400ms ease-out;
+    box-shadow:0 14px 24px rgba(var(--theme-color-rgb),0.35);
   }
   @keyframes pulse {
-    from { transform: scale(.85); filter: drop-shadow(0 0 0 rgba(var(--theme-color-rgb),0)); }
-    60% { transform: scale(1.06); filter: drop-shadow(0 6px 14px rgba(var(--theme-color-rgb),.55)); }
-    to   { transform: scale(1.00); filter: drop-shadow(0 4px 10px rgba(var(--theme-color-rgb),.35)); }
+    from { transform:scale(.75); opacity:.5; }
+    70% { transform:scale(1.05); opacity:1; }
+    to { transform:scale(1); opacity:1; }
   }
 `;

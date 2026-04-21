@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../../components/BackLink';
 import { useThemeColor, withAlpha } from '../../../components/theme';
+import { fetchPatientHistories, setLastHistoryId, type HistoryState, type PatientHistory } from '../../../lib/patientTracking';
 
 type StateType = 'Hyper' | 'Hypo' | 'Tolérance';
 type Row = {
@@ -13,9 +14,37 @@ type Row = {
   backMins?: number;
 };
 
+function toStateLabel(state: HistoryState): StateType {
+  if (state === 'HYPER') return 'Hyper';
+  if (state === 'HYPO') return 'Hypo';
+  return 'Tolérance';
+}
+
+function formatTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+
+  return new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function toRow(history: PatientHistory): Row {
+  return {
+    id: String(history.id),
+    time: formatTime(history.time),
+    state: toStateLabel(history.state),
+    emotion: '—',
+    backMins: 0,
+  };
+}
+
 export default function HistoryPage() {
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const theme = useThemeColor();
   const bg = useMemo(
     () => `radial-gradient(1200px 800px at 50% -10%, ${withAlpha(theme, 0.13)} 0%, #F6F7FE 55%)`,
@@ -23,14 +52,34 @@ export default function HistoryPage() {
   );
 
   useEffect(() => {
-    // Données d’exemple
-    const seed: Row[] = [
-      { id: '1', time: '08:10', state: 'Hypo', emotion: 'Tristesse / isolement', backMins: 20 },
-      { id: '2', time: '09:05', state: 'Hyper', emotion: 'Colère / irritation', backMins: 5 },
-      { id: '3', time: '11:30', state: 'Tolérance', emotion: 'Sérénité / calme', backMins: 10 },
-      { id: '4', time: '15:00', state: 'Hypo', emotion: 'Fatigue / apathie', backMins: 25 },
-    ];
-    setRows(seed);
+    let cancelled = false;
+
+    async function loadHistories() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const histories = await fetchPatientHistories();
+        if (cancelled) return;
+
+        if (histories[0]?.id != null) {
+          setLastHistoryId(histories[0].id);
+        }
+        setRows(histories.map(toRow));
+      } catch (err) {
+        if (cancelled) return;
+        const message = err instanceof Error ? err.message : 'Impossible de charger l’historique.';
+        setError(message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void loadHistories();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const stateBadge = (s: StateType) => {
@@ -126,7 +175,11 @@ export default function HistoryPage() {
           <div style={{ textAlign: 'right' }}>Tps retour FT</div>
         </div>
 
-        {rows.map((r) => (
+        {loading && <div style={infoCard}>Chargement de l’historique…</div>}
+        {error && !loading && <div style={infoCard}>{error}</div>}
+        {!loading && !error && rows.length === 0 && <div style={infoCard}>Aucun historique disponible.</div>}
+
+        {!loading && !error && rows.map((r) => (
           <div
             key={r.id}
             style={{
@@ -184,4 +237,12 @@ const pdfBtn = {
   padding: '10px 14px',
   cursor: 'pointer',
   boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+} as const;
+
+const infoCard = {
+  padding: '14px 16px',
+  background: '#fff',
+  border: '1px solid #eee',
+  borderRadius: 10,
+  color: '#334155',
 } as const;

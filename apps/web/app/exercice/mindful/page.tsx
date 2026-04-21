@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../components/BackLink';
+import { logActivity } from '../../../lib/patientTracking';
 
 type Track = {
   id: string;
@@ -94,6 +95,14 @@ export default function MindfulAudiosPage() {
     const a = ensureAudio(id);
     try { await a.play(); setIsPlaying(true); } catch { setIsPlaying(false); }
     setCurrentId(id);
+    const track = TRACKS.find((item) => item.id === id);
+    if (track) {
+      void logActivity({
+        category: 'AUDIO',
+        subType: track.label,
+        detail: track.id,
+      }).catch(console.error);
+    }
   }
 
   function stopAll() {

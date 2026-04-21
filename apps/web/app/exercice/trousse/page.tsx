@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import BackLink from '../../../components/BackLink';
 import { useQueryParam } from '../../../hooks/useQueryParam';
 
@@ -56,6 +57,15 @@ function useOrigin() {
 
 export default function SafetyKitPage() {
   const backHref = useOrigin();
+  const [draft, setDraft] = useState('');
+  const [customItems, setCustomItems] = useState<string[]>([]);
+
+  const addCustomItem = () => {
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+    setCustomItems(prev => [...prev, trimmed]);
+    setDraft('');
+  };
 
   return (
     <main style={page}>
@@ -83,10 +93,7 @@ export default function SafetyKitPage() {
       <section style={grid}>
         {SECTIONS.map((section) => (
           <article key={section.key} style={card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-              <h2 style={{ margin: 0, fontSize: 18 }}>{section.title}</h2>
-              <span style={bubble}>+</span>
-            </div>
+            <h2 style={{ margin: 0, fontSize: 18 }}>{section.title}</h2>
             <p style={{ margin: '4px 0 10px', opacity: 0.75, fontSize: 13 }}>{section.subtitle}</p>
             <ul style={list}>
               {section.bullets.map((item) => (
@@ -95,6 +102,38 @@ export default function SafetyKitPage() {
             </ul>
           </article>
         ))}
+      </section>
+
+      <section style={{ padding: '0 20px', maxWidth: 960, margin: '0 auto 60px' }}>
+        <article style={customCard}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <button onClick={addCustomItem} style={addBtn} aria-label="Ajouter un élément">
+              +
+            </button>
+            <div>
+              <p style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Ma trousse personnelle</p>
+              <p style={{ margin: 0, opacity: 0.7, fontSize: 13 }}>Écris ce que tu veux mettre dans ta trousse.</p>
+            </div>
+          </div>
+
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Ajoute ici tes idées (ex : balle sensorielle, huile de lavande, photo...)"
+            style={textarea}
+            rows={3}
+          />
+
+          {!!customItems.length && (
+            <div style={chipRow}>
+              {customItems.map((item, idx) => (
+                <span key={`${item}-${idx}`} style={chip}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
+        </article>
       </section>
     </main>
   );
@@ -134,7 +173,7 @@ const grid: React.CSSProperties = {
   display: 'grid',
   gap: 18,
   padding: '0 20px',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
   maxWidth: 960,
   margin: '0 auto 40px',
 };
@@ -145,15 +184,6 @@ const card: React.CSSProperties = {
   padding: '20px 22px',
   boxShadow: '0 10px 26px rgba(15,23,42,.08)',
   border: '1px solid rgba(15,23,42,.05)',
-};
-
-const bubble: React.CSSProperties = {
-  borderRadius: '999px',
-  border: '1px solid rgba(15,23,42,.12)',
-  padding: '2px 10px',
-  fontSize: 14,
-  cursor: 'pointer',
-  background: '#fff',
 };
 
 const list: React.CSSProperties = {
@@ -167,3 +197,48 @@ const list: React.CSSProperties = {
 const css = `
   article ul li + li { margin-top: 6px; }
 `;
+
+const customCard: React.CSSProperties = {
+  borderRadius: 22,
+  padding: '18px 20px 20px',
+  border: '1px dashed rgba(15,23,42,.25)',
+  background: 'rgba(167,139,250,0.08)',
+  boxShadow: '0 12px 30px rgba(15,23,42,.06)',
+};
+
+const addBtn: React.CSSProperties = {
+  borderRadius: 12,
+  width: 40,
+  height: 40,
+  border: '1px solid rgba(15,23,42,.15)',
+  background: '#fff',
+  fontSize: 20,
+  cursor: 'pointer',
+};
+
+const textarea: React.CSSProperties = {
+  width: '100%',
+  borderRadius: 16,
+  border: '1px solid rgba(15,23,42,.12)',
+  padding: '12px 14px',
+  fontSize: 14,
+  resize: 'vertical',
+  outline: 'none',
+  minHeight: 80,
+  background: '#fff',
+};
+
+const chipRow: React.CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 8,
+  marginTop: 12,
+};
+
+const chip: React.CSSProperties = {
+  borderRadius: 20,
+  padding: '6px 12px',
+  background: '#fff',
+  border: '1px solid rgba(15,23,42,.12)',
+  fontSize: 13,
+};

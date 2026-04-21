@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import { logActivity } from '../../../../lib/patientTracking';
 
 export default function SBAVisuelles() {
   const [running, setRunning] = useState(false);
@@ -57,6 +58,11 @@ export default function SBAVisuelles() {
       setRunning(false);
     } else {
       setRunning(true);
+      void logActivity({
+        category: 'SBA',
+        subType: 'Visuelle',
+        detail: `vitesse:${speed}`,
+      }).catch(console.error);
     }
   }
 

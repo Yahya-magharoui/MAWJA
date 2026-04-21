@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import { logActivity } from '../../../../lib/patientTracking';
 
 const QUESTIONS = [
   "De quelle couleur est-il ?",
@@ -33,6 +34,19 @@ export default function ObjectSenses() {
       return next;
     });
     vibe();
+  }
+
+  async function finish() {
+    try {
+      await logActivity({
+        category: 'GROUNDING',
+        subType: 'Objet sensoriel',
+        detail: `${answered.filter(Boolean).length}/${QUESTIONS.length}`,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+    window.location.href = '/exercice/anchoring';
   }
 
   return (
@@ -74,7 +88,7 @@ export default function ObjectSenses() {
       )}
 
       <footer style={{ display:'flex', justifyContent:'center', margin:'26px 0' }}>
-        <a href="/exercice/anchoring" style={linkSecondary}>Terminer</a>
+        <button onClick={finish} style={linkSecondaryButton}>Terminer</button>
       </footer>
 
       <style>{css}</style>
@@ -107,6 +121,10 @@ const startBtn: React.CSSProperties = {
 };
 const linkSecondary: React.CSSProperties = {
   padding:'10px 14px', borderRadius:12, border:'1px solid #e5e7eb', background:'#fff', color:'#0f172a', textDecoration:'none', fontWeight:600
+};
+const linkSecondaryButton: React.CSSProperties = {
+  ...linkSecondary,
+  cursor:'pointer'
 };
 
 const css = `.q:active{ transform:scale(.985) }`;

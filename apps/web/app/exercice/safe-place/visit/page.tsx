@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import { logActivity } from '../../../../lib/patientTracking';
 
 type SafePlace = { id:string; name:string; answers:string[]; createdAt:number };
 
@@ -85,7 +86,19 @@ export default function VisitSafePlace() {
                 <div style={{ display:'flex', gap:8 }}>
                   <button
                     style={ghost}
-                    onClick={()=>{ vibe(); setOpenId(sp.id); }}
+                    onClick={async ()=>{
+                      vibe();
+                      setOpenId(sp.id);
+                      try {
+                        await logActivity({
+                          category: 'SAFE_PLACE',
+                          subType: 'Visite',
+                          detail: sp.name,
+                        });
+                      } catch (error) {
+                        console.error(error);
+                      }
+                    }}
                     title="Voir les détails"
                   >
                     Voir les détails

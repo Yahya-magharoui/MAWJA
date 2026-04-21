@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import { logActivity } from '../../../../lib/patientTracking';
 
 type Phase = 'inspire' | 'expire' | 'stopped' | 'paused';
 
@@ -87,7 +88,15 @@ export default function BreathingTube() {
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [phase, phaseDuration, cycle, showTip]);
 
-  function start() { setCycle(0); setPhase('inspire'); }
+  function start() {
+    setCycle(0);
+    setPhase('inspire');
+    void logActivity({
+      category: 'BREATHING',
+      subType: 'Cohérence cardiaque',
+      detail: '365 / 5 min',
+    }).catch(console.error);
+  }
   function pause() { setPhase('paused'); }
   function resume() { setPhase('inspire'); }
   function stop() {

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../components/BackLink';
 import { useQueryParam } from '../../../hooks/useQueryParam';
+import { logActivity } from '../../../lib/patientTracking';
 
 type Phase = 'inhale' | 'hold' | 'exhale';
 
@@ -105,6 +106,11 @@ export default function StimulatingBreathPage() {
     setSecondsLeft(INHALE_S);
     setCycleIndex(0);
     vibe(18);
+    void logActivity({
+      category: 'BREATHING',
+      subType: 'Respiration stimulante',
+      detail: '4-7-8',
+    }).catch(console.error);
   }
 
   function pauseResume() {

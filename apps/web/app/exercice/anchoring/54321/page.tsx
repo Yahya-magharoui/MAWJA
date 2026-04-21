@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import { logActivity } from '../../../../lib/patientTracking';
 
 type SenseRow = { icon: string; label: string; target: number; key: string };
 
@@ -56,14 +57,23 @@ export default function FiveFourThreeTwoOne() {
   // }, [counts]);
 
   const doneAll = ROWS.every(r => (counts[r.key] || 0) >= r.target);
+  const [loggedDone, setLoggedDone] = useState(false);
 
   useEffect(() => {
     if (doneAll) {
+      if (!loggedDone) {
+        setLoggedDone(true);
+        void logActivity({
+          category: 'GROUNDING',
+          subType: '5-4-3-2-1',
+          detail: ROWS.map((row) => `${row.key}:${counts[row.key] || 0}/${row.target}`).join(', '),
+        }).catch(console.error);
+      }
       vibe(25);
       const t = setTimeout(() => { window.location.href = '/exercice/anchoring'; }, 900);
       return () => clearTimeout(t);
     }
-  }, [doneAll]);
+  }, [counts, doneAll, loggedDone]);
 
   function inc(k: string, max: number) {
     setCounts(prev => {
@@ -77,6 +87,7 @@ export default function FiveFourThreeTwoOne() {
   function resetAll() {
     vibe();
     setCounts(zeroCounts); // retour à zéro
+    setLoggedDone(false);
   }
 
   return (
