@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import BackLink from '../../../components/BackLink';
 import { useThemeColor, withAlpha } from '../../../components/theme';
+import { useSessionInfo } from '../../../lib/session';
 import {
   createPatientGoal,
   deletePatientGoal,
@@ -53,6 +55,8 @@ function mergeGoals(apiGoals: PatientGoal[]) {
 
 export default function ObjectifsPage() {
   const theme = useThemeColor();
+  const session = useSessionInfo();
+  const authenticated = session?.status === 'registered' && session.role === 'PATIENT';
   const bg = useMemo(
     () => `radial-gradient(1200px 800px at 50% -10%, ${withAlpha(theme, 0.13)} 0%, #F6F7FE 55%)`,
     [theme]
@@ -67,6 +71,14 @@ export default function ObjectifsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (session && !authenticated) {
+      setLoading(false);
+      setGoals([]);
+      setError(null);
+      return;
+    }
+    if (!authenticated) return;
+
     let cancelled = false;
 
     async function loadGoals() {
@@ -89,7 +101,7 @@ export default function ObjectifsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authenticated, session]);
 
   const doneCount = goals.filter((goal) => goal.done).length;
 
@@ -236,91 +248,98 @@ export default function ObjectifsPage() {
       </header>
 
       <div style={{ maxWidth: 720, margin: '6px auto 0', padding: '0 20px' }}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr auto',
-            gap: 10,
-            border: '1px solid rgba(0,0,0,.06)',
-            borderRadius: 14,
-            padding: 10,
-            background: '#fff',
-            boxShadow: '0 8px 18px rgba(0,0,0,.06)',
-          }}
-        >
-          <input
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => { if (event.key === 'Enter') void addGoal(); }}
-            placeholder="Ajouter un objectif… (Entrée pour valider)"
-            style={{ border: 'none', outline: 'none', fontSize: 15 }}
-          />
-          <button onClick={() => void addGoal()} disabled={submitting} style={btnPrimary(theme, submitting)}>
-            {submitting ? 'Ajout…' : 'Ajouter'}
-          </button>
-        </div>
+        {session && !authenticated ? <AuthRequiredNotice subject="tes objectifs" /> : null}
+        {authenticated ? (
+          <>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto',
+                gap: 10,
+                border: '1px solid rgba(0,0,0,.06)',
+                borderRadius: 14,
+                padding: 10,
+                background: '#fff',
+                boxShadow: '0 8px 18px rgba(0,0,0,.06)',
+              }}
+            >
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => { if (event.key === 'Enter') void addGoal(); }}
+                placeholder="Ajouter un objectif… (Entrée pour valider)"
+                style={{ border: 'none', outline: 'none', fontSize: 15 }}
+              />
+              <button onClick={() => void addGoal()} disabled={submitting} style={btnPrimary(theme, submitting)}>
+                {submitting ? 'Ajout…' : 'Ajouter'}
+              </button>
+            </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10, alignItems: 'center' }}>
-          <span style={{ fontSize: 13, opacity: 0.75 }}>
-            Progression&nbsp;: <strong>{doneCount}</strong> / {goals.length}
-          </span>
-          <div style={{ flex: 1 }} />
-          <button onClick={() => markAll(true)} style={btnTiny}>Tout cocher</button>
-          <button onClick={() => markAll(false)} style={btnTiny}>Tout décocher</button>
-          <button onClick={() => void clearDone()} style={btnTiny}>Supprimer les accomplis</button>
-        </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10, alignItems: 'center' }}>
+              <span style={{ fontSize: 13, opacity: 0.75 }}>
+                Progression&nbsp;: <strong>{doneCount}</strong> / {goals.length}
+              </span>
+              <div style={{ flex: 1 }} />
+              <button onClick={() => markAll(true)} style={btnTiny}>Tout cocher</button>
+              <button onClick={() => markAll(false)} style={btnTiny}>Tout décocher</button>
+              <button onClick={() => void clearDone()} style={btnTiny}>Supprimer les accomplis</button>
+            </div>
 
-        {error && <div style={infoCard}>{error}</div>}
+            {error && <div style={infoCard}>{error}</div>}
+          </>
+        ) : null}
       </div>
 
-      <section style={{ maxWidth: 720, margin: '10px auto 0', padding: '0 20px', display: 'grid', gap: 10 }}>
-        {loading && <div style={emptyState}>Chargement des objectifs…</div>}
-        {!loading && goals.length === 0 && <div style={emptyState}>Aucun objectif pour le moment.</div>}
+      {authenticated ? (
+        <section style={{ maxWidth: 720, margin: '10px auto 0', padding: '0 20px', display: 'grid', gap: 10 }}>
+          {loading && <div style={emptyState}>Chargement des objectifs…</div>}
+          {!loading && goals.length === 0 && <div style={emptyState}>Aucun objectif pour le moment.</div>}
 
-        {!loading && goals.map((goal, index) => (
-          <article key={goal.id} style={row}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={goal.done}
-                onChange={() => toggle(goal.id)}
-                style={{ width: 18, height: 18 }}
-              />
-              {editingId === goal.id ? (
+          {!loading && goals.map((goal, index) => (
+            <article key={goal.id} style={row}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                 <input
-                  autoFocus
-                  value={editingText}
-                  onChange={(event) => setEditingText(event.target.value)}
-                  onBlur={() => void commitEdit()}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') void commitEdit();
-                    if (event.key === 'Escape') cancelEdit();
-                  }}
-                  style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 8px', width: '100%' }}
+                  type="checkbox"
+                  checked={goal.done}
+                  onChange={() => toggle(goal.id)}
+                  style={{ width: 18, height: 18 }}
                 />
-              ) : (
-                <span
-                  onDoubleClick={() => startEdit(goal)}
-                  style={{
-                    textDecoration: goal.done ? 'line-through' : 'none',
-                    opacity: goal.done ? 0.6 : 1,
-                    userSelect: 'none',
-                  }}
-                >
-                  {goal.text}
-                </span>
-              )}
-            </label>
+                {editingId === goal.id ? (
+                  <input
+                    autoFocus
+                    value={editingText}
+                    onChange={(event) => setEditingText(event.target.value)}
+                    onBlur={() => void commitEdit()}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') void commitEdit();
+                      if (event.key === 'Escape') cancelEdit();
+                    }}
+                    style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 8px', width: '100%' }}
+                  />
+                ) : (
+                  <span
+                    onDoubleClick={() => startEdit(goal)}
+                    style={{
+                      textDecoration: goal.done ? 'line-through' : 'none',
+                      opacity: goal.done ? 0.6 : 1,
+                      userSelect: 'none',
+                    }}
+                  >
+                    {goal.text}
+                  </span>
+                )}
+              </label>
 
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button title="Éditer" onClick={() => startEdit(goal)} style={btnIcon}>✏️</button>
-              <button title="Monter" onClick={() => move(goal.id, -1)} disabled={index === 0} style={btnIcon} aria-disabled={index === 0}>⤴︎</button>
-              <button title="Descendre" onClick={() => move(goal.id, +1)} disabled={index === goals.length - 1} style={btnIcon} aria-disabled={index === goals.length - 1}>⤵︎</button>
-              <button title="Supprimer" onClick={() => void remove(goal.id)} style={btnIcon}>🗑️</button>
-            </div>
-          </article>
-        ))}
-      </section>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button title="Éditer" onClick={() => startEdit(goal)} style={btnIcon}>✏️</button>
+                <button title="Monter" onClick={() => move(goal.id, -1)} disabled={index === 0} style={btnIcon} aria-disabled={index === 0}>⤴︎</button>
+                <button title="Descendre" onClick={() => move(goal.id, +1)} disabled={index === goals.length - 1} style={btnIcon} aria-disabled={index === goals.length - 1}>⤵︎</button>
+                <button title="Supprimer" onClick={() => void remove(goal.id)} style={btnIcon}>🗑️</button>
+              </div>
+            </article>
+          ))}
+        </section>
+      ) : null}
 
       <div style={{ height: 34 }} />
     </main>

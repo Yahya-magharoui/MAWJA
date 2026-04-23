@@ -1,9 +1,11 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import BackLink from '../../../components/BackLink';
 import { useThemeColor, withAlpha } from '../../../components/theme';
 import { fetchPatientHistories, setLastHistoryId, type HistoryState, type PatientHistory } from '../../../lib/patientTracking';
+import { useSessionInfo } from '../../../lib/session';
 
 type StateType = 'Hyper' | 'Hypo' | 'Tolérance';
 type Row = {
@@ -42,6 +44,8 @@ function toRow(history: PatientHistory): Row {
 
 export default function HistoryPage() {
   const router = useRouter();
+  const session = useSessionInfo();
+  const authenticated = session?.status === 'registered' && session.role === 'PATIENT';
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +56,14 @@ export default function HistoryPage() {
   );
 
   useEffect(() => {
+    if (session && !authenticated) {
+      setLoading(false);
+      setRows([]);
+      setError(null);
+      return;
+    }
+    if (!authenticated) return;
+
     let cancelled = false;
 
     async function loadHistories() {
@@ -80,7 +92,7 @@ export default function HistoryPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authenticated, session]);
 
   const stateBadge = (s: StateType) => {
     const base = { padding: '6px 10px', borderRadius: 12, fontWeight: 700, fontSize: 13 } as const;
@@ -145,6 +157,9 @@ export default function HistoryPage() {
       </header>
 
       <div style={{ padding: '0 20px', maxWidth: 980, margin: '0 auto 40px' }}>
+        {session && !authenticated ? <AuthRequiredNotice subject="ton historique" /> : null}
+        {authenticated ? (
+        <>
         <div
           style={{
             display: 'flex',
@@ -201,6 +216,8 @@ export default function HistoryPage() {
             <div style={{ textAlign: 'right' }}>{r.backMins ? `${r.backMins} min` : '—'}</div>
           </div>
         ))}
+        </>
+        ) : null}
       </div>
     </main>
   );

@@ -1,8 +1,10 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import BackLink from '../../../components/BackLink';
 import { useThemeColor, withAlpha } from '../../../components/theme';
+import { useSessionInfo } from '../../../lib/session';
 
 type Card = { key:string; label:string; href:string };
 
@@ -15,6 +17,8 @@ const ALL: Card[] = [
 
 export default function RoutinePage(){
   const router = useRouter();
+  const session = useSessionInfo();
+  const authenticated = session?.status === 'registered' && session.role === 'PATIENT';
   const [favKeys, setFavKeys] = useState<string[]>([]);
   const theme = useThemeColor();
   const bg = useMemo(
@@ -23,8 +27,15 @@ export default function RoutinePage(){
   );
   const tileStyle = useMemo(() => tile(theme), [theme]);
 
-  useEffect(()=>{ const s = localStorage.getItem('routine_favs'); if(s) setFavKeys(JSON.parse(s)); },[]);
-  useEffect(()=>{ localStorage.setItem('routine_favs', JSON.stringify(favKeys)); },[favKeys]);
+  useEffect(()=>{
+    if (!authenticated) return;
+    const s = localStorage.getItem('routine_favs');
+    if(s) setFavKeys(JSON.parse(s));
+  },[authenticated]);
+  useEffect(()=>{
+    if (!authenticated) return;
+    localStorage.setItem('routine_favs', JSON.stringify(favKeys));
+  },[favKeys, authenticated]);
 
   const favs = useMemo(()=>ALL.filter(c=>favKeys.includes(c.key)),[favKeys]);
 
@@ -43,6 +54,8 @@ export default function RoutinePage(){
 
       <p style={{ margin:'0 20px 10px', opacity:.7 }}>Pratique les exercices que tu as ajoutés en favoris</p>
 
+      {session && !authenticated ? <AuthRequiredNotice subject="ta routine" /> : null}
+      {authenticated ? (
       <div style={{ padding:'0 20px', maxWidth:900, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px,1fr))', gap:14 }}>
         {favs.length === 0 && <div style={{ opacity:.6 }}>Aucun favori pour le moment.</div>}
         {favs.map(c=>(
@@ -53,6 +66,7 @@ export default function RoutinePage(){
           </a>
         ))}
       </div>
+      ) : null}
     </main>
   );
 }

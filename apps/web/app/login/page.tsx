@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BackLink from '../../components/BackLink';
+import { isAuthenticatedSession, persistAuthenticatedSession } from '../../lib/session';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://mawja-back.onrender.com/api';
 
@@ -11,6 +12,12 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticatedSession()) {
+      router.replace('/app');
+    }
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,18 +36,20 @@ export default function Login() {
         throw new Error(data.message || 'Connexion impossible. Vérifie tes informations.');
       }
 
-      if (data.access_token) {
-        localStorage.setItem('authToken', data.access_token);
-      }
-      if (data.user || data.payload) {
-        localStorage.setItem('guestProfile', JSON.stringify(data.user ?? data.payload));
-      } else {
-        localStorage.setItem('guestProfile', JSON.stringify({ email, loggedInAt: new Date().toISOString() }));
-      }
-      localStorage.setItem('accountStatus', 'registered');
+      const profile = data.user ?? data.payload ?? { email, loggedInAt: new Date().toISOString() };
+
+      persistAuthenticatedSession(
+        {
+          ...profile,
+          email: profile.email ?? email,
+          name: profile.name ?? null,
+          role: profile.role === 'DOCTOR' || profile.role === 'PATIENT' ? profile.role : null,
+        },
+        data.access_token ?? null
+      );
 
       setMsg('Connexion réussie ✅');
-      router.push('/app');
+      router.replace('/app');
     } catch (error) {
       const err = error as Error;
       setMsg(err.message);

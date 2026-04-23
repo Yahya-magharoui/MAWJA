@@ -1,5 +1,7 @@
 'use client';
 
+import { isPatientSession } from './session';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://mawja-back.onrender.com/api';
 const LAST_HISTORY_ID_KEY = 'mawja-last-history-id';
 
@@ -59,7 +61,9 @@ function getAuthToken() {
 
 function requireAuthToken() {
   const token = getAuthToken();
-  if (!token) throw new Error('Token utilisateur introuvable.');
+  if (!token || !isPatientSession()) {
+    throw new Error('Utilisateur non authentifié.');
+  }
   return token;
 }
 
@@ -101,6 +105,8 @@ export function setLastHistoryId(historyId: number | null) {
 }
 
 export async function postHistoryEntry(state: HistoryState) {
+  if (!isPatientSession()) return null;
+
   const response = await fetch(`${API_URL}/histories`, {
     method: 'POST',
     headers: {
@@ -127,6 +133,8 @@ export async function postHistoryEntry(state: HistoryState) {
 }
 
 export async function fetchPatientHistories(): Promise<PatientHistory[]> {
+  if (!isPatientSession()) return [];
+
   const response = await fetch(`${API_URL}/histories/me`, {
     headers: {
       Authorization: `Bearer ${requireAuthToken()}`,
@@ -143,6 +151,8 @@ export async function fetchPatientHistories(): Promise<PatientHistory[]> {
 }
 
 export async function fetchPatientGoals(): Promise<PatientGoal[]> {
+  if (!isPatientSession()) return [];
+
   const response = await fetch(`${API_URL}/goals/me`, {
     headers: {
       Authorization: `Bearer ${requireAuthToken()}`,
@@ -159,6 +169,10 @@ export async function fetchPatientGoals(): Promise<PatientGoal[]> {
 }
 
 export async function createPatientGoal(goal: GoalPayload): Promise<PatientGoal> {
+  if (!isPatientSession()) {
+    throw new Error('Connecte-toi pour enregistrer un objectif.');
+  }
+
   const response = await fetch(`${API_URL}/goals`, {
     method: 'POST',
     headers: {
@@ -177,6 +191,10 @@ export async function createPatientGoal(goal: GoalPayload): Promise<PatientGoal>
 }
 
 export async function updatePatientGoal(goalId: number, goal: GoalPayload): Promise<PatientGoal> {
+  if (!isPatientSession()) {
+    throw new Error('Connecte-toi pour modifier un objectif.');
+  }
+
   const response = await fetch(`${API_URL}/goals/${goalId}`, {
     method: 'PUT',
     headers: {
@@ -195,6 +213,10 @@ export async function updatePatientGoal(goalId: number, goal: GoalPayload): Prom
 }
 
 export async function deletePatientGoal(goalId: number) {
+  if (!isPatientSession()) {
+    throw new Error('Connecte-toi pour supprimer un objectif.');
+  }
+
   const response = await fetch(`${API_URL}/goals/${goalId}`, {
     method: 'DELETE',
     headers: {
@@ -211,6 +233,8 @@ export async function deletePatientGoal(goalId: number) {
 }
 
 export async function fetchPatientNotes(): Promise<PatientNote[]> {
+  if (!isPatientSession()) return [];
+
   const response = await fetch(`${API_URL}/notes/me`, {
     headers: {
       Authorization: `Bearer ${requireAuthToken()}`,
@@ -227,6 +251,10 @@ export async function fetchPatientNotes(): Promise<PatientNote[]> {
 }
 
 export async function createPatientNote(note: NotePayload): Promise<PatientNote> {
+  if (!isPatientSession()) {
+    throw new Error('Connecte-toi pour enregistrer une note.');
+  }
+
   const response = await fetch(`${API_URL}/notes`, {
     method: 'POST',
     headers: {
@@ -245,6 +273,10 @@ export async function createPatientNote(note: NotePayload): Promise<PatientNote>
 }
 
 export async function updatePatientNote(noteId: number, note: NotePayload): Promise<PatientNote> {
+  if (!isPatientSession()) {
+    throw new Error('Connecte-toi pour modifier une note.');
+  }
+
   const response = await fetch(`${API_URL}/notes/${noteId}`, {
     method: 'PUT',
     headers: {
@@ -263,6 +295,10 @@ export async function updatePatientNote(noteId: number, note: NotePayload): Prom
 }
 
 export async function deletePatientNote(noteId: number) {
+  if (!isPatientSession()) {
+    throw new Error('Connecte-toi pour supprimer une note.');
+  }
+
   const response = await fetch(`${API_URL}/notes/${noteId}`, {
     method: 'DELETE',
     headers: {
@@ -279,6 +315,8 @@ export async function deletePatientNote(noteId: number) {
 }
 
 async function resolveLatestHistoryId() {
+  if (!isPatientSession()) return null;
+
   const storedHistoryId = getLastHistoryId();
   if (storedHistoryId != null) return storedHistoryId;
 
@@ -292,6 +330,8 @@ async function resolveLatestHistoryId() {
 }
 
 export async function logActivity(activity: ActivityPayload) {
+  if (!isPatientSession()) return null;
+
   const historyId = activity.historyId ?? (await resolveLatestHistoryId());
   if (historyId == null) {
     throw new Error('Aucun historique récent disponible pour lier l’activité.');

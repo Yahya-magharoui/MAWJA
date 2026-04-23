@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryParam } from '../hooks/useQueryParam';
+import { isAuthenticatedSession, persistGuestSession } from '../lib/session';
 
 /* —— slides —— */
 type Slide = {
@@ -87,6 +88,20 @@ export default function Home() {
   const startX = useRef<number | null>(null);
 
   useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const accountStatus = localStorage.getItem('accountStatus');
+
+    if (token && accountStatus === 'registered') {
+      router.replace('/app');
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (isAuthenticatedSession()) {
+      router.replace('/app');
+      return;
+    }
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') next();
       if (e.key === 'ArrowLeft') prev();
@@ -115,7 +130,7 @@ export default function Home() {
     const existing = localStorage.getItem('guestId');
     const guestId = existing ?? crypto.randomUUID();
     localStorage.setItem('guestId', guestId);
-    localStorage.setItem('guestProfile', JSON.stringify({ id: guestId, role: 'guest', createdAt: new Date().toISOString() }));
+    persistGuestSession({ id: guestId, role: 'PATIENT' });
     router.push('/app');
   }
 

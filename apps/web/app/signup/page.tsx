@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BackLink from '../../components/BackLink';
+import { isAuthenticatedSession, persistAuthenticatedSession } from '../../lib/session';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://mawja-back.onrender.com/api';
 
@@ -11,6 +12,12 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticatedSession()) {
+      router.replace('/app');
+    }
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,18 +36,24 @@ export default function Signup() {
         throw new Error(data.message || 'Création impossible. Essaie avec une autre adresse.');
       }
 
-      if (data.access_token) {
-        localStorage.setItem('authToken', data.access_token);
-      }
-      localStorage.setItem(
-        'guestProfile',
-        JSON.stringify(data.user ?? { email, createdAt: new Date().toISOString() })
+      const profile = data.user ?? {
+        email,
+        role: 'PATIENT',
+        createdAt: new Date().toISOString(),
+      };
+
+      persistAuthenticatedSession(
+        {
+          ...profile,
+          email: profile.email ?? email,
+          role: 'PATIENT',
+        },
+        data.access_token ?? null
       );
-      localStorage.setItem('accountStatus', 'registered');
 
       setMsg('Compte créé ✅');
       setTimeout(() => {
-        router.push('/login');
+        router.replace('/app');
       }, 600);
     } catch (error) {
       const err = error as Error;

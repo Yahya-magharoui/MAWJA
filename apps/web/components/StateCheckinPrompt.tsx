@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { postHistoryEntry, type HistoryState } from '../lib/patientTracking';
+import { useSessionInfo } from '../lib/session';
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const STORAGE_KEY = 'mawja-state-checkin-last-at';
 
@@ -47,13 +48,15 @@ function writeLastCheckinAt(timestamp: number) {
 
 export default function StateCheckinPrompt() {
   const pathname = usePathname();
+  const session = useSessionInfo();
   const timerRef = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const canShowPrompt = session?.status === 'registered' && session.role === 'PATIENT';
 
   useEffect(() => {
-    if (!isEligiblePath(pathname)) {
+    if (!isEligiblePath(pathname) || !canShowPrompt) {
       setOpen(false);
       setError(null);
       if (timerRef.current) {
@@ -86,7 +89,7 @@ export default function StateCheckinPrompt() {
         timerRef.current = null;
       }
     };
-  }, [pathname]);
+  }, [pathname, canShowPrompt]);
 
   async function submitState(state: HistoryState) {
     setBusy(true);
@@ -127,7 +130,7 @@ export default function StateCheckinPrompt() {
     }, FIVE_MINUTES_MS);
   }
 
-  if (!isEligiblePath(pathname) || !open) return null;
+  if (!isEligiblePath(pathname) || !canShowPrompt || !open) return null;
 
   return (
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="state-checkin-title">

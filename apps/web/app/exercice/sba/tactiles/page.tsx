@@ -92,7 +92,9 @@ function EndpointBody({ side }: { side: 'L' | 'R' }) {
         alt="Bras croisés sur les épaules"
         style={{ width:'100%', height:'auto', display:'block', filter:'drop-shadow(0 14px 32px rgba(15,23,42,.15))' }}
       />
-      <span key={side} className="shoulderBubble" style={bubble} />
+      <span style={bubble}>
+        <span key={side} className="shoulderBubble" style={styles.bubbleDot} />
+      </span>
     </div>
   );
 }
@@ -128,14 +130,19 @@ const mini: React.CSSProperties = {
 };
 const styles = {
   bubbleLeft: {
-    left: '18%',
-    top: '62%',
+    position: 'absolute',
+    left: '10%',
+    top: '44%',
     transform: 'translate(-50%, -50%)'
   },
   bubbleRight: {
-    left: '82%',
+    position: 'absolute',
+    left: '67%',
     top: '44%',
     transform: 'translate(-50%, -50%)'
+  },
+  bubbleDot: {
+    display: 'block'
   }
 } satisfies Record<string, React.CSSProperties>;
 

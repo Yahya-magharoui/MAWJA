@@ -1,8 +1,10 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import AuthRequiredNotice from '../../../../components/AuthRequiredNotice';
 import BackLink from '../../../../components/BackLink';
 import { deletePatientNote, fetchPatientNotes, type PatientNote } from '../../../../lib/patientTracking';
+import { useSessionInfo } from '../../../../lib/session';
 
 type Note = {
   id: number;
@@ -18,6 +20,8 @@ function toNote(note: PatientNote): Note {
 
 export default function NoteDetail() {
   const router = useRouter();
+  const session = useSessionInfo();
+  const authenticated = session?.status === 'registered' && session.role === 'PATIENT';
   const { id } = useParams<{ id: string }>();
   const noteId = Number(id);
   const [note, setNote] = useState<Note | null>(null);
@@ -25,6 +29,14 @@ export default function NoteDetail() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (session && !authenticated) {
+      setLoading(false);
+      setNote(null);
+      setError(null);
+      return;
+    }
+    if (!authenticated) return;
+
     let cancelled = false;
 
     async function loadNote() {
@@ -55,7 +67,7 @@ export default function NoteDetail() {
     return () => {
       cancelled = true;
     };
-  }, [noteId]);
+  }, [noteId, authenticated, session]);
 
   async function removeNote() {
     if (!Number.isFinite(noteId)) return;
@@ -78,10 +90,15 @@ export default function NoteDetail() {
       </header>
 
       <div style={{ padding: '0 20px', maxWidth: 700, margin: '0 auto' }}>
+        {session && !authenticated ? <AuthRequiredNotice subject="tes notes" /> : null}
+        {authenticated ? (
+        <>
         {loading ? <div style={statusCard}>Chargement…</div> : null}
         {error ? <div style={errorCard}>{error}</div> : null}
         {!loading && !error && !note ? <div style={statusCard}>Note introuvable.</div> : null}
         {!loading && !error && note ? <div style={bigCard}>{note.text}</div> : null}
+        </>
+        ) : null}
       </div>
     </main>
   );

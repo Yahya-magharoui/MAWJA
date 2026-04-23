@@ -1,8 +1,10 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import { useThemeColor } from '../../../components/theme';
 import BackLink from '../../../components/BackLink';
+import { useSessionInfo } from '../../../lib/session';
 import {
   createPatientNote,
   deletePatientNote,
@@ -28,6 +30,8 @@ function toNote(note: PatientNote): Note {
 export default function NotesPage() {
   const router = useRouter();
   const themeColor = useThemeColor();
+  const session = useSessionInfo();
+  const authenticated = session?.status === 'registered' && session.role === 'PATIENT';
   const [notes, setNotes] = useState<Note[]>([]);
   const [draft, setDraft] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -36,6 +40,14 @@ export default function NotesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (session && !authenticated) {
+      setLoading(false);
+      setNotes([]);
+      setError(null);
+      return;
+    }
+    if (!authenticated) return;
+
     let cancelled = false;
 
     async function loadNotes() {
@@ -58,7 +70,7 @@ export default function NotesPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authenticated, session]);
 
   async function saveNote() {
     const text = draft.trim();
@@ -121,62 +133,67 @@ export default function NotesPage() {
       <p style={{ margin: '0 20px 10px', opacity: 0.7 }}>Écris ce dont tu souhaites te souvenir ou que tu as remarqué</p>
 
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 20px' }}>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-          <input
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') void saveNote();
-            }}
-            placeholder="Ajouter une note…"
-            style={input}
-          />
-          <button onClick={() => void saveNote()} disabled={saving} style={buttonStyle(themeColor, saving)}>
-            {saving ? 'Enregistrement…' : editingId ? 'Mettre à jour' : 'Ajouter'}
-          </button>
-          {editingId ? (
-            <button onClick={cancelEdit} style={btnGhost}>Annuler</button>
-          ) : null}
-          <a href="/tolerance/notes/guides" style={smallLink}>Questions guidées →</a>
-        </div>
+        {session && !authenticated ? <AuthRequiredNotice subject="tes notes" /> : null}
+        {authenticated ? (
+          <>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') void saveNote();
+                }}
+                placeholder="Ajouter une note…"
+                style={input}
+              />
+              <button onClick={() => void saveNote()} disabled={saving} style={buttonStyle(themeColor, saving)}>
+                {saving ? 'Enregistrement…' : editingId ? 'Mettre à jour' : 'Ajouter'}
+              </button>
+              {editingId ? (
+                <button onClick={cancelEdit} style={btnGhost}>Annuler</button>
+              ) : null}
+              <a href="/tolerance/notes/guides" style={smallLink}>Questions guidées →</a>
+            </div>
 
-        {error && <div style={errorCard}>{error}</div>}
+            {error && <div style={errorCard}>{error}</div>}
 
-        {loading ? <div style={emptyState}>Chargement des notes…</div> : null}
-        {!loading && notes.length === 0 ? <div style={emptyState}>Aucune note pour le moment.</div> : null}
+            {loading ? <div style={emptyState}>Chargement des notes…</div> : null}
+            {!loading && notes.length === 0 ? <div style={emptyState}>Aucune note pour le moment.</div> : null}
 
-        <div style={cards}>
-          {!loading && notes.map((note) => (
-            <article key={note.id} style={card}>
-              <a
-                href={`/tolerance/notes/${note.id}`}
-                style={{ textDecoration: 'none', color: '#0f172a', flex: 1 }}
-              >
-                {note.text}
-              </a>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  onClick={(event) => {
-                    event.preventDefault();
-                    startEdit(note);
-                  }}
-                  style={smallButton(themeColor)}
-                >
-                  Modifier
-                </button>
-                <button
-                  onClick={(event) => {
-                    event.preventDefault();
-                    void removeNote(note.id);
-                  }}
-                  style={dangerButton}
-                >
-                  Supprimer
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
+            <div style={cards}>
+              {!loading && notes.map((note) => (
+                <article key={note.id} style={card}>
+                  <a
+                    href={`/tolerance/notes/${note.id}`}
+                    style={{ textDecoration: 'none', color: '#0f172a', flex: 1 }}
+                  >
+                    {note.text}
+                  </a>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={(event) => {
+                        event.preventDefault();
+                        startEdit(note);
+                      }}
+                      style={smallButton(themeColor)}
+                    >
+                      Modifier
+                    </button>
+                    <button
+                      onClick={(event) => {
+                        event.preventDefault();
+                        void removeNote(note.id);
+                      }}
+                      style={dangerButton}
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
+        ) : null}
       </div>
     </main>
   );
