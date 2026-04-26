@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BackLink from '../../components/BackLink';
-import { isAuthenticatedSession, persistAuthenticatedSession } from '../../lib/session';
+import { isAuthenticatedSession, persistAuthenticatedSession, type UserRole } from '../../lib/session';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://mawja-back.onrender.com/api';
 
@@ -10,6 +10,7 @@ export default function Signup() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<UserRole>('PATIENT');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -28,7 +29,7 @@ export default function Signup() {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, "role":"PATIENT" }),
+        body: JSON.stringify({ email, password, role }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -38,7 +39,7 @@ export default function Signup() {
 
       const profile = data.user ?? {
         email,
-        role: 'PATIENT',
+        role,
         createdAt: new Date().toISOString(),
       };
 
@@ -46,7 +47,7 @@ export default function Signup() {
         {
           ...profile,
           email: profile.email ?? email,
-          role: 'PATIENT',
+          role: profile.role === 'DOCTOR' || profile.role === 'PATIENT' ? profile.role : role,
         },
         data.access_token ?? null
       );
@@ -82,6 +83,25 @@ export default function Signup() {
         }}
       >
         <h1 style={{ fontSize: 22, marginBottom: 8 }}>Créer un compte</h1>
+        <div style={{ display: 'grid', gap: 8 }}>
+          <span style={labelStyle}>Je suis</span>
+          <div style={roleGroupStyle}>
+            <button
+              type="button"
+              onClick={() => setRole('PATIENT')}
+              style={roleButtonStyle(role === 'PATIENT')}
+            >
+              Patient
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('DOCTOR')}
+              style={roleButtonStyle(role === 'DOCTOR')}
+            >
+              Médecin
+            </button>
+          </div>
+        </div>
         <input
           type="email"
           required
@@ -116,6 +136,28 @@ const inputStyle: React.CSSProperties = {
   border: '1px solid #ddd',
   fontSize: 15,
 };
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 14,
+  fontWeight: 600,
+  color: '#334155',
+};
+
+const roleGroupStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: 8,
+};
+
+const roleButtonStyle = (active: boolean): React.CSSProperties => ({
+  padding: '11px 12px',
+  borderRadius: 10,
+  border: active ? '1px solid #4f46e5' : '1px solid #ddd',
+  background: active ? '#eef2ff' : '#fff',
+  color: active ? '#312e81' : '#111',
+  fontWeight: 700,
+  cursor: 'pointer',
+});
 
 const btnStyle: React.CSSProperties = {
   padding: '12px 16px',
