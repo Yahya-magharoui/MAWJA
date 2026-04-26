@@ -19,6 +19,7 @@ export type SessionProfile = {
 };
 
 const SESSION_PROFILE_KEY = 'guestProfile';
+const SESSION_EVENT = 'mawja-session-changed';
 
 function normalizeRole(value: unknown): UserRole | null {
   return value === 'DOCTOR' || value === 'PATIENT' ? value : null;
@@ -136,6 +137,7 @@ export function persistAuthenticatedSession(profile: SessionProfile, token?: str
       loggedInAt: profile.loggedInAt ?? new Date().toISOString(),
     } satisfies SessionProfile)
   );
+  window.dispatchEvent(new Event(SESSION_EVENT));
 }
 
 export function persistGuestSession(profile?: Partial<SessionProfile>) {
@@ -152,6 +154,7 @@ export function persistGuestSession(profile?: Partial<SessionProfile>) {
       createdAt: profile?.createdAt ?? new Date().toISOString(),
     } satisfies SessionProfile)
   );
+  window.dispatchEvent(new Event(SESSION_EVENT));
 }
 
 export function clearSession() {
@@ -159,13 +162,27 @@ export function clearSession() {
   window.localStorage.removeItem('authToken');
   window.localStorage.removeItem('accountStatus');
   window.localStorage.removeItem(SESSION_PROFILE_KEY);
+  window.dispatchEvent(new Event(SESSION_EVENT));
 }
 
 export function useAuthenticatedSession() {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [authenticated, setAuthenticated] = useState<boolean | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return isAuthenticatedSession();
+  });
 
   useEffect(() => {
-    setAuthenticated(isAuthenticatedSession());
+    const sync = () => setAuthenticated(isAuthenticatedSession());
+    sync();
+    window.addEventListener(SESSION_EVENT, sync);
+    window.addEventListener('storage', sync);
+    window.addEventListener('pageshow', sync);
+
+    return () => {
+      window.removeEventListener(SESSION_EVENT, sync);
+      window.removeEventListener('storage', sync);
+      window.removeEventListener('pageshow', sync);
+    };
   }, []);
 
   return authenticated;
@@ -177,15 +194,36 @@ export function useSessionInfo() {
     authenticated: boolean;
     role: UserRole | null;
     profile: SessionProfile | null;
-  } | null>(null);
-
-  useEffect(() => {
-    setSession({
+  } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return {
       status: getAccountStatus(),
       authenticated: isAuthenticatedSession(),
       role: getUserRole(),
       profile: getSessionProfile(),
-    });
+    };
+  });
+
+  useEffect(() => {
+    const sync = () => {
+      setSession({
+        status: getAccountStatus(),
+        authenticated: isAuthenticatedSession(),
+        role: getUserRole(),
+        profile: getSessionProfile(),
+      });
+    };
+
+    sync();
+    window.addEventListener(SESSION_EVENT, sync);
+    window.addEventListener('storage', sync);
+    window.addEventListener('pageshow', sync);
+
+    return () => {
+      window.removeEventListener(SESSION_EVENT, sync);
+      window.removeEventListener('storage', sync);
+      window.removeEventListener('pageshow', sync);
+    };
   }, []);
 
   return session;

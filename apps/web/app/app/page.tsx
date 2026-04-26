@@ -69,7 +69,7 @@ export default function AppHome() {
   function handleLogout() {
     clearSession();
     setOpenSettings(false);
-    window.location.href = '/login';
+    window.location.replace('/login');
   }
 
   async function handleStateSelection(state: HistoryState, href: string) {

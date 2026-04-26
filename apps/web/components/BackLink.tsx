@@ -46,6 +46,7 @@ export default function BackLink({
   const handleClick: MouseEventHandler<HTMLButtonElement> = (event) => {
     onClick?.(event);
     if (event.defaultPrevented) return;
+    if (onClick) return;
 
     const fallback = (href ?? '/') as Route;
 
