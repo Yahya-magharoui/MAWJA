@@ -1,5 +1,4 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import BackLink from '../../../components/BackLink';
@@ -43,7 +42,6 @@ function toRow(history: PatientHistory): Row {
 }
 
 export default function HistoryPage() {
-  const router = useRouter();
   const session = useSessionInfo();
   const authenticated = session?.status === 'registered' && session.role === 'PATIENT';
   const [rows, setRows] = useState<Row[]>([]);
@@ -151,7 +149,7 @@ export default function HistoryPage() {
   return (
     <main style={{ ...wrap, background: bg }}>
       <header style={hdr}>
-        <BackLink href={null} onClick={() => router.back()} style={backBtn} />
+        <BackLink href="/tolerance" style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Mon historique</h1>
         <div />
       </header>

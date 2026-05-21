@@ -1,5 +1,4 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import { useThemeColor } from '../../../components/theme';
@@ -28,7 +27,6 @@ function toNote(note: PatientNote): Note {
 }
 
 export default function NotesPage() {
-  const router = useRouter();
   const themeColor = useThemeColor();
   const session = useSessionInfo();
   const authenticated = session?.status === 'registered' && session.role === 'PATIENT';
@@ -125,7 +123,7 @@ export default function NotesPage() {
   return (
     <main style={wrap}>
       <header style={hdr}>
-        <BackLink href={null} onClick={() => router.back()} style={backBtn} />
+        <BackLink href="/tolerance" style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Mes Notes</h1>
         <div />
       </header>

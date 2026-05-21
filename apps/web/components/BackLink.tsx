@@ -50,7 +50,7 @@ export default function BackLink({
 
     const fallback = (href ?? '/') as Route;
 
-    if (window.history.length > 1) {
+    if (href == null && window.history.length > 1) {
       event.preventDefault();
       router.back();
       return;

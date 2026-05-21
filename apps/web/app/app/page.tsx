@@ -3,18 +3,40 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import BackLink from '../../components/BackLink';
 import DoctorDashboard from '../../components/DoctorDashboard';
+import PatientAssignmentCard from '../../components/PatientAssignmentCard';
 import { getStoredThemeColor, setThemeColor, tintColor, withAlpha } from '../../components/theme';
 import type { Lang } from '../../i18n';
 import { postHistoryEntry, type HistoryState } from '../../lib/patientTracking';
 import { clearSession, type AccountStatus, type UserRole, useSessionInfo } from '../../lib/session';
 
 const PRESET = ['#A78BFA', '#93C5FD', '#A7F3D0', '#FDE68A', '#F9A8D4', '#D1D5DB'];
+const STATE_OPTIONS: Array<{ value: HistoryState; label: string; description: string }> = [
+  {
+    value: 'HYPER',
+    label: 'Hyperactivation',
+    description: 'Tension, agitation, accélération.',
+  },
+  {
+    value: 'TOLERANCE',
+    label: 'Fenêtre de tolérance',
+    description: 'Équilibre, présence, stabilité.',
+  },
+  {
+    value: 'HYPO',
+    label: 'Hypoactivation',
+    description: 'Ralenti, engourdi, déconnecté.',
+  },
+];
 
 export default function AppHome() {
   const session = useSessionInfo();
   const [color, setColor] = useState(PRESET[0]);
   const [openSettings, setOpenSettings] = useState(false);
+  const [openAssignmentModal, setOpenAssignmentModal] = useState(false);
+  const [openLogoutCheckin, setOpenLogoutCheckin] = useState(false);
   const [selectionBusy, setSelectionBusy] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
   const [readingEnabled, setReadingEnabled] = useState(() => {
     if (typeof window === 'undefined') return true;
     return window.localStorage.getItem('readingEnabled') !== 'false';
@@ -64,26 +86,66 @@ export default function AppHome() {
   const accountEmail = session?.profile?.email ?? null;
   const accountName = session?.profile?.name ?? null;
   const isDoctor = role === 'DOCTOR' && accountStatus === 'registered';
+  const isAuthenticatedPatient = role === 'PATIENT' && accountStatus === 'registered';
   const screenTitle = isDoctor ? 'Dashboard medecin' : 'Comment te sens-tu maintenant ?';
 
   function handleLogout() {
+    if (isAuthenticatedPatient) {
+      setOpenAssignmentModal(false);
+      setOpenSettings(false);
+      setOpenLogoutCheckin(true);
+      setLogoutError(null);
+      return;
+    }
+
     clearSession();
+    setOpenAssignmentModal(false);
+    setOpenLogoutCheckin(false);
     setOpenSettings(false);
     window.location.replace('/login');
   }
 
-  async function handleStateSelection(state: HistoryState, href: string) {
+  function handleStateSelection(_: HistoryState, href: string) {
     if (selectionBusy) return;
 
     setSelectionBusy(true);
+    window.location.href = href;
+  }
+
+  function finalizeLogout() {
+    clearSession();
+    setOpenAssignmentModal(false);
+    setOpenSettings(false);
+    setOpenLogoutCheckin(false);
+    setLogoutBusy(false);
+    window.location.replace('/login');
+  }
+
+  async function tryLogLogoutState(state: HistoryState) {
+    await Promise.race([
+      postHistoryEntry(state),
+      new Promise((resolve) => window.setTimeout(resolve, 1200)),
+    ]);
+  }
+
+  async function handleLogoutStateSelection(state: HistoryState) {
+    if (logoutBusy) return;
+
+    setLogoutBusy(true);
+    setLogoutError(null);
+
     try {
-      await postHistoryEntry(state);
-      window.location.href = href;
+      await tryLogLogoutState(state);
     } catch (error) {
       console.error(error);
-      window.alert("L’état n’a pas pu être enregistré. Réessaie.");
-      setSelectionBusy(false);
+    } finally {
+      finalizeLogout();
     }
+  }
+
+  function handleLogoutLater() {
+    if (logoutBusy) return;
+    finalizeLogout();
   }
 
   return (
@@ -104,7 +166,7 @@ export default function AppHome() {
       </header>
 
       {isDoctor ? (
-        <DoctorDashboard themeColor={color} />
+        <DoctorDashboard themeColor={color} profile={session?.profile ?? null} />
       ) : (
         <>
           <section className="fade-in" style={styles.stack}>
@@ -204,6 +266,20 @@ export default function AppHome() {
               </button>
             )}
 
+            {isAuthenticatedPatient && (
+              <button
+                style={styles.settingRow}
+                onClick={() => {
+                  setOpenSettings(false);
+                  setOpenAssignmentModal(true);
+                }}
+              >
+                <span style={styles.settingIcon}>🩺</span>
+                <div style={{ flex: 1 }}>Affectation à un médecin</div>
+                <span aria-hidden>›</span>
+              </button>
+            )}
+
             <div style={styles.settingSection}>
               <div style={styles.sectionTitle}>Personnaliser le thème</div>
               <div style={styles.bubbles}>
@@ -252,6 +328,65 @@ export default function AppHome() {
               <div>Effet sonore</div>
               <span style={{ fontSize: 13, opacity: 0.7 }}>{soundEnabled ? 'Activé' : 'Désactivé'}</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {openAssignmentModal && isAuthenticatedPatient && (
+        <div style={styles.settingsOverlay} role="dialog" aria-modal="true" aria-labelledby="assignment-modal-title">
+          <div style={styles.assignmentModalCard}>
+            <button onClick={() => setOpenAssignmentModal(false)} style={styles.closeBtn} aria-label="Fermer">✕</button>
+            <div style={{ marginBottom: 10 }}>
+              <p style={styles.assignmentEyebrow}>Suivi</p>
+              <h2 id="assignment-modal-title" style={styles.assignmentTitle}>Affectation à un médecin</h2>
+            </div>
+            <PatientAssignmentCard
+              themeColor={color}
+              profile={session?.profile ?? null}
+              authenticated={isAuthenticatedPatient}
+              embedded
+            />
+          </div>
+        </div>
+      )}
+
+      {openLogoutCheckin && isAuthenticatedPatient && (
+        <div style={styles.settingsOverlay} role="dialog" aria-modal="true" aria-labelledby="logout-checkin-title">
+          <div style={styles.logoutModalCard}>
+            <button onClick={() => setOpenLogoutCheckin(false)} style={styles.closeBtn} aria-label="Fermer">✕</button>
+            <div style={{ marginBottom: 8 }}>
+              <p style={styles.assignmentEyebrow}>Avant la déconnexion</p>
+              <h2 id="logout-checkin-title" style={styles.assignmentTitle}>Comment tu te sens maintenant ?</h2>
+              <p style={styles.logoutDescription}>Choisis ton état pour l’ajouter à l’historique avant de te déconnecter.</p>
+            </div>
+
+            <div style={styles.logoutOptions}>
+              {STATE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => void handleLogoutStateSelection(option.value)}
+                  disabled={logoutBusy}
+                  style={styles.logoutOptionButton}
+                >
+                  <span style={styles.logoutOptionLabel}>{option.label}</span>
+                  <span style={styles.logoutOptionDescription}>{option.description}</span>
+                </button>
+              ))}
+            </div>
+
+            <div style={styles.logoutActions}>
+              <button
+                type="button"
+                onClick={handleLogoutLater}
+                disabled={logoutBusy}
+                style={styles.logoutLaterButton}
+              >
+                Plus tard
+              </button>
+            </div>
+
+            {logoutError ? <p style={styles.logoutError}>{logoutError}</p> : null}
           </div>
         </div>
       )}
@@ -359,11 +494,40 @@ const styles = {
   hexInput: { width: 110, padding: '8px 10px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, outline: 'none' } as React.CSSProperties,
   settingsOverlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,.35)', display: 'grid', placeItems: 'center', padding: 20, zIndex: 50 } as React.CSSProperties,
   settingsCard: { width: 'min(420px,100%)', background: '#fff', borderRadius: 24, padding: '22px 12px 12px', boxShadow: '0 24px 40px rgba(15,23,42,.25)', display: 'grid', gap: 4, position: 'relative' } as React.CSSProperties,
+  assignmentModalCard: { width: 'min(520px,100%)', background: '#fff', borderRadius: 24, padding: '22px 18px 18px', boxShadow: '0 24px 40px rgba(15,23,42,.25)', display: 'grid', gap: 4, position: 'relative' } as React.CSSProperties,
+  logoutModalCard: { width: 'min(560px,100%)', background: '#fff', borderRadius: 24, padding: '22px 18px 18px', boxShadow: '0 24px 40px rgba(15,23,42,.25)', display: 'grid', gap: 4, position: 'relative' } as React.CSSProperties,
   closeBtn: { position: 'absolute', right: 12, top: 12, border: 'none', background: 'transparent', fontSize: 20, cursor: 'pointer' } as React.CSSProperties,
   settingRow: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', background: 'transparent', padding: '10px 8px', borderRadius: 12, cursor: 'pointer', textAlign: 'left' } as React.CSSProperties,
   settingIcon: { width: 28, textAlign: 'center', fontSize: 18 } as React.CSSProperties,
   settingSection: { padding: '6px 8px', borderRadius: 14, border: '1px solid rgba(0,0,0,.04)', background: '#fafaff', margin: '4px 0 6px' } as React.CSSProperties,
   sectionTitle: { fontWeight: 600, fontSize: 13, marginBottom: 6 } as React.CSSProperties,
+  assignmentEyebrow: { margin: 0, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#64748b' } as React.CSSProperties,
+  assignmentTitle: { margin: '6px 0 0', fontSize: 24, color: '#0f172a' } as React.CSSProperties,
+  logoutDescription: { margin: '8px 0 0', fontSize: 15, lineHeight: 1.5, color: '#475569' } as React.CSSProperties,
+  logoutOptions: { display: 'grid', gap: 12 } as React.CSSProperties,
+  logoutActions: { display: 'flex', justifyContent: 'flex-end', marginTop: 14 } as React.CSSProperties,
+  logoutOptionButton: {
+    textAlign: 'left',
+    border: '1px solid #e2e8f0',
+    background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+    borderRadius: 20,
+    padding: '16px 18px',
+    cursor: 'pointer',
+    display: 'grid',
+    gap: 4,
+  } as React.CSSProperties,
+  logoutOptionLabel: { fontSize: 17, fontWeight: 700, color: '#0f172a' } as React.CSSProperties,
+  logoutOptionDescription: { fontSize: 14, color: '#64748b' } as React.CSSProperties,
+  logoutLaterButton: {
+    border: '1px solid #dbe1f0',
+    background: '#f8fafc',
+    color: '#334155',
+    borderRadius: 999,
+    padding: '10px 16px',
+    cursor: 'pointer',
+    fontWeight: 600,
+  } as React.CSSProperties,
+  logoutError: { margin: '14px 0 0', color: '#b91c1c', fontSize: 14 } as React.CSSProperties,
   langRow: { display: 'flex', gap: 8 } as React.CSSProperties,
   langBtn: { flex: 1, padding: '8px 10px', borderRadius: 12, border: '1px solid rgba(0,0,0,.08)', fontWeight: 600, cursor: 'pointer' } as React.CSSProperties,
 } as const;

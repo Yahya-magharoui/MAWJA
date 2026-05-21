@@ -78,7 +78,7 @@ export default function GuidedQuestionsPage() {
           padding: '16px 20px',
         }}
       >
-        <BackLink href={null} onClick={() => history.back()} style={{ justifySelf: 'start' }} />
+        <BackLink href="/tolerance/notes" style={{ justifySelf: 'start' }} />
         <div>
           <h1 style={{ margin: 0, fontSize: 20 }}>Questions guidées</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, opacity: 0.7 }}>

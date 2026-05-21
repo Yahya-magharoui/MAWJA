@@ -1,5 +1,4 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import BackLink from '../../../components/BackLink';
@@ -16,7 +15,6 @@ const ALL: Card[] = [
 ];
 
 export default function RoutinePage(){
-  const router = useRouter();
   const session = useSessionInfo();
   const authenticated = session?.status === 'registered' && session.role === 'PATIENT';
   const [favKeys, setFavKeys] = useState<string[]>([]);
@@ -47,7 +45,7 @@ export default function RoutinePage(){
   return (
     <main style={{ ...wrap, background: bg }}>
       <header style={hdr}>
-        <BackLink href={null} onClick={() => router.back()} style={backBtn} />
+        <BackLink href="/tolerance" style={backBtn} />
         <h1 style={{ margin:0, fontSize:20 }}>Ma routine</h1>
         <div />
       </header>

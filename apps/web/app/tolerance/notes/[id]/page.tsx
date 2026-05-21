@@ -84,7 +84,7 @@ export default function NoteDetail() {
   return (
     <main style={wrap}>
       <header style={hdr}>
-        <BackLink href={null} onClick={() => router.back()} style={backBtn} />
+        <BackLink href="/tolerance/notes" style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Note</h1>
         <button onClick={() => void removeNote()} title="Supprimer" style={trashBtn}>🗑️</button>
       </header>

@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { postHistoryEntry, type HistoryState } from '../lib/patientTracking';
 import { useSessionInfo } from '../lib/session';
-const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
+const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 const STORAGE_KEY = 'mawja-state-checkin-last-at';
+const LOGIN_PROMPT_KEY = 'mawja-state-checkin-login-prompted-at';
 
 const OPTIONS: Array<{ value: HistoryState; label: string; description: string }> = [
   {
@@ -46,6 +48,16 @@ function writeLastCheckinAt(timestamp: number) {
   window.localStorage.setItem(STORAGE_KEY, String(timestamp));
 }
 
+function readLoginPromptMarker() {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(LOGIN_PROMPT_KEY);
+}
+
+function writeLoginPromptMarker(value: string) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(LOGIN_PROMPT_KEY, value);
+}
+
 export default function StateCheckinPrompt() {
   const pathname = usePathname();
   const session = useSessionInfo();
@@ -54,9 +66,12 @@ export default function StateCheckinPrompt() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canShowPrompt = session?.status === 'registered' && session.role === 'PATIENT';
+  const loginMarker = session?.profile?.loggedInAt ?? null;
 
   useEffect(() => {
-    if (!isEligiblePath(pathname) || !canShowPrompt) {
+    const promptEnabled = isEligiblePath(pathname) && canShowPrompt;
+
+    if (!promptEnabled) {
       setOpen(false);
       setError(null);
       if (timerRef.current) {
@@ -69,7 +84,7 @@ export default function StateCheckinPrompt() {
     const scheduleNext = () => {
       const now = Date.now();
       const lastCheckinAt = readLastCheckinAt();
-      const remaining = Math.max(FIVE_MINUTES_MS - (now - lastCheckinAt), 0);
+      const remaining = Math.max(FIFTEEN_MINUTES_MS - (now - lastCheckinAt), 0);
 
       if (timerRef.current) {
         window.clearTimeout(timerRef.current);
@@ -81,6 +96,23 @@ export default function StateCheckinPrompt() {
       }, remaining);
     };
 
+    const hasShownInitialPromptForThisLogin =
+      Boolean(loginMarker) && readLoginPromptMarker() === loginMarker;
+    const loginAt = loginMarker ? Date.parse(loginMarker) : 0;
+    const shouldOpenForNewLogin =
+      Boolean(loginMarker) && !hasShownInitialPromptForThisLogin && (!Number.isFinite(loginAt) || readLastCheckinAt() < loginAt);
+
+    if (shouldOpenForNewLogin) {
+      writeLoginPromptMarker(loginMarker as string);
+      setError(null);
+      setOpen(true);
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
     scheduleNext();
 
     return () => {
@@ -89,7 +121,7 @@ export default function StateCheckinPrompt() {
         timerRef.current = null;
       }
     };
-  }, [pathname, canShowPrompt]);
+  }, [pathname, canShowPrompt, loginMarker]);
 
   async function submitState(state: HistoryState) {
     setBusy(true);
@@ -99,6 +131,9 @@ export default function StateCheckinPrompt() {
       await postHistoryEntry(state);
       const now = Date.now();
       writeLastCheckinAt(now);
+      if (loginMarker) {
+        writeLoginPromptMarker(loginMarker);
+      }
       setOpen(false);
       setError(null);
 
@@ -107,7 +142,7 @@ export default function StateCheckinPrompt() {
       }
       timerRef.current = window.setTimeout(() => {
         setOpen(true);
-      }, FIVE_MINUTES_MS);
+      }, FIFTEEN_MINUTES_MS);
     } catch (err) {
       const nextError = err instanceof Error ? err.message : 'Une erreur est survenue.';
       setError(nextError);
@@ -119,6 +154,9 @@ export default function StateCheckinPrompt() {
   function dismissForLater() {
     const now = Date.now();
     writeLastCheckinAt(now);
+    if (loginMarker) {
+      writeLoginPromptMarker(loginMarker);
+    }
     setOpen(false);
     setError(null);
 
@@ -127,7 +165,7 @@ export default function StateCheckinPrompt() {
     }
     timerRef.current = window.setTimeout(() => {
       setOpen(true);
-    }, FIVE_MINUTES_MS);
+    }, FIFTEEN_MINUTES_MS);
   }
 
   if (!isEligiblePath(pathname) || !canShowPrompt || !open) return null;

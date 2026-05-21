@@ -1,13 +1,11 @@
 'use client';
 import { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import AuthRequiredNotice from '../../components/AuthRequiredNotice';
 import BackLink from '../../components/BackLink';
 import { useThemeColor, withAlpha } from '../../components/theme';
 import { useSessionInfo } from '../../lib/session';
 
 export default function ToleranceHome() {
-  const router = useRouter();
   const theme = useThemeColor();
   const session = useSessionInfo();
   const isAuthenticatedPatient = session?.status === 'registered' && session.role === 'PATIENT';
@@ -23,7 +21,7 @@ export default function ToleranceHome() {
   return (
     <main style={{ ...wrap, background: bg }}>
       <header style={hdr}>
-        <BackLink href={null} onClick={() => router.back()} style={backBtn} />
+        <BackLink href="/app" style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Fenêtre de tolérance</h1>
         <div />
       </header>
