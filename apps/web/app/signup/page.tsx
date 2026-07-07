@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BackLink from '../../components/BackLink';
+import { DOCTOR_EXPERIENCE_ENABLED } from '../../lib/features';
 import { isAuthenticatedSession, persistAuthenticatedSession, type UserRole } from '../../lib/session';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://mawja-back.onrender.com/api';
@@ -10,7 +11,7 @@ export default function Signup() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('PATIENT');
+  const [role] = useState<UserRole>('PATIENT');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -83,25 +84,27 @@ export default function Signup() {
         }}
       >
         <h1 style={{ fontSize: 22, marginBottom: 8 }}>Créer un compte</h1>
-        <div style={{ display: 'grid', gap: 8 }}>
-          <span style={labelStyle}>Je suis</span>
-          <div style={roleGroupStyle}>
-            <button
-              type="button"
-              onClick={() => setRole('PATIENT')}
-              style={roleButtonStyle(role === 'PATIENT')}
-            >
-              Patient
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole('DOCTOR')}
-              style={roleButtonStyle(role === 'DOCTOR')}
-            >
-              Médecin
-            </button>
+        {DOCTOR_EXPERIENCE_ENABLED ? (
+          <div style={{ display: 'grid', gap: 8 }}>
+            <span style={labelStyle}>Je suis</span>
+            <div style={roleGroupStyle}>
+              <button
+                type="button"
+                onClick={() => undefined}
+                style={roleButtonStyle(role === 'PATIENT')}
+              >
+                Patient
+              </button>
+              <button
+                type="button"
+                onClick={() => undefined}
+                style={roleButtonStyle(role === 'DOCTOR')}
+              >
+                Médecin
+              </button>
+            </div>
           </div>
-        </div>
+        ) : null}
         <input
           type="email"
           required

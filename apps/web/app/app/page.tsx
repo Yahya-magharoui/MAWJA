@@ -6,6 +6,7 @@ import DoctorDashboard from '../../components/DoctorDashboard';
 import PatientAssignmentCard from '../../components/PatientAssignmentCard';
 import { getStoredThemeColor, setThemeColor, tintColor, withAlpha } from '../../components/theme';
 import type { Lang } from '../../i18n';
+import { DOCTOR_EXPERIENCE_ENABLED } from '../../lib/features';
 import { postHistoryEntry, type HistoryState } from '../../lib/patientTracking';
 import { clearSession, type AccountStatus, type UserRole, useSessionInfo } from '../../lib/session';
 
@@ -85,9 +86,14 @@ export default function AppHome() {
   const role: UserRole | null = session?.role ?? null;
   const accountEmail = session?.profile?.email ?? null;
   const accountName = session?.profile?.name ?? null;
-  const isDoctor = role === 'DOCTOR' && accountStatus === 'registered';
+  const isDoctor = DOCTOR_EXPERIENCE_ENABLED && role === 'DOCTOR' && accountStatus === 'registered';
+  const hasDoctorAccount = role === 'DOCTOR' && accountStatus === 'registered';
   const isAuthenticatedPatient = role === 'PATIENT' && accountStatus === 'registered';
-  const screenTitle = isDoctor ? 'Dashboard medecin' : 'Comment te sens-tu maintenant ?';
+  const screenTitle = isDoctor
+    ? 'Dashboard medecin'
+    : hasDoctorAccount
+      ? 'Espace médecin'
+      : 'Comment te sens-tu maintenant ?';
 
   function handleLogout() {
     if (isAuthenticatedPatient) {
@@ -167,6 +173,16 @@ export default function AppHome() {
 
       {isDoctor ? (
         <DoctorDashboard themeColor={color} profile={session?.profile ?? null} />
+      ) : hasDoctorAccount ? (
+        <section className="fade-in" style={styles.disabledDoctorShell}>
+          <div style={styles.disabledDoctorCard}>
+            <p style={styles.disabledDoctorEyebrow}>Bientôt disponible</p>
+            <h2 style={styles.disabledDoctorTitle}>L’espace médecin est temporairement masqué avant le déploiement.</h2>
+            <p style={styles.disabledDoctorText}>
+              La partie médecin n’est pas encore prête pour cette version publique. Tu peux te déconnecter depuis les paramètres.
+            </p>
+          </div>
+        </section>
       ) : (
         <>
           <section className="fade-in" style={styles.stack}>
@@ -266,7 +282,7 @@ export default function AppHome() {
               </button>
             )}
 
-            {isAuthenticatedPatient && (
+            {DOCTOR_EXPERIENCE_ENABLED && isAuthenticatedPatient && (
               <button
                 style={styles.settingRow}
                 onClick={() => {
@@ -332,7 +348,7 @@ export default function AppHome() {
         </div>
       )}
 
-      {openAssignmentModal && isAuthenticatedPatient && (
+      {DOCTOR_EXPERIENCE_ENABLED && openAssignmentModal && isAuthenticatedPatient && (
         <div style={styles.settingsOverlay} role="dialog" aria-modal="true" aria-labelledby="assignment-modal-title">
           <div style={styles.assignmentModalCard}>
             <button onClick={() => setOpenAssignmentModal(false)} style={styles.closeBtn} aria-label="Fermer">✕</button>
@@ -459,6 +475,24 @@ const styles = {
     cursor: 'pointer',
   } as React.CSSProperties,
   stack: { display: 'grid', gap: 14, padding: '6px 20px 14px', maxWidth: 520, margin: '0 auto', width: '100%' } as React.CSSProperties,
+  disabledDoctorShell: { display: 'grid', alignContent: 'start', padding: '24px 20px', maxWidth: 720, margin: '0 auto', width: '100%' } as React.CSSProperties,
+  disabledDoctorCard: {
+    background: '#fff',
+    borderRadius: 24,
+    border: '1px solid rgba(15,23,42,.08)',
+    boxShadow: '0 18px 36px rgba(15,23,42,.08)',
+    padding: '28px 24px',
+  } as React.CSSProperties,
+  disabledDoctorEyebrow: {
+    margin: 0,
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#7c3aed',
+  } as React.CSSProperties,
+  disabledDoctorTitle: { margin: '10px 0 8px', fontSize: 24, lineHeight: 1.2, color: '#0f172a' } as React.CSSProperties,
+  disabledDoctorText: { margin: 0, fontSize: 15, lineHeight: 1.6, color: '#475569' } as React.CSSProperties,
   card: {
     borderRadius: 22,
     border: '1px solid rgba(0,0,0,.04)',
