@@ -1,6 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../../components/BackLink';
 
 /** données */
@@ -17,8 +16,16 @@ type Emotion = typeof EMOTIONS[number];
 
 export default function EmotionWheel() {
   const [hovered, setHovered] = useState<Emotion | null>(null);
-  const searchParams = useSearchParams();
-  const from = searchParams.get('from');
+  const [from, setFrom] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('from');
+  });
+
+  useEffect(() => {
+    const nextFrom = new URLSearchParams(window.location.search).get('from');
+    setFrom(nextFrom);
+  }, []);
+
   const backHref =
     from === 'tolerance'
       ? '/tolerance'

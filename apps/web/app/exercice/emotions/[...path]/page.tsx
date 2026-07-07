@@ -1,6 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import { logActivity } from '../../../../lib/patientTracking';
 
@@ -246,12 +245,19 @@ const GRANDCHILDREN: Record<string, Item[]> = {
 
 export default function EmotionDetailPage({ params }: { params: { path: string[] } }) {
   const segs = params.path || [];
-  const searchParams = useSearchParams();
-  const from = searchParams.get('from');
+  const [from, setFrom] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('from');
+  });
   const root = (segs[0] as PrimaryKey) || 'joy';
   const level2Key = segs[1];
   const level3Key = segs[2];
   const [pendingKey, setPendingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const nextFrom = new URLSearchParams(window.location.search).get('from');
+    setFrom(nextFrom);
+  }, []);
 
   const theme = PRIMARY[root] ?? PRIMARY.joy;
   const withFrom = (href: string) => (from ? `${href}?from=${encodeURIComponent(from)}` : href);
