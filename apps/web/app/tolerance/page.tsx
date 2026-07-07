@@ -31,7 +31,7 @@ export default function ToleranceHome() {
       </p>
 
       <section style={grid}>
-        <a href="/exercice/emotions" className="tile" style={tileStyle}>
+        <a href="/exercice/emotions?from=tolerance" className="tile" style={tileStyle}>
          <img
             src="/icons/emotion.svg"
             alt="Roue des émotions"

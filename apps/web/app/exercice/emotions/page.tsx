@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import BackLink from '../../../components/BackLink';
 
 /** données */
@@ -16,6 +17,14 @@ type Emotion = typeof EMOTIONS[number];
 
 export default function EmotionWheel() {
   const [hovered, setHovered] = useState<Emotion | null>(null);
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from');
+  const backHref =
+    from === 'tolerance'
+      ? '/tolerance'
+      : from === 'hypo'
+        ? '/hypoactivation'
+        : '/hyperactivation';
 
   function pressFeedback() {
     if ('vibrate' in navigator) { try { (navigator as any).vibrate?.(18); } catch {} }
@@ -27,7 +36,7 @@ export default function EmotionWheel() {
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <BackLink href="/hyperactivation" style={styles.backLink} />
+        <BackLink href={backHref} style={styles.backLink} />
         <h1 style={styles.h1}>Roue des émotions</h1>
         <div />
       </header>
@@ -57,7 +66,7 @@ export default function EmotionWheel() {
           {EMOTIONS.map((emo, i) => {
   const s = slices[i];
   const isDim = hovered && hovered.key !== emo.key;
-  const href = `/exercice/emotions/${encodeURIComponent(emo.key)}`;
+  const href = `/exercice/emotions/${encodeURIComponent(emo.key)}${from ? `?from=${encodeURIComponent(from)}` : ''}`;
 
   return (
     <g key={emo.key}

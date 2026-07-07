@@ -20,6 +20,18 @@ test.describe('patient app flows', () => {
     await expect(page.getByText('Connecte-toi pour accéder à tes objectifs, notes, routine et historique')).toBeVisible();
   });
 
+  test('back from emotions returns to tolerance when opened from tolerance', async ({ page }) => {
+    await seedGuestSession(page);
+    await page.goto('/tolerance');
+
+    await page.getByRole('link', { name: 'Roue des émotions' }).click();
+    await expect(page.getByRole('heading', { name: 'Roue des émotions' })).toBeVisible();
+    await page.getByLabel('Retour').click();
+
+    await page.waitForURL('**/tolerance');
+    await expect(page.getByRole('heading', { name: 'Fenêtre de tolérance' })).toBeVisible();
+  });
+
   test('authenticated patient sees the initial check-in popup once', async ({ page }) => {
     await seedAuthenticatedSession(page, 'PATIENT');
     await page.goto('/app');

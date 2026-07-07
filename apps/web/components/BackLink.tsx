@@ -4,15 +4,15 @@ import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
 import type {
   CSSProperties,
-  MouseEventHandler,
   TouchEventHandler,
   MouseEvent,
-  TouchEvent
+  TouchEvent,
+  MouseEventHandler
 } from 'react';
 
 type Props = {
   href?: string | null;
-  onClick?: MouseEventHandler<HTMLButtonElement>;
+  onClick?: MouseEventHandler<HTMLAnchorElement | HTMLButtonElement>;
   onMouseDown?: (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void;
   onTouchStart?: (event: TouchEvent<HTMLAnchorElement | HTMLButtonElement>) => void;
   label?: string;
@@ -43,7 +43,7 @@ export default function BackLink({
 }: Props) {
   const router = useRouter();
 
-  const handleClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+  const handleButtonClick: MouseEventHandler<HTMLButtonElement> = (event) => {
     onClick?.(event);
     if (event.defaultPrevented) return;
     if (onClick) return;
@@ -62,11 +62,38 @@ export default function BackLink({
     }
   };
 
+  const handleAnchorClick: MouseEventHandler<HTMLAnchorElement> = (event) => {
+    onClick?.(event);
+    if (event.defaultPrevented) return;
+
+    const fallback = (href ?? '/') as Route;
+    if (!fallback) return;
+
+    event.preventDefault();
+    router.push(fallback);
+  };
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        aria-label={label}
+        onClick={handleAnchorClick}
+        onMouseDown={onMouseDown as MouseEventHandler<HTMLAnchorElement> | undefined}
+        onTouchStart={onTouchStart as TouchEventHandler<HTMLAnchorElement> | undefined}
+        className={className}
+        style={{ ...baseStyle, ...style, cursor: 'pointer' }}
+      >
+        ←
+      </a>
+    );
+  }
+
   return (
     <button
       type="button"
       aria-label={label}
-      onClick={handleClick}
+      onClick={handleButtonClick}
       onMouseDown={onMouseDown as MouseEventHandler<HTMLButtonElement> | undefined}
       onTouchStart={onTouchStart as TouchEventHandler<HTMLButtonElement> | undefined}
       className={className}

@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import BackLink from '../../../../components/BackLink';
 import { logActivity } from '../../../../lib/patientTracking';
 
@@ -245,14 +246,24 @@ const GRANDCHILDREN: Record<string, Item[]> = {
 
 export default function EmotionDetailPage({ params }: { params: { path: string[] } }) {
   const segs = params.path || [];
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from');
   const root = (segs[0] as PrimaryKey) || 'joy';
   const level2Key = segs[1];
   const level3Key = segs[2];
   const [pendingKey, setPendingKey] = useState<string | null>(null);
 
   const theme = PRIMARY[root] ?? PRIMARY.joy;
-  const backHref =
-    segs.length <= 1 ? '/exercice/emotions' : `/exercice/emotions/${segs.slice(0, -1).join('/')}`;
+  const withFrom = (href: string) => (from ? `${href}?from=${encodeURIComponent(from)}` : href);
+  const backHref = withFrom(
+    segs.length <= 1 ? '/exercice/emotions' : `/exercice/emotions/${segs.slice(0, -1).join('/')}`
+  );
+  const homeHref =
+    from === 'tolerance'
+      ? '/tolerance'
+      : from === 'hypo'
+        ? '/hypoactivation'
+        : '/hyperactivation';
 
   const items: Item[] = useMemo(() => {
     if (!(root in PRIMARY)) return [];
@@ -269,7 +280,7 @@ export default function EmotionDetailPage({ params }: { params: { path: string[]
   function destFor(item: Item) {
     const nextSegs =
       !level2Key ? [root, item.key] : level3Key ? [root, level2Key, item.key] : [root, item.key];
-    return `/exercice/emotions/${nextSegs.join('/')}`;
+    return withFrom(`/exercice/emotions/${nextSegs.join('/')}`);
   }
 
   function press() {
@@ -313,13 +324,13 @@ export default function EmotionDetailPage({ params }: { params: { path: string[]
       </header>
 
       <nav style={styles.crumbs}>
-        <a href="/exercice/emotions" style={chip('#fff', '#0f172a')}>Roue</a>
+        <a href={withFrom('/exercice/emotions')} style={chip('#fff', '#0f172a')}>Roue</a>
         <span style={{ margin: '0 6px', opacity: .5 }}>›</span>
-        <a href={`/exercice/emotions/${root}`} style={chip(theme.color, '#111')}>{PRIMARY[root]?.label ?? root}</a>
+        <a href={withFrom(`/exercice/emotions/${root}`)} style={chip(theme.color, '#111')}>{PRIMARY[root]?.label ?? root}</a>
         {level2Key && (
           <>
             <span style={{ margin: '0 6px', opacity: .5 }}>›</span>
-            <a href={`/exercice/emotions/${root}/${level2Key}`} style={chip('#fff', '#0f172a')}>
+            <a href={withFrom(`/exercice/emotions/${root}/${level2Key}`)} style={chip('#fff', '#0f172a')}>
               {labelOf(level2Key)}
             </a>
           </>
@@ -389,9 +400,9 @@ export default function EmotionDetailPage({ params }: { params: { path: string[]
       )}
 
       <footer style={styles.footer}>
-        <a href="/exercice/emotions" style={btnSecondary}>Réinitialiser</a>
+        <a href={withFrom('/exercice/emotions')} style={btnSecondary}>Réinitialiser</a>
         <a
-          href="/hyperactivation"
+          href={homeHref}
           style={{
             ...btnPlain,
             pointerEvents: pendingKey ? 'none' : undefined,
