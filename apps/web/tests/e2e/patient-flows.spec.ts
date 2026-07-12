@@ -32,6 +32,18 @@ test.describe('patient app flows', () => {
     await expect(page.getByRole('heading', { name: 'Fenêtre de tolérance' })).toBeVisible();
   });
 
+  test("back from help returns to app when opened from the home screen", async ({ page }) => {
+    await seedGuestSession(page);
+    await page.goto('/app');
+
+    await page.getByRole('button', { name: "J’ai besoin d’aide" }).click();
+    await expect(page.getByRole('heading', { name: 'Numéros d’urgence' })).toBeVisible();
+    await page.getByLabel('Retour').click();
+
+    await page.waitForURL('**/app');
+    await expect(page.getByRole('heading', { name: 'Comment te sens-tu maintenant ?' })).toBeVisible();
+  });
+
   test('authenticated patient sees the initial check-in popup once', async ({ page }) => {
     await seedAuthenticatedSession(page, 'PATIENT');
     await page.goto('/app');

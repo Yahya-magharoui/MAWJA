@@ -19,7 +19,7 @@ const SLIDES: Slide[] = [
     id: 'window',
     img: '/intro/tolerance_ouverte.png',
     alt: 'Fenêtre ouverte avec vague',
-    title: 'À PROPOS DE KALYMA',
+    title: 'À PROPOS DE KALYMAP',
     lines: [
       "La fenêtre de tolérance, c’est une zone où tu te sens suffisamment stable pour gérer tes émotions et les stimulations extérieures.",
       "Quand tu t’y trouves, tu es dans un état d’équilibre, calme et attentif au monde qui t’entoure.",
@@ -29,7 +29,7 @@ const SLIDES: Slide[] = [
     id: 'hyper',
     img: '/intro/hyper.png',
     alt: 'Fenêtre avec flèche vers le haut',
-    title: 'À PROPOS DE KALYMA',
+    title: 'À PROPOS DE KALYMAP',
     lines: [
       "Quand tu dépasses ta fenêtre de tolérance vers l’hyperactivation ton corps réagit comme s’il y avait un danger imminent.",
       "C’est une réponse automatique de protection (lutte ou fuite).",
@@ -40,7 +40,7 @@ const SLIDES: Slide[] = [
     id: 'hypo',
     img: '/intro/hypo.png',
     alt: 'Fenêtre avec flèche vers le bas',
-    title: 'À PROPOS DE KALYMA',
+    title: 'À PROPOS DE KALYMAP',
     lines: [
       "Quand tu dépasses ta fenêtre de tolérance vers l’hypoactivation le système passe en mode « paralysie / dissociation » pour te protéger d’une surcharge émotionnelle.",
       "Tu peux ressentir : paralysie, déconnexion, engourdissement, digestion perturbée, respiration impactée, déréalisation, apathie, retrait, confusion.",
@@ -50,7 +50,7 @@ const SLIDES: Slide[] = [
     id: 'why',
     img: '/intro/chemins.png',
     alt: 'Transition entre fenêtres',
-    title: 'À PROPOS DE KALYMA',
+    title: 'À PROPOS DE KALYMAP',
     lines: [
       "Connaître ta fenêtre de tolérance t’aide à repérer l’hypoactivation et l’hyperactivation.",
       "Quand tu identifies l’état dans lequel tu te trouves, tu peux utiliser des stratégies pour revenir dans ta fenêtre de tolérance et éviter de rester trop longtemps en déséquilibre.",

@@ -13,13 +13,13 @@ export default function TermsPage() {
         <h1 style={title}>Conditions générales d’utilisation</h1>
 
         <p>
-          Kalima est éditée par le Dr Kalyma (psychiatre). En utilisant l’application, vous acceptez les présentes
+          Kalymap est éditée par le Dr Kalyma (psychiatre). En utilisant l’application, vous acceptez les présentes
           conditions ainsi que la <Link href="/privacy" style={link}>Politique de confidentialité</Link>.
         </p>
 
         <h2 style={subtitle}>Objet du service</h2>
         <p>
-          Kalima propose des outils de psychoéducation, des exercices de régulation émotionnelle et un espace pour
+          Kalymap propose des outils de psychoéducation, des exercices de régulation émotionnelle et un espace pour
           rédiger des notes personnelles. Le service n’est pas un dispositif médical et ne remplace pas un suivi
           thérapeutique. En cas de détresse, contactez les services d’urgence.
         </p>
@@ -33,14 +33,14 @@ export default function TermsPage() {
 
         <h2 style={subtitle}>Règles d’usage</h2>
         <ul style={list}>
-          <li>Utiliser Kalima dans le respect des lois et des droits d’autrui.</li>
+          <li>Utiliser Kalymap dans le respect des lois et des droits d’autrui.</li>
           <li>Ne pas publier d’informations diffamatoires, menaçantes ou illégales.</li>
           <li>Ne pas altérer le fonctionnement de la plateforme ni tenter d’accéder aux données d’autres utilisateurs.</li>
         </ul>
 
         <h2 style={subtitle}>Disponibilité du service</h2>
         <p>
-          Nous fournissons Kalima 24h/24 sous réserve d’opérations de maintenance. Des évolutions techniques peuvent
+          Nous fournissons Kalymap 24h/24 sous réserve d’opérations de maintenance. Des évolutions techniques peuvent
           être déployées sans préavis, mais nous nous engageons à préserver la continuité et la sécurité des données.
         </p>
 
@@ -60,7 +60,7 @@ export default function TermsPage() {
         <h2 style={subtitle}>Résiliation</h2>
         <p>
           Vous pouvez clôturer votre compte à tout moment via les paramètres ou en écrivant à
-          <a href="mailto:support@kalima.app"> support@kalima.app</a>. Nous nous réservons le droit de suspendre un
+          <a href="mailto:support@kallymap.com"> support@kallymap.com</a>. Nous nous réservons le droit de suspendre un
           compte en cas de non-respect des CGU.
         </p>
 

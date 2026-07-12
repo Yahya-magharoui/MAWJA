@@ -12,7 +12,7 @@ export default function PrivacyPage() {
       <section style={card}>
         <h1 style={{ fontSize: 26, marginBottom: 12 }}>Politique de confidentialité</h1>
         <p style={{ marginBottom: 10 }}>
-          Kalima est éditée par le Dr Kalyma (psychiatre). Contact : <a href="mailto:support@kalima.app">support@kalima.app</a>.
+          Kalymap est éditée par le Dr Kalyma (psychiatre). Contact : <a href="mailto:support@kallymap.com">support@kallymap.com</a>.
           Les données sont hébergées dans l’Union Européenne et font l’objet d’une protection conforme au RGPD.
         </p>
         <h2 style={subtitle}>Données collectées</h2>
@@ -45,13 +45,13 @@ export default function PrivacyPage() {
         <p>
           Vous disposez des droits d’accès, de rectification, d’effacement, de limitation, d’opposition et de portabilité.
           Pour exercer ces droits ou retirer votre consentement, envoyez une demande à
-          <a href="mailto:support@kalima.app"> support@kalima.app</a> depuis l’adresse liée à votre compte.
+          <a href="mailto:support@kallymap.com"> support@kallymap.com</a> depuis l’adresse liée à votre compte.
           Votre requête sera traitée sous 30 jours.
         </p>
 
         <h2 style={subtitle}>Sécurité et responsabilité médicale</h2>
         <p>
-          Kalima n’est pas un dispositif médical et ne remplace pas une consultation individuelle avec un médecin
+          Kalymap n’est pas un dispositif médical et ne remplace pas une consultation individuelle avec un médecin
           ou un psychologue. En cas d’urgence ou de risque immédiat, contactez les services adaptés (SOS, SAMU, etc.).
           Des mesures techniques (chiffrement TLS, contrôle d’accès) protègent vos informations.
         </p>

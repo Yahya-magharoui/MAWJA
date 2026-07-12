@@ -110,7 +110,7 @@ export default function HypoactivationPage() {
       </section>
 
       <div style={{ display:'flex', gap:12, justifyContent:'center', margin:'10px 0 90px' }}>
-        <a href="/sos" onMouseDown={pressFeedback} style={btnSecondary}>J’ai besoin d’aide</a>
+        <a href="/sos?from=hypo" onMouseDown={pressFeedback} style={btnSecondary}>J’ai besoin d’aide</a>
       </div>
 
       <button type="button" onClick={randomChoice} aria-label="Choix aléatoire" style={fab(color)}>🎲</button>

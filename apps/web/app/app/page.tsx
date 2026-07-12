@@ -210,7 +210,7 @@ export default function AppHome() {
           </section>
 
           <nav className="float-up" style={styles.actions}>
-            <button style={styles.secondary} onClick={() => (window.location.href = '/sos')}>
+            <button style={styles.secondary} onClick={() => (window.location.href = '/sos?from=app')}>
               J’ai besoin d’aide
             </button>
           </nav>

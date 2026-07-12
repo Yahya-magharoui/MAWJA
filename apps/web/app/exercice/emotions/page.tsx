@@ -14,17 +14,19 @@ const EMOTIONS = [
 
 type Emotion = typeof EMOTIONS[number];
 
-export default function EmotionWheel() {
+type PageSearchParams = {
+  from?: string | string[];
+};
+
+export default function EmotionWheel({ searchParams }: { searchParams?: PageSearchParams }) {
+  const initialFrom = typeof searchParams?.from === 'string' ? searchParams.from : null;
   const [hovered, setHovered] = useState<Emotion | null>(null);
-  const [from, setFrom] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    return new URLSearchParams(window.location.search).get('from');
-  });
+  const [from, setFrom] = useState<string | null>(initialFrom);
 
   useEffect(() => {
     const nextFrom = new URLSearchParams(window.location.search).get('from');
     setFrom(nextFrom);
-  }, []);
+  }, [initialFrom]);
 
   const backHref =
     from === 'tolerance'

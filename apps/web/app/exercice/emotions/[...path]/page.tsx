@@ -241,14 +241,20 @@ const GRANDCHILDREN: Record<string, Item[]> = {
   ],
 };
 
+type PageSearchParams = {
+  from?: string | string[];
+};
 
-
-export default function EmotionDetailPage({ params }: { params: { path: string[] } }) {
+export default function EmotionDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { path: string[] };
+  searchParams?: PageSearchParams;
+}) {
   const segs = params.path || [];
-  const [from, setFrom] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    return new URLSearchParams(window.location.search).get('from');
-  });
+  const initialFrom = typeof searchParams?.from === 'string' ? searchParams.from : null;
+  const [from, setFrom] = useState<string | null>(initialFrom);
   const root = (segs[0] as PrimaryKey) || 'joy';
   const level2Key = segs[1];
   const level3Key = segs[2];
@@ -257,7 +263,7 @@ export default function EmotionDetailPage({ params }: { params: { path: string[]
   useEffect(() => {
     const nextFrom = new URLSearchParams(window.location.search).get('from');
     setFrom(nextFrom);
-  }, []);
+  }, [initialFrom]);
 
   const theme = PRIMARY[root] ?? PRIMARY.joy;
   const withFrom = (href: string) => (from ? `${href}?from=${encodeURIComponent(from)}` : href);

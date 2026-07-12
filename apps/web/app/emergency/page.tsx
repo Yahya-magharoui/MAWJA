@@ -1,17 +1,36 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import BackLink from '../../components/BackLink';
 
-export default function EmergencyPage() {
+type PageSearchParams = {
+  from?: string | string[];
+};
+
+export default function EmergencyPage({ searchParams }: { searchParams?: PageSearchParams }) {
+  const initialFrom = typeof searchParams?.from === 'string' ? searchParams.from : '';
+  const [from, setFrom] = useState(initialFrom);
+
+  useEffect(() => {
+    try {
+      setFrom(new URLSearchParams(window.location.search).get('from') ?? '');
+    } catch {}
+  }, [initialFrom]);
+
   const vibe = useCallback(() => {
     try { (navigator as any)?.vibrate?.(15); } catch {}
   }, []);
 
+  const backHref =
+    from === 'app' ? '/app'
+    : from === 'hypo' ? '/hypoactivation'
+    : '/hyperactivation';
+  const helpFlowSuffix = from ? `?from=${from}` : '';
+
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <BackLink href="/hyperactivation" style={styles.back} />
+        <BackLink href={backHref} style={styles.back} />
         <h1 style={styles.h1}>J’ai besoin d’aide</h1>
         <button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button>
       </header>
@@ -20,7 +39,7 @@ export default function EmergencyPage() {
 
       <section style={styles.grid}>
         <a
-          href="/sos"
+          href={`/sos${helpFlowSuffix}`}
           onMouseDown={vibe}
           style={{ ...styles.card, ...styles.cardTone }}
           className="card"
@@ -39,7 +58,7 @@ export default function EmergencyPage() {
         </a>
 
         <a
-          href="/plan"
+          href={`/plan${helpFlowSuffix}`}
           onMouseDown={vibe}
           style={{ ...styles.card, ...styles.cardTone }}
           className="card"

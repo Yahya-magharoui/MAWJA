@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { tintColor, useThemeColor } from '../../components/theme';
 import BackLink from '../../components/BackLink';
 
@@ -23,11 +22,15 @@ const EMPTY: PlanData = {
   soignants: ['', '', '', '', ''],
 };
 
-export default function CrisisPlanPage() {
-  const router = useRouter();
+type PageSearchParams = {
+  from?: string | string[];
+};
 
+export default function CrisisPlanPage({ searchParams }: { searchParams?: PageSearchParams }) {
   /** thème doux */
   const color = useThemeColor();
+  const initialFrom = typeof searchParams?.from === 'string' ? searchParams.from : '';
+  const [from, setFrom] = useState(initialFrom);
   const bg = useMemo(
     () => `radial-gradient(1200px 800px at 50% -10%, ${tintColor(color, 0.85)} 0%, #F6F7FE 55%)`,
     [color]
@@ -46,6 +49,11 @@ export default function CrisisPlanPage() {
       localStorage.setItem('crisisPlan', JSON.stringify(plan));
     } catch {}
   }, [plan]);
+  useEffect(() => {
+    try {
+      setFrom(new URLSearchParams(window.location.search).get('from') ?? '');
+    } catch {}
+  }, [initialFrom]);
 
   function updateCell(section: SectionId, idx: number, value: string) {
     setPlan(prev => {
@@ -64,14 +72,11 @@ export default function CrisisPlanPage() {
     setPlan(prev => ({ ...prev, [section]: ['', '', '', '', ''] }));
   }
 
-  function goBack() {
-    // Si on a une page précédente, on y revient, sinon on redirige vers la page d'aide
-    if (typeof document !== 'undefined' && document.referrer) {
-      router.back();
-    } else {
-      router.push('/emergency'); // ← ta page “J’ai besoin d’aide”
-    }
-  }
+  const backHref =
+    from === 'app' ? '/app'
+    : from === 'hypo' ? '/hypoactivation'
+    : '/hyperactivation';
+  const helpFlowSuffix = from ? `?from=${from}` : '';
 
   return (
     <main
@@ -93,7 +98,7 @@ export default function CrisisPlanPage() {
           padding: '16px 20px',
         }}
       >
-        <BackLink onClick={goBack} style={{ justifySelf: 'start' }} />
+        <BackLink href={backHref} style={{ justifySelf: 'start' }} />
         <div>
           <h1 style={{ margin: 0, fontSize: 20 }}>Plan de crise/sécurité</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, opacity: 0.7 }}>Tu peux le compléter ou l’actualiser !</p>
@@ -138,7 +143,7 @@ export default function CrisisPlanPage() {
           justifyContent: 'flex-end',
         }}
       >
-        <a href="/sos" style={btnSecondary}>Voir numéros d’urgence</a>
+        <a href={`/sos${helpFlowSuffix}`} style={btnSecondary}>Voir numéros d’urgence</a>
       </footer>
     </main>
   );

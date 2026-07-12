@@ -109,9 +109,15 @@ const BUILTIN: Emergency[] = [
 /* --- Helpers --- */
 const LS_KEY = 'customEmergencyContacts';
 
-export default function EmergencyPage() {
+type PageSearchParams = {
+  from?: string | string[];
+};
+
+export default function EmergencyPage({ searchParams }: { searchParams?: PageSearchParams }) {
+  const initialFrom = typeof searchParams?.from === 'string' ? searchParams.from : '';
   const [customs, setCustoms] = useState<Emergency[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [from, setFrom] = useState(initialFrom);
   const [draft, setDraft] = useState<{ title: string; phone: string; notes: string }>({
     title: '',
     phone: '',
@@ -130,8 +136,17 @@ export default function EmergencyPage() {
       localStorage.setItem(LS_KEY, JSON.stringify(customs));
     } catch {}
   }, [customs]);
+  useEffect(() => {
+    try {
+      setFrom(new URLSearchParams(window.location.search).get('from') ?? '');
+    } catch {}
+  }, [initialFrom]);
 
   const allCards = useMemo(() => [...BUILTIN, ...customs], [customs]);
+  const backHref =
+    from === 'app' ? '/app'
+    : from === 'hypo' ? '/hypoactivation'
+    : '/hyperactivation';
 
   function addCustom() {
     const title = draft.title.trim();
@@ -170,7 +185,7 @@ export default function EmergencyPage() {
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <BackLink href="/hyperactivation" style={styles.back} />
+        <BackLink href={backHref} style={styles.back} />
         <h1 style={styles.h1}>Numéros d’urgence</h1>
         <button style={styles.gear} title="Paramètres">⚙️</button>
       </header>
