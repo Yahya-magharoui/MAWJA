@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { useQueryParam } from '../../../../hooks/useQueryParam';
 import { logActivity } from '../../../../lib/patientTracking';
 
@@ -22,6 +23,7 @@ export default function AbdominalBreathing() {
   const [phase, setPhase] = useState<Phase>('stopped');
   const [loopI, setLoopI] = useState(0);
   const [left, setLeft] = useState(DUR.inhale);
+  const [completionOpen, setCompletionOpen] = useState(false);
 
   // RAF + timing helpers
   const rafRef = useRef<number | null>(null);
@@ -38,6 +40,7 @@ export default function AbdominalBreathing() {
   const [loopEnabled, setLoopEnabled] = useState(false);
 
   function start() {
+    setCompletionOpen(false);
     setPhase('inhale');
     setLoopI(0);
     setLeft(DUR.inhale);
@@ -55,6 +58,7 @@ export default function AbdominalBreathing() {
     setLoopI(0);
     setLeft(DUR.inhale);
     elapsedRef.current = 0;
+    setCompletionOpen(false);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
   }
@@ -85,7 +89,14 @@ export default function AbdominalBreathing() {
         const isCycleEnd = loopI === LOOP.length - 1;
         elapsedRef.current = 0;
         if (isCycleEnd && !loopEnabled) {
-          stop();
+          setPhase('stopped');
+          setLoopI(0);
+          setLeft(DUR.inhale);
+          setCompletionOpen(true);
+          if (rafRef.current) {
+            cancelAnimationFrame(rafRef.current);
+            rafRef.current = null;
+          }
           return;
         }
         setLoopI(nextI);
@@ -207,6 +218,11 @@ export default function AbdominalBreathing() {
       </div>
 
       {/* aide */}
+      <ExerciseCompletionPrompt
+        open={completionOpen}
+        onClose={() => setCompletionOpen(false)}
+        message="Merci d’avoir pris le temps de terminer cet exercice de respiration abdominale."
+      />
     </main>
   );
 }

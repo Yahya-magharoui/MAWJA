@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import BackLink from '../../../../components/BackLink';
+import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { useQueryParam } from '../../../../hooks/useQueryParam';
 
 const EXOS = [
@@ -31,6 +32,7 @@ export default function MiniWake() {
   const [runningKey, setRunningKey] = useState<string | null>(null);
   // selectedKey = exo dont on affiche l'overlay (permet de garder overlay même si on stoppe)
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [completionOpen, setCompletionOpen] = useState(false);
 
   const [leftByKey, setLeftByKey] = useState<Record<string, number>>(
     Object.fromEntries(EXOS.map(x => [x.key, x.defaultSec]))
@@ -65,6 +67,7 @@ export default function MiniWake() {
           vibe(80);
           clearTimer();
           setRunningKey(null);
+          setCompletionOpen(true);
           // on laisse selectedKey (donc overlay visible) — l'utilisateur voit "Terminé" et peut réinit ou fermer
         }
         return { ...prev, [exoKey]: v };
@@ -85,6 +88,7 @@ export default function MiniWake() {
   const resetTimer = (exoKey: string) => {
     const ex = EXOS.find(e => e.key === exoKey)!;
     setLeftByKey(prev => ({ ...prev, [exoKey]: ex.defaultSec }));
+    setCompletionOpen(false);
     vibe(10);
     // ne clear pas le timer : si l'exo tournait, il va continuer (à partir de la nouvelle valeur)
     // on ne touche pas selectedKey
@@ -95,6 +99,7 @@ export default function MiniWake() {
     if (runningKey === exoKey) {
       stopTimer();
     } else {
+      setCompletionOpen(false);
       startTimer(exoKey);
     }
     // ensure overlay selected
@@ -108,6 +113,7 @@ export default function MiniWake() {
     // clearTimer();
     setSelectedKey(null);
     setRunningKey(null);
+    setCompletionOpen(false);
   };
 
   // compute current display
@@ -177,6 +183,11 @@ export default function MiniWake() {
       )}
 
       <div style={{ height:28 }} />
+      <ExerciseCompletionPrompt
+        open={completionOpen}
+        onClose={() => setCompletionOpen(false)}
+        message="Merci d’avoir pris le temps de terminer ce mini-exercice."
+      />
     </main>
   );
 }

@@ -32,6 +32,46 @@ test.describe('patient app flows', () => {
     await expect(page.getByRole('heading', { name: 'Fenêtre de tolérance' })).toBeVisible();
   });
 
+  test('emotion followup popup can send the user back to the origin exercise screen', async ({ page }) => {
+    await seedGuestSession(page);
+    await page.goto('/exercice/emotions/joy/intime/aimant?from=tolerance');
+
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Roue des émotions' })).toBeVisible();
+    await page.getByRole('button', { name: 'Reprendre mes exercices' }).click();
+
+    await page.waitForURL('**/tolerance');
+    await expect(page.getByRole('heading', { name: 'Fenêtre de tolérance' })).toBeVisible();
+  });
+
+  test('emotion followup gradient can redirect toward the matching activation zone', async ({ page }) => {
+    await seedGuestSession(page);
+    await page.goto('/exercice/emotions/fear/anxieux/preoccupe?from=hyper');
+
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.getByRole('button', { name: 'Réactualiser mon niveau d’activation' }).click();
+    await page.getByLabel('Niveau d’activation').fill('10');
+    await page.getByRole('button', { name: 'Valider mon niveau d’activation' }).click();
+
+    await expect(page.getByRole('button', { name: 'Continuer vers les exercices correspondants' })).toBeVisible();
+    await page.getByRole('button', { name: 'Continuer vers les exercices correspondants' }).click();
+
+    await page.waitForURL('**/hypoactivation');
+    await expect(page.getByRole('heading', { name: 'Exercices hypoactivation' })).toBeVisible();
+  });
+
+  test('emotion wheel keeps the level-2 parent when choosing the final emotion from the full flow', async ({ page }) => {
+    await seedGuestSession(page);
+    await page.goto('/exercice/emotions/fear?from=hyper');
+
+    await page.locator('svg [role="link"]').nth(4).click();
+    await page.waitForURL('**/exercice/emotions/fear/insecure?from=hyper');
+
+    await page.locator('svg [role="link"]').nth(1).click();
+    await page.waitForURL('**/exercice/emotions/fear/insecure/insignifiant?from=hyper');
+    await expect(page.getByRole('dialog')).toBeVisible();
+  });
+
   test("back from help returns to app when opened from the home screen", async ({ page }) => {
     await seedGuestSession(page);
     await page.goto('/app');

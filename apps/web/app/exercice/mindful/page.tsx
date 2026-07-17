@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../components/BackLink';
+import ExerciseCompletionPrompt from '../../../components/ExerciseCompletionPrompt';
 import { logActivity } from '../../../lib/patientTracking';
 
 type Track = {
@@ -50,6 +51,7 @@ function RenderIcon({ icon, size = 40 }: { icon?: string; size?: number }) {
 export default function MindfulAudiosPage() {
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
   const audioMap = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   // libère les audios quand on quitte la page
@@ -72,7 +74,9 @@ export default function MindfulAudiosPage() {
       a = new Audio(srcFor(track));
       a.preload = 'auto';
       a.addEventListener('ended', () => {
-        if (currentId === id) setIsPlaying(false);
+        setIsPlaying(false);
+        setCurrentId(null);
+        setCompletionOpen(true);
       });
       audioMap.current.set(id, a);
     }
@@ -81,6 +85,7 @@ export default function MindfulAudiosPage() {
 
   async function playToggle(id: string) {
     vibe();
+    setCompletionOpen(false);
     if (currentId === id) {
       const a = ensureAudio(id);
       if (isPlaying) { a.pause(); setIsPlaying(false); }
@@ -174,6 +179,11 @@ export default function MindfulAudiosPage() {
       </div>
 
       <style>{css}</style>
+      <ExerciseCompletionPrompt
+        open={completionOpen}
+        onClose={() => setCompletionOpen(false)}
+        message="Merci d’avoir pris le temps d’écouter cet audio de pleine conscience."
+      />
     </main>
   );
 }

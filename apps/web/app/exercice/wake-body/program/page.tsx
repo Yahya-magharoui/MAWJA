@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { useQueryParam } from '../../../../hooks/useQueryParam';
 
 type Step = { key: string; label: string; icon: string; seconds: number };
@@ -33,6 +34,7 @@ export default function WakeProgram() {
   const [index, setIndex] = useState(0);
   const [left, setLeft] = useState(STEPS[0].seconds);
   const [running, setRunning] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const done = index >= STEPS.length;
@@ -65,6 +67,7 @@ export default function WakeProgram() {
     if (ni >= STEPS.length) {
       setRunning(false);
       setIndex(ni);
+      setCompletionOpen(true);
       vibe(40);
       return;
     }
@@ -78,6 +81,7 @@ export default function WakeProgram() {
     setRunning(false);
     setIndex(0);
     setLeft(STEPS[0].seconds);
+    setCompletionOpen(false);
     vibe(20);
   }
 
@@ -111,6 +115,11 @@ export default function WakeProgram() {
             <a href={chooserHref} style={btnGhost}>Retour</a>
           </div>
         </div>
+        <ExerciseCompletionPrompt
+          open={completionOpen}
+          onClose={() => setCompletionOpen(false)}
+          message="Merci d’avoir pris le temps de terminer ce programme de réveil corporel."
+        />
       </main>
     );
   }

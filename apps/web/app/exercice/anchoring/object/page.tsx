@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { logActivity } from '../../../../lib/patientTracking';
 
 const QUESTIONS = [
@@ -18,6 +19,7 @@ function vibe(ms=12){ try{ (navigator as any)?.vibrate?.(ms) }catch{} }
 
 export default function ObjectSenses() {
   const [started, setStarted] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
   const [answered, setAnswered] = useState<boolean[]>(() => {
     // restaure l'état “répondu”
     try { return JSON.parse(localStorage.getItem('anchoring_object_state')||'[]') } catch { return [] }
@@ -37,6 +39,7 @@ export default function ObjectSenses() {
   }
 
   async function finish() {
+    if (completionOpen) return;
     try {
       await logActivity({
         category: 'GROUNDING',
@@ -46,7 +49,7 @@ export default function ObjectSenses() {
     } catch (error) {
       console.error(error);
     }
-    window.location.href = '/exercice/anchoring';
+    setCompletionOpen(true);
   }
 
   return (
@@ -88,11 +91,16 @@ export default function ObjectSenses() {
       )}
 
       <footer style={{ display:'flex', justifyContent:'center', margin:'26px 0' }}>
-        <button onClick={finish} style={linkSecondaryButton}>Terminer</button>
+        <button onClick={finish} disabled={completionOpen} style={linkSecondaryButton}>Terminer</button>
       </footer>
 
       <style>{css}</style>
       </div>
+      <ExerciseCompletionPrompt
+        open={completionOpen}
+        onClose={() => setCompletionOpen(false)}
+        message="Merci d’avoir pris le temps de faire cet exercice d’ancrage sensoriel."
+      />
     </main>
   );
 }

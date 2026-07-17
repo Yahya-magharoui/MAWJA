@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../components/BackLink';
+import ExerciseCompletionPrompt from '../../../components/ExerciseCompletionPrompt';
 import { useQueryParam } from '../../../hooks/useQueryParam';
 import { logActivity } from '../../../lib/patientTracking';
 
@@ -37,6 +38,7 @@ export default function StimulatingBreathPage() {
   const [cycleIndex, setCycleIndex] = useState(0); // 0..CYCLES-1
   const [running, setRunning] = useState(false);
   const [loop, setLoop] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
   const timerRef = useRef<number | null>(null);
 
   // passage de phase
@@ -50,6 +52,7 @@ export default function StimulatingBreathPage() {
       const next = cycleIndex + 1;
       if (next >= CYCLES && !loop) {
         setRunning(false);
+        setCompletionOpen(true);
         vibe(40);
         return;
       }
@@ -102,6 +105,7 @@ export default function StimulatingBreathPage() {
   function startFromIntro() {
     setStarted(true);
     setRunning(true);
+    setCompletionOpen(false);
     setPhase('inhale');
     setSecondsLeft(INHALE_S);
     setCycleIndex(0);
@@ -119,6 +123,7 @@ export default function StimulatingBreathPage() {
 
   function restart() {
     setRunning(true);
+    setCompletionOpen(false);
     setPhase('inhale');
     setSecondsLeft(INHALE_S);
     setCycleIndex(0);
@@ -185,6 +190,11 @@ export default function StimulatingBreathPage() {
           </div>
         </section>
       )}
+      <ExerciseCompletionPrompt
+        open={completionOpen}
+        onClose={() => setCompletionOpen(false)}
+        message="Merci d’avoir pris le temps de terminer cet exercice de respiration stimulante."
+      />
     </main>
   );
 }

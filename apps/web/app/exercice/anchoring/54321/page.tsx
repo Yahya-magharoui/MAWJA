@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { logActivity } from '../../../../lib/patientTracking';
 
 type SenseRow = { icon: string; label: string; target: number; key: string };
@@ -46,6 +47,7 @@ function RenderIcon({ icon, size = 28 }: { icon?: string; size?: number }) {
 export default function FiveFourThreeTwoOne() {
   // ⛔️ plus de localStorage -> on part de zéro à chaque ouverture
   const [counts, setCounts] = useState<Record<string, number>>(zeroCounts);
+  const [completionOpen, setCompletionOpen] = useState(false);
 
   // (Option si tu veux garder l’état tant que l’onglet est ouvert)
   // useEffect(() => {
@@ -70,8 +72,7 @@ export default function FiveFourThreeTwoOne() {
         }).catch(console.error);
       }
       vibe(25);
-      const t = setTimeout(() => { window.location.href = '/exercice/anchoring'; }, 900);
-      return () => clearTimeout(t);
+      setCompletionOpen(true);
     }
   }, [counts, doneAll, loggedDone]);
 
@@ -133,6 +134,11 @@ export default function FiveFourThreeTwoOne() {
       )}
 
       <style>{css}</style>
+      <ExerciseCompletionPrompt
+        open={completionOpen}
+        onClose={() => setCompletionOpen(false)}
+        message="Merci d’avoir pris le temps de terminer l’exercice 5-4-3-2-1."
+      />
     </main>
   );
 }

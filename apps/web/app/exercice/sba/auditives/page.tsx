@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 
 /** Un petit moteur SBA audio gauche↔︎droite via Web Audio */
 class SBABinaural {
@@ -194,6 +195,7 @@ export default function SBAAuditivesPage() {
   const [current, setCurrent] = useState<Instrument | null>(null);
   const [playing, setPlaying] = useState(false);
   const [done, setDone] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
 
   // nettoyage
   useEffect(() => () => engineRef.current?.stop(), []);
@@ -207,6 +209,7 @@ export default function SBAAuditivesPage() {
 
   async function start(kind: Instrument) {
     setDone(false);
+    setCompletionOpen(false);
     setCurrent(kind);
     vibe();
     await engine.start(kind, bpm, 5);
@@ -219,6 +222,7 @@ export default function SBAAuditivesPage() {
         clearInterval(id);
         setPlaying(false);
         setDone(true);
+        setCompletionOpen(true);
       }
     }, 500);
   }
@@ -296,6 +300,11 @@ export default function SBAAuditivesPage() {
       )}
 
       <style>{css}</style>
+      <ExerciseCompletionPrompt
+        open={completionOpen}
+        onClose={() => setCompletionOpen(false)}
+        message="Merci d’avoir pris le temps de terminer cette séance de stimulation auditive."
+      />
     </main>
   );
 }

@@ -4,12 +4,12 @@ import BackLink from '../../../components/BackLink';
 
 /** données */
 const EMOTIONS = [
-  { key: 'joy',       label: 'Joie',       color: '#FDE68A' },
-  { key: 'surprise',  label: 'Surprise',   color: '#A7F3D0' },
-  { key: 'anger',     label: 'Colère',     color: '#FCA5A5' },
-  { key: 'sadness',   label: 'Tristesse',  color: '#93C5FD' },
-  { key: 'fear',      label: 'Peur',       color: '#C4B5FD' },
-  { key: 'disgust',   label: 'Dégoût',     color: '#FBCFE8' },
+  { key: 'anger', label: 'Colère', color: '#FCA5A5' },
+  { key: 'disgust', label: 'Dégoût', color: '#FBCFE8' },
+  { key: 'sadness', label: 'Tristesse', color: '#93C5FD' },
+  { key: 'joy', label: 'Joie', color: '#FDE68A' },
+  { key: 'surprise', label: 'Surprise', color: '#A7F3D0' },
+  { key: 'fear', label: 'Peur', color: '#C4B5FD' },
 ] as const;
 
 type Emotion = typeof EMOTIONS[number];
@@ -57,86 +57,80 @@ export default function EmotionWheel({ searchParams }: { searchParams?: PageSear
       </p>
 
       <div style={styles.wheelWrap}>
-        {/* étiquette centrale */}
         <div style={styles.center}>
           <span style={styles.centerBadge}>
             {hovered?.label ?? 'Choisis une émotion'}
           </span>
         </div>
 
-        {/* La roue SVG */}
         <svg
           viewBox="-160 -160 320 320"
-          // important: width/height en CSS, pas de "min()" dans l'attribut
           style={{ ...styles.svg, width: 'min(420px, 80vw)', height: 'min(420px, 80vw)' }}
           role="group"
           aria-label="Roue des émotions"
         >
           {EMOTIONS.map((emo, i) => {
-  const s = slices[i];
-  const isDim = hovered && hovered.key !== emo.key;
-  const href = `/exercice/emotions/${encodeURIComponent(emo.key)}${from ? `?from=${encodeURIComponent(from)}` : ''}`;
+            const s = slices[i];
+            const isDim = hovered && hovered.key !== emo.key;
+            const href = `/exercice/emotions/${encodeURIComponent(emo.key)}${from ? `?from=${encodeURIComponent(from)}` : ''}`;
 
-  return (
-    <g key={emo.key}
-       onMouseEnter={() => setHovered(emo)}
-       onMouseLeave={() => setHovered(null)}>
+            return (
+              <g
+                key={emo.key}
+                onMouseEnter={() => setHovered(emo)}
+                onMouseLeave={() => setHovered(null)}
+              >
+                <path
+                  d={s.path}
+                  fill={emo.color}
+                  stroke="#fff"
+                  strokeWidth={1}
+                  className="emotion-slice"
+                  style={{
+                    ...styles.slicePath,
+                    filter: isDim ? 'grayscale(.15) brightness(.98)' : 'none',
+                  }}
+                  role="link"
+                  tabIndex={0}
+                  onMouseDown={pressFeedback}
+                  onFocus={() => setHovered(emo)}
+                  onBlur={() => setHovered(null)}
+                  onClick={() => { window.location.href = href; }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      window.location.href = href;
+                    }
+                  }}
+                />
 
-      {/* secteur cliquable */}
-          <path
-            d={s.path}
-            fill={emo.color}
-            stroke="#fff"
-            strokeWidth={1}
-            className="emotion-slice"
-            style={{
-              ...styles.slicePath,
-              filter: isDim ? 'grayscale(.15) brightness(.98)' : 'none',
-            }}
-            role="link"
-            tabIndex={0}
-            onMouseDown={pressFeedback}
-            onFocus={() => setHovered(emo)}
-            onBlur={() => setHovered(null)}
-            onClick={() => { window.location.href = href; }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                window.location.href = href;
-              }
-            }}
-          />
-
-      {/* libellé centré */}
-      <text
-        x={s.labelPos.x}
-        y={s.labelPos.y}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontWeight={700}
-        fontSize={12}
-        fill="#0f172a"
-        pointerEvents="none"
-      >
-        {emo.label}
-      </text>
-    </g>
-  );
-})}
-
+                <text
+                  x={s.labelPos.x}
+                  y={s.labelPos.y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontWeight={700}
+                  fontSize={12}
+                  fill="#0f172a"
+                  pointerEvents="none"
+                >
+                  {emo.label}
+                </text>
+              </g>
+            );
+          })}
         </svg>
       </div>
     </main>
   );
 }
 
-/** —— géométrie SVG —— */
 function buildSlices(count: number, radius: number) {
   const sweep = 360 / count;
   const cx = 0, cy = 0;
 
   return new Array(count).fill(0).map((_, i) => {
-    const start = -90 + i * sweep;          // on commence en haut
+    const start = -90 + i * sweep;
     const end = start + sweep;
 
     const startRad = toRad(start);
@@ -162,7 +156,6 @@ function buildSlices(count: number, radius: number) {
 
 function toRad(deg: number) { return (deg * Math.PI) / 180; }
 
-/** —— styles —— */
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: '100dvh',
@@ -185,7 +178,6 @@ const styles: Record<string, React.CSSProperties> = {
   backLink: { justifySelf: 'start' },
   h1: { margin: 0, textAlign: 'center', fontSize: 22, letterSpacing: .2 },
   subtitle: { margin: '8px 0 18px', opacity: .7, fontSize: 14, textAlign: 'center' },
-
   wheelWrap: { position: 'relative' },
   svg: {
     display: 'block',

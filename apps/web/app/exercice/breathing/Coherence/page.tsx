@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { logActivity } from '../../../../lib/patientTracking';
 
 type Phase = 'inspire' | 'expire' | 'stopped' | 'paused';
@@ -16,6 +17,7 @@ export default function BreathingTube() {
   const [cycle, setCycle] = useState(0);
   const [muted, setMuted] = useState(false);
   const [showTip, setTip] = useState(true);
+  const [completionOpen, setCompletionOpen] = useState(false);
 
   const yRef = useRef<'top'|'bottom'>('bottom');
   const rafRef = useRef<number | null>(null);
@@ -76,6 +78,7 @@ export default function BreathingTube() {
           if (next >= TARGET_CYCLES) {
             setPhase('stopped');
             yRef.current = 'bottom';
+            setCompletionOpen(true);
             return;
           }
           setPhase('inspire');
@@ -90,6 +93,7 @@ export default function BreathingTube() {
 
   function start() {
     setCycle(0);
+    setCompletionOpen(false);
     setPhase('inspire');
     void logActivity({
       category: 'BREATHING',
@@ -101,6 +105,7 @@ export default function BreathingTube() {
   function resume() { setPhase('inspire'); }
   function stop() {
     setPhase('stopped'); setCycle(0);
+    setCompletionOpen(false);
     yRef.current = 'bottom'; setTip(true);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
   }
@@ -168,6 +173,11 @@ export default function BreathingTube() {
         {isPause && <button onClick={resume} style={btnPrimary}>Reprendre</button>}
         {!isIdle && <button onClick={stop}   style={btnDanger}>Arrêter</button>}
       </footer>
+      <ExerciseCompletionPrompt
+        open={completionOpen}
+        onClose={() => setCompletionOpen(false)}
+        message="Merci d’avoir pris le temps de terminer cette séance de cohérence cardiaque."
+      />
     </main>
   );
 }
