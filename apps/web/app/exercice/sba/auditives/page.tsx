@@ -205,6 +205,8 @@ export default function SBAAuditivesPage() {
     return engineRef.current;
   }, []);
 
+  const speedLabel = bpm <= 45 ? 'Lente' : bpm >= 90 ? 'Rapide' : 'Modérée';
+
   function vibe() { try { (navigator as any)?.vibrate?.(12); } catch {} }
 
   async function start(kind: Instrument) {
@@ -288,8 +290,12 @@ export default function SBAAuditivesPage() {
         })}
       </section>
 
-      <div style={{ display:'flex', justifyContent:'center', gap:10, marginTop:12 }}>
+      <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:10, marginTop:12, flexWrap:'wrap' }}>
         <button onClick={() => adjust(-5)} className="mini" style={mini}>−</button>
+        <div style={speedPill} aria-live="polite">
+          <span style={{ fontWeight: 700 }}>{speedLabel}</span>
+          <span style={{ opacity: 0.7 }}>{bpm} bpm</span>
+        </div>
         <button onClick={() => adjust(+5)} className="mini" style={mini}>＋</button>
       </div>
 
@@ -321,6 +327,18 @@ const bubble: React.CSSProperties = {
   boxShadow:'0 8px 18px rgba(0,0,0,.08)', cursor:'pointer'
 };
 const mini: React.CSSProperties = { borderRadius:999, padding:'8px 16px', border:'1px solid #e5e7eb', background:'#fff', cursor:'pointer' };
+const speedPill: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  minWidth: 126,
+  justifyContent: 'center',
+  padding: '9px 14px',
+  borderRadius: 999,
+  border: '1px solid #e5e7eb',
+  background: '#fff',
+  boxShadow: '0 6px 14px rgba(0,0,0,.05)',
+};
 const badge: React.CSSProperties = { position:'absolute', top:6, right:8, fontSize:14, opacity:.9 };
 const iconWrap: React.CSSProperties = {
   width: 56,

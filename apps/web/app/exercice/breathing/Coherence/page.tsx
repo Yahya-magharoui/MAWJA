@@ -173,6 +173,16 @@ export default function BreathingTube() {
         {isPause && <button onClick={resume} style={btnPrimary}>Reprendre</button>}
         {!isIdle && <button onClick={stop}   style={btnDanger}>Arrêter</button>}
       </footer>
+
+      <section style={protocolCard}>
+        <div style={protocolTitle}>Protocole 3-6-5</div>
+        <ul style={protocolList}>
+          <li>3 fois par jour</li>
+          <li>6 respirations par minute</li>
+          <li>pendant 5 minutes</li>
+        </ul>
+      </section>
+
       <ExerciseCompletionPrompt
         open={completionOpen}
         onClose={() => setCompletionOpen(false)}
@@ -209,7 +219,7 @@ const muteBtn: React.CSSProperties = {
 };
 const scene: React.CSSProperties = { display:'grid', placeItems:'center', padding:'10px 0' };
 const tube: React.CSSProperties = {
-  position:'relative', width:'min(88px, 36vw)', height:'68vh', minHeight:420,
+  position:'relative', width:'min(88px, 36vw)', height:'min(60vh, 540px)', minHeight:320,
   borderRadius:44, border:'1px solid rgba(167,139,250,.25)',
   background:'linear-gradient(180deg, rgba(167,139,250,.25), rgba(139,92,246,.15))',
   boxShadow:'inset 0 0 12px rgba(0,0,0,.05)', overflow:'hidden'
@@ -232,7 +242,30 @@ const shine: React.CSSProperties = {
   filter:'blur(1px)'
 };
 const caption: React.CSSProperties = { marginTop:18, fontSize:18, color:'#4C1D95', textShadow:'0 1px 6px rgba(255,255,255,.5)' };
-const controls: React.CSSProperties = { display:'flex', gap:10, justifyContent:'center', padding:'12px 0 18px' };
+const controls: React.CSSProperties = { display:'flex', gap:10, justifyContent:'center', padding:'8px 0 12px', flexWrap:'wrap' };
+const protocolCard: React.CSSProperties = {
+  margin: '0 auto 20px',
+  width: 'min(520px, calc(100% - 32px))',
+  padding: '12px 16px',
+  borderRadius: 16,
+  border: '1px solid rgba(167,139,250,.28)',
+  background: 'rgba(255,255,255,.72)',
+  boxShadow: '0 10px 24px rgba(167,139,250,.12)',
+  color: '#4C1D95',
+};
+const protocolTitle: React.CSSProperties = {
+  fontSize: 15,
+  fontWeight: 800,
+  marginBottom: 8,
+  textAlign: 'center',
+};
+const protocolList: React.CSSProperties = {
+  margin: 0,
+  paddingLeft: 18,
+  display: 'grid',
+  gap: 4,
+  fontSize: 13,
+};
 const btn: React.CSSProperties = {
   padding:'10px 16px', borderRadius:14,
   border:'1px solid rgba(167,139,250,.4)',
