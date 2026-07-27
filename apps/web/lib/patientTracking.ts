@@ -1,8 +1,7 @@
 'use client';
 
+import { buildApiUrl } from './api';
 import { isPatientSession } from './session';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://mawja-back.onrender.com/api';
 const LAST_HISTORY_ID_KEY = 'mawja-last-history-id';
 
 export type HistoryState = 'HYPER' | 'TOLERANCE' | 'HYPO';
@@ -107,7 +106,7 @@ export function setLastHistoryId(historyId: number | null) {
 export async function postHistoryEntry(state: HistoryState) {
   if (!isPatientSession()) return null;
 
-  const response = await fetch(`${API_URL}/histories`, {
+  const response = await fetch(buildApiUrl('/histories'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -135,7 +134,7 @@ export async function postHistoryEntry(state: HistoryState) {
 export async function fetchPatientHistories(): Promise<PatientHistory[]> {
   if (!isPatientSession()) return [];
 
-  const response = await fetch(`${API_URL}/histories/me`, {
+  const response = await fetch(buildApiUrl('/histories/me'), {
     headers: {
       Authorization: `Bearer ${requireAuthToken()}`,
     },
@@ -153,7 +152,7 @@ export async function fetchPatientHistories(): Promise<PatientHistory[]> {
 export async function fetchPatientGoals(): Promise<PatientGoal[]> {
   if (!isPatientSession()) return [];
 
-  const response = await fetch(`${API_URL}/goals/me`, {
+  const response = await fetch(buildApiUrl('/goals/me'), {
     headers: {
       Authorization: `Bearer ${requireAuthToken()}`,
     },
@@ -173,7 +172,7 @@ export async function createPatientGoal(goal: GoalPayload): Promise<PatientGoal>
     throw new Error('Connecte-toi pour enregistrer un objectif.');
   }
 
-  const response = await fetch(`${API_URL}/goals`, {
+  const response = await fetch(buildApiUrl('/goals'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -195,7 +194,7 @@ export async function updatePatientGoal(goalId: number, goal: GoalPayload): Prom
     throw new Error('Connecte-toi pour modifier un objectif.');
   }
 
-  const response = await fetch(`${API_URL}/goals/${goalId}`, {
+  const response = await fetch(buildApiUrl(`/goals/${goalId}`), {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -217,7 +216,7 @@ export async function deletePatientGoal(goalId: number) {
     throw new Error('Connecte-toi pour supprimer un objectif.');
   }
 
-  const response = await fetch(`${API_URL}/goals/${goalId}`, {
+  const response = await fetch(buildApiUrl(`/goals/${goalId}`), {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${requireAuthToken()}`,
@@ -235,7 +234,7 @@ export async function deletePatientGoal(goalId: number) {
 export async function fetchPatientNotes(): Promise<PatientNote[]> {
   if (!isPatientSession()) return [];
 
-  const response = await fetch(`${API_URL}/notes/me`, {
+  const response = await fetch(buildApiUrl('/notes/me'), {
     headers: {
       Authorization: `Bearer ${requireAuthToken()}`,
     },
@@ -255,7 +254,7 @@ export async function createPatientNote(note: NotePayload): Promise<PatientNote>
     throw new Error('Connecte-toi pour enregistrer une note.');
   }
 
-  const response = await fetch(`${API_URL}/notes`, {
+  const response = await fetch(buildApiUrl('/notes'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -277,7 +276,7 @@ export async function updatePatientNote(noteId: number, note: NotePayload): Prom
     throw new Error('Connecte-toi pour modifier une note.');
   }
 
-  const response = await fetch(`${API_URL}/notes/${noteId}`, {
+  const response = await fetch(buildApiUrl(`/notes/${noteId}`), {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -299,7 +298,7 @@ export async function deletePatientNote(noteId: number) {
     throw new Error('Connecte-toi pour supprimer une note.');
   }
 
-  const response = await fetch(`${API_URL}/notes/${noteId}`, {
+  const response = await fetch(buildApiUrl(`/notes/${noteId}`), {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${requireAuthToken()}`,
@@ -337,7 +336,7 @@ export async function logActivity(activity: ActivityPayload) {
     throw new Error('Aucun historique récent disponible pour lier l’activité.');
   }
 
-  const response = await fetch(`${API_URL}/activities`, {
+  const response = await fetch(buildApiUrl('/activities'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

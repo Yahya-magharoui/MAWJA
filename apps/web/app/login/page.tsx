@@ -2,9 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BackLink from '../../components/BackLink';
+import { buildApiUrl } from '../../lib/api';
 import { isAuthenticatedSession, persistAuthenticatedSession } from '../../lib/session';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://mawja-back.onrender.com/api';
 
 export default function Login() {
   const router = useRouter();
@@ -25,7 +24,7 @@ export default function Login() {
     setMsg(null);
 
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const res = await fetch(buildApiUrl('/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

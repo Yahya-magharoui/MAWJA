@@ -8,6 +8,8 @@
     "start": "node dist/main.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:deploy": "prisma migrate deploy",
+    "start:railway": "pnpm prisma:deploy && node dist/main.js",
     "lint": "eslint ."
   },
   "dependencies": {

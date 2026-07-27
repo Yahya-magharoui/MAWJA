@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { buildApiUrl } from '../../lib/api';
 
 type Mood = {
   id: string;
@@ -9,8 +10,6 @@ type Mood = {
   context?: string | null;
   timestamp: string; // ISO
 };
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -39,7 +38,7 @@ export default function HistoryPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/mood?userId=u1&range=${range}`, { cache: 'no-store' });
+      const res = await fetch(buildApiUrl(`/mood?userId=u1&range=${range}`), { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = (await res.json()) as Mood[];
       setItems(data);

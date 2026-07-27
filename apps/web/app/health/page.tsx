@@ -1,8 +1,9 @@
+import { buildApiUrl } from '../../lib/api';
+
 export default async function Health() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
   let status = "unknown";
   try {
-    const res = await fetch(apiUrl + "/health");
+    const res = await fetch(buildApiUrl('/health'));
     status = res.ok ? "ok" : "down";
   } catch {
     status = "down";

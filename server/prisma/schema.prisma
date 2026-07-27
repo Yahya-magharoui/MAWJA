@@ -8,10 +8,16 @@ datasource db {
 }
 
 model User {
-  id        String      @id @default(cuid())
-  email     String      @unique
-  createdAt DateTime    @default(now())
-  mood      MoodEntry[]
+  id          String      @id @default(cuid())
+  email       String      @unique
+  passwordHash String
+  role        String      @default("PATIENT")
+  createdAt   DateTime    @default(now())
+  mood        MoodEntry[]
+  histories   History[]
+  goals       Goal[]
+  notes       Note[]
+  activities  Activity[]
 }
 
 model MoodEntry {
@@ -22,4 +28,52 @@ model MoodEntry {
   context   String?
   timestamp DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model History {
+  id        Int        @id @default(autoincrement())
+  time      DateTime
+  state     String
+  userId    String
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id])
+  activities Activity[]
+
+  @@index([userId, createdAt])
+}
+
+model Goal {
+  id        Int      @id @default(autoincrement())
+  text      String
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  text      String
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model Activity {
+  id        Int      @id @default(autoincrement())
+  category  String
+  subType   String
+  detail    String?
+  emotion   String?
+  historyId Int
+  userId    String
+  createdAt DateTime @default(now())
+  history   History  @relation(fields: [historyId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([historyId, createdAt])
+  @@index([userId, createdAt])
 }
