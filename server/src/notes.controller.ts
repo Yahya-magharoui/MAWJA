@@ -4,6 +4,8 @@ import {
   Delete,
   Get,
   Headers,
+  HttpException,
+  HttpStatus,
   NotFoundException,
   Param,
   Post,
@@ -23,11 +25,20 @@ export class NotesController {
   @Get('me')
   async listMine(@Headers('authorization') authorization: string | undefined) {
     const user = await requireAuthenticatedUser(this.prisma, authorization);
+    const patientId = user.patientProfileId;
 
-    return this.prisma.note.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-    });
+    if (!patientId) {
+      return [];
+    }
+
+    return this.prisma.$queryRaw<
+      Array<{ id: number; text: string; patientId: number; createdAt: Date }>
+    >`
+      SELECT id, text, "patientId", "createdAt"
+      FROM "Note"
+      WHERE "patientId" = ${patientId}
+      ORDER BY "createdAt" DESC
+    `;
   }
 
   @Post()
@@ -36,13 +47,21 @@ export class NotesController {
     @Body() body: NoteBody
   ) {
     const user = await requireAuthenticatedUser(this.prisma, authorization);
+    const patientId = user.patientProfileId;
 
-    return this.prisma.note.create({
-      data: {
-        userId: user.id,
-        text: body.text.trim(),
-      },
-    });
+    if (!patientId) {
+      throw new HttpException('Profil patient introuvable.', HttpStatus.BAD_REQUEST);
+    }
+
+    const rows = await this.prisma.$queryRaw<
+      Array<{ id: number; text: string; patientId: number; createdAt: Date }>
+    >`
+      INSERT INTO "Note" (text, "patientId")
+      VALUES (${body.text.trim()}, ${patientId})
+      RETURNING id, text, "patientId", "createdAt"
+    `;
+
+    return rows[0] ?? null;
   }
 
   @Put(':id')
@@ -53,19 +72,30 @@ export class NotesController {
   ) {
     const user = await requireAuthenticatedUser(this.prisma, authorization);
     const noteId = Number(id);
+    const patientId = user.patientProfileId;
 
-    const note = await this.prisma.note.findFirst({
-      where: { id: noteId, userId: user.id },
-    });
+    const noteRows = await this.prisma.$queryRaw<Array<{ id: number }>>`
+      SELECT id
+      FROM "Note"
+      WHERE id = ${noteId} AND "patientId" = ${patientId}
+      LIMIT 1
+    `;
+    const note = noteRows[0] ?? null;
 
     if (!note) {
       throw new NotFoundException('Note introuvable.');
     }
 
-    return this.prisma.note.update({
-      where: { id: noteId },
-      data: { text: body.text.trim() },
-    });
+    const rows = await this.prisma.$queryRaw<
+      Array<{ id: number; text: string; patientId: number; createdAt: Date }>
+    >`
+      UPDATE "Note"
+      SET text = ${body.text.trim()}
+      WHERE id = ${noteId}
+      RETURNING id, text, "patientId", "createdAt"
+    `;
+
+    return rows[0] ?? null;
   }
 
   @Delete(':id')
@@ -75,18 +105,24 @@ export class NotesController {
   ) {
     const user = await requireAuthenticatedUser(this.prisma, authorization);
     const noteId = Number(id);
+    const patientId = user.patientProfileId;
 
-    const note = await this.prisma.note.findFirst({
-      where: { id: noteId, userId: user.id },
-    });
+    const noteRows = await this.prisma.$queryRaw<Array<{ id: number }>>`
+      SELECT id
+      FROM "Note"
+      WHERE id = ${noteId} AND "patientId" = ${patientId}
+      LIMIT 1
+    `;
+    const note = noteRows[0] ?? null;
 
     if (!note) {
       throw new NotFoundException('Note introuvable.');
     }
 
-    await this.prisma.note.delete({
-      where: { id: noteId },
-    });
+    await this.prisma.$executeRaw`
+      DELETE FROM "Note"
+      WHERE id = ${noteId}
+    `;
 
     return { ok: true };
   }

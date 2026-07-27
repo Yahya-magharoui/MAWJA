@@ -4,6 +4,8 @@ import {
   Delete,
   Get,
   Headers,
+  HttpException,
+  HttpStatus,
   NotFoundException,
   Param,
   Post,
@@ -23,11 +25,20 @@ export class GoalsController {
   @Get('me')
   async listMine(@Headers('authorization') authorization: string | undefined) {
     const user = await requireAuthenticatedUser(this.prisma, authorization);
+    const patientId = user.patientProfileId;
 
-    return this.prisma.goal.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-    });
+    if (!patientId) {
+      return [];
+    }
+
+    return this.prisma.$queryRaw<
+      Array<{ id: number; text: string; patientId: number; createdAt: Date }>
+    >`
+      SELECT id, text, "patientId", "createdAt"
+      FROM "Goal"
+      WHERE "patientId" = ${patientId}
+      ORDER BY "createdAt" DESC
+    `;
   }
 
   @Post()
@@ -36,13 +47,21 @@ export class GoalsController {
     @Body() body: GoalBody
   ) {
     const user = await requireAuthenticatedUser(this.prisma, authorization);
+    const patientId = user.patientProfileId;
 
-    return this.prisma.goal.create({
-      data: {
-        userId: user.id,
-        text: body.text.trim(),
-      },
-    });
+    if (!patientId) {
+      throw new HttpException('Profil patient introuvable.', HttpStatus.BAD_REQUEST);
+    }
+
+    const rows = await this.prisma.$queryRaw<
+      Array<{ id: number; text: string; patientId: number; createdAt: Date }>
+    >`
+      INSERT INTO "Goal" (text, "patientId")
+      VALUES (${body.text.trim()}, ${patientId})
+      RETURNING id, text, "patientId", "createdAt"
+    `;
+
+    return rows[0] ?? null;
   }
 
   @Put(':id')
@@ -53,19 +72,30 @@ export class GoalsController {
   ) {
     const user = await requireAuthenticatedUser(this.prisma, authorization);
     const goalId = Number(id);
+    const patientId = user.patientProfileId;
 
-    const goal = await this.prisma.goal.findFirst({
-      where: { id: goalId, userId: user.id },
-    });
+    const goalRows = await this.prisma.$queryRaw<Array<{ id: number }>>`
+      SELECT id
+      FROM "Goal"
+      WHERE id = ${goalId} AND "patientId" = ${patientId}
+      LIMIT 1
+    `;
+    const goal = goalRows[0] ?? null;
 
     if (!goal) {
       throw new NotFoundException('Objectif introuvable.');
     }
 
-    return this.prisma.goal.update({
-      where: { id: goalId },
-      data: { text: body.text.trim() },
-    });
+    const rows = await this.prisma.$queryRaw<
+      Array<{ id: number; text: string; patientId: number; createdAt: Date }>
+    >`
+      UPDATE "Goal"
+      SET text = ${body.text.trim()}
+      WHERE id = ${goalId}
+      RETURNING id, text, "patientId", "createdAt"
+    `;
+
+    return rows[0] ?? null;
   }
 
   @Delete(':id')
@@ -75,18 +105,24 @@ export class GoalsController {
   ) {
     const user = await requireAuthenticatedUser(this.prisma, authorization);
     const goalId = Number(id);
+    const patientId = user.patientProfileId;
 
-    const goal = await this.prisma.goal.findFirst({
-      where: { id: goalId, userId: user.id },
-    });
+    const goalRows = await this.prisma.$queryRaw<Array<{ id: number }>>`
+      SELECT id
+      FROM "Goal"
+      WHERE id = ${goalId} AND "patientId" = ${patientId}
+      LIMIT 1
+    `;
+    const goal = goalRows[0] ?? null;
 
     if (!goal) {
       throw new NotFoundException('Objectif introuvable.');
     }
 
-    await this.prisma.goal.delete({
-      where: { id: goalId },
-    });
+    await this.prisma.$executeRaw`
+      DELETE FROM "Goal"
+      WHERE id = ${goalId}
+    `;
 
     return { ok: true };
   }

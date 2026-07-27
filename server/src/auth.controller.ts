@@ -16,6 +16,16 @@ type LegacyUserRow = {
   name: string | null;
   role: string | null;
   createdAt: Date;
+  patientProfileId: number | null;
+  doctorProfileId: number | null;
+};
+
+type LegacyPatientRow = {
+  id: number;
+};
+
+type LegacyDoctorRow = {
+  id: number;
 };
 
 @Controller('auth')
@@ -24,13 +34,95 @@ export class AuthController {
 
   private async findLegacyUserByEmail(email: string) {
     const rows = await this.prisma.$queryRaw<LegacyUserRow[]>`
-      SELECT id, email, password, name, role, "createdAt"
+      SELECT id, email, password, name, role, "createdAt", "patientProfileId", "doctorProfileId"
       FROM "User"
       WHERE email = ${email}
       LIMIT 1
     `;
 
     return rows[0] ?? null;
+  }
+
+  private async ensurePatientProfile(userId: number) {
+    const existingRows = await this.prisma.$queryRaw<LegacyPatientRow[]>`
+      SELECT id
+      FROM "Patient"
+      WHERE "userId" = ${userId}
+      LIMIT 1
+    `;
+
+    const existing = existingRows[0];
+    if (existing) return existing.id;
+
+    const createdRows = await this.prisma.$queryRaw<LegacyPatientRow[]>`
+      INSERT INTO "Patient" ("userId")
+      VALUES (${userId})
+      RETURNING id
+    `;
+
+    return createdRows[0]?.id ?? null;
+  }
+
+  private async ensureDoctorProfile(userId: number) {
+    const existingRows = await this.prisma.$queryRaw<LegacyDoctorRow[]>`
+      SELECT id
+      FROM "Doctor"
+      WHERE "userId" = ${userId}
+      LIMIT 1
+    `;
+
+    const existing = existingRows[0];
+    if (existing) return existing.id;
+
+    const doctorCode = `DOC-${userId}-${Date.now()}`;
+    const createdRows = await this.prisma.$queryRaw<LegacyDoctorRow[]>`
+      INSERT INTO "Doctor" ("userId", "doctor_code")
+      VALUES (${userId}, ${doctorCode})
+      RETURNING id
+    `;
+
+    return createdRows[0]?.id ?? null;
+  }
+
+  private async syncUserProfiles(user: LegacyUserRow) {
+    let patientProfileId = user.patientProfileId;
+    let doctorProfileId = user.doctorProfileId;
+
+    if (user.role === 'DOCTOR') {
+      doctorProfileId = doctorProfileId ?? (await this.ensureDoctorProfile(user.id));
+    } else {
+      patientProfileId = patientProfileId ?? (await this.ensurePatientProfile(user.id));
+    }
+
+    if (patientProfileId !== user.patientProfileId || doctorProfileId !== user.doctorProfileId) {
+      const rows = await this.prisma.$queryRaw<LegacyUserRow[]>`
+        UPDATE "User"
+        SET "patientProfileId" = ${patientProfileId},
+            "doctorProfileId" = ${doctorProfileId}
+        WHERE id = ${user.id}
+        RETURNING id, email, password, name, role, "createdAt", "patientProfileId", "doctorProfileId"
+      `;
+
+      return rows[0] ?? {
+        ...user,
+        patientProfileId,
+        doctorProfileId,
+      };
+    }
+
+    return user;
+  }
+
+  private serializeUser(user: LegacyUserRow) {
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
+      createdAt: user.createdAt,
+      patientProfileId: user.patientProfileId,
+      doctorProfileId: user.doctorProfileId,
+    };
   }
 
   private async registerUser(body: AuthBody) {
@@ -51,13 +143,15 @@ export class AuthController {
     const rows = await this.prisma.$queryRaw<LegacyUserRow[]>`
       INSERT INTO "User" (email, password, role)
       VALUES (${email}, ${hash}, ${role})
-      RETURNING id, email, password, name, role, "createdAt"
+      RETURNING id, email, password, name, role, "createdAt", "patientProfileId", "doctorProfileId"
     `;
-    const user = rows[0];
+    const createdUser = rows[0];
 
-    if (!user) {
+    if (!createdUser) {
       throw new HttpException('Création du compte impossible.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    const user = await this.syncUserProfiles(createdUser);
 
     const accessToken = signAuthToken({
       sub: String(user.id),
@@ -67,13 +161,7 @@ export class AuthController {
 
     return {
       ok: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
-        createdAt: user.createdAt,
-      },
+      user: this.serializeUser(user),
       access_token: accessToken,
     };
   }
@@ -97,16 +185,18 @@ export class AuthController {
       throw new HttpException('Email ou mot de passe invalide.', HttpStatus.BAD_REQUEST);
     }
 
-    const user = await this.findLegacyUserByEmail(email);
+    const existingUser = await this.findLegacyUserByEmail(email);
 
-    if (!user?.password) {
+    if (!existingUser?.password) {
       throw new HttpException('Identifiants invalides.', HttpStatus.UNAUTHORIZED);
     }
 
-    const passwordMatches = await bcrypt.compare(password, user.password);
+    const passwordMatches = await bcrypt.compare(password, existingUser.password);
     if (!passwordMatches) {
       throw new HttpException('Identifiants invalides.', HttpStatus.UNAUTHORIZED);
     }
+
+    const user = await this.syncUserProfiles(existingUser);
 
     const accessToken = signAuthToken({
       sub: String(user.id),
@@ -117,12 +207,7 @@ export class AuthController {
     return {
       ok: true,
       access_token: accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        createdAt: user.createdAt,
-      },
+      user: this.serializeUser(user),
     };
   }
 }

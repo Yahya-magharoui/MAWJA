@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpException, HttpStatus, Post } from '@nestjs/common';
 import { requireAuthenticatedUser } from './auth-token';
 import { PrismaService } from './prisma.service';
 
@@ -17,38 +17,53 @@ export class HistoriesController {
     @Body() body: HistoryBody
   ) {
     const user = await requireAuthenticatedUser(this.prisma, authorization);
+    const patientId = user.patientProfileId;
 
-    const history = await this.prisma.history.create({
-      data: {
-        userId: user.id,
-        state: body.state,
-        time: body.time ? new Date(body.time) : new Date(),
-      },
-    });
+    if (!patientId) {
+      throw new HttpException('Profil patient introuvable.', HttpStatus.BAD_REQUEST);
+    }
+
+    const rows = await this.prisma.$queryRaw<
+      Array<{ id: number; time: Date; state: string; patientId: number; createdAt: Date }>
+    >`
+      INSERT INTO "History" (time, state, "patientId")
+      VALUES (${body.time ? new Date(body.time) : new Date()}, ${body.state}, ${patientId})
+      RETURNING id, time, state, "patientId", "createdAt"
+    `;
+    const history = rows[0];
 
     return {
-      id: history.id,
-      time: history.time,
-      state: history.state,
-      patientId: user.id,
-      createdAt: history.createdAt,
+      id: history?.id,
+      time: history?.time,
+      state: history?.state,
+      patientId: history?.patientId,
+      createdAt: history?.createdAt,
     };
   }
 
   @Get('me')
   async listMine(@Headers('authorization') authorization: string | undefined) {
     const user = await requireAuthenticatedUser(this.prisma, authorization);
+    const patientId = user.patientProfileId;
 
-    const histories = await this.prisma.history.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-    });
+    if (!patientId) {
+      return [];
+    }
+
+    const histories = await this.prisma.$queryRaw<
+      Array<{ id: number; time: Date; state: string; patientId: number; createdAt: Date }>
+    >`
+      SELECT id, time, state, "patientId", "createdAt"
+      FROM "History"
+      WHERE "patientId" = ${patientId}
+      ORDER BY "createdAt" DESC
+    `;
 
     return histories.map((history) => ({
       id: history.id,
       time: history.time,
       state: history.state,
-      patientId: user.id,
+      patientId: history.patientId,
       createdAt: history.createdAt,
     }));
   }

@@ -14,14 +14,18 @@ type LegacyAuthenticatedUser = {
   role: string | null;
   password: string | null;
   createdAt: Date;
+  patientProfileId: number | null;
+  doctorProfileId: number | null;
 };
 
 type AuthenticatedUser = {
-  id: string;
+  id: number;
   email: string;
   role: 'PATIENT' | 'DOCTOR';
   passwordHash: string | null;
   createdAt: Date;
+  patientProfileId: number | null;
+  doctorProfileId: number | null;
 };
 
 function toBase64Url(value: Buffer | string) {
@@ -103,7 +107,7 @@ export async function requireAuthenticatedUser(prisma: PrismaService, authorizat
   }
 
   const rows = await prisma.$queryRaw<LegacyAuthenticatedUser[]>`
-    SELECT id, email, role, password, "createdAt"
+    SELECT id, email, role, password, "createdAt", "patientProfileId", "doctorProfileId"
     FROM "User"
     WHERE id = ${userId}
     LIMIT 1
@@ -115,10 +119,12 @@ export async function requireAuthenticatedUser(prisma: PrismaService, authorizat
   }
 
   return {
-    id: String(user.id),
+    id: user.id,
     email: user.email,
     role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
     passwordHash: user.password,
     createdAt: user.createdAt,
+    patientProfileId: user.patientProfileId,
+    doctorProfileId: user.doctorProfileId,
   } satisfies AuthenticatedUser;
 }
