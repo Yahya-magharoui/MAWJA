@@ -8,6 +8,22 @@ type TokenPayload = {
   role: 'PATIENT' | 'DOCTOR';
 };
 
+type LegacyAuthenticatedUser = {
+  id: number;
+  email: string;
+  role: string | null;
+  password: string | null;
+  createdAt: Date;
+};
+
+type AuthenticatedUser = {
+  id: string;
+  email: string;
+  role: 'PATIENT' | 'DOCTOR';
+  passwordHash: string | null;
+  createdAt: Date;
+};
+
 function toBase64Url(value: Buffer | string) {
   return Buffer.from(value)
     .toString('base64')
@@ -80,21 +96,29 @@ export function extractBearerToken(authorization?: string) {
 export async function requireAuthenticatedUser(prisma: PrismaService, authorization?: string) {
   const token = extractBearerToken(authorization);
   const payload = verifyAuthToken(token);
+  const userId = Number(payload.sub);
 
-  const user = await prisma.user.findUnique({
-    where: { id: payload.sub },
-    select: {
-      id: true,
-      email: true,
-      role: true,
-      passwordHash: true,
-      createdAt: true,
-    },
-  });
+  if (!Number.isFinite(userId)) {
+    throw new UnauthorizedException('Utilisateur introuvable.');
+  }
+
+  const rows = await prisma.$queryRaw<LegacyAuthenticatedUser[]>`
+    SELECT id, email, role, password, "createdAt"
+    FROM "User"
+    WHERE id = ${userId}
+    LIMIT 1
+  `;
+  const user = rows[0] ?? null;
 
   if (!user) {
     throw new UnauthorizedException('Utilisateur introuvable.');
   }
 
-  return user;
+  return {
+    id: String(user.id),
+    email: user.email,
+    role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
+    passwordHash: user.password,
+    createdAt: user.createdAt,
+  } satisfies AuthenticatedUser;
 }

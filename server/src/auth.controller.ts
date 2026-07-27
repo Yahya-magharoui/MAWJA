@@ -9,9 +9,29 @@ type AuthBody = {
   role?: 'PATIENT' | 'DOCTOR';
 };
 
+type LegacyUserRow = {
+  id: number;
+  email: string;
+  password: string | null;
+  name: string | null;
+  role: string | null;
+  createdAt: Date;
+};
+
 @Controller('auth')
 export class AuthController {
   constructor(private prisma: PrismaService) {}
+
+  private async findLegacyUserByEmail(email: string) {
+    const rows = await this.prisma.$queryRaw<LegacyUserRow[]>`
+      SELECT id, email, password, name, role, "createdAt"
+      FROM "User"
+      WHERE email = ${email}
+      LIMIT 1
+    `;
+
+    return rows[0] ?? null;
+  }
 
   private async registerUser(body: AuthBody) {
     const email = (body.email || '').trim().toLowerCase();
@@ -22,24 +42,40 @@ export class AuthController {
       throw new HttpException('Email ou mot de passe invalide (≥ 8 caractères)', HttpStatus.BAD_REQUEST);
     }
 
-    const exists = await this.prisma.user.findUnique({ where: { email } });
+    const exists = await this.findLegacyUserByEmail(email);
     if (exists) {
       throw new HttpException('Email déjà utilisé', HttpStatus.CONFLICT);
     }
 
     const hash = await bcrypt.hash(password, 10);
-    const user = await this.prisma.user.create({
-      data: { email, passwordHash: hash, role },
-      select: { id: true, email: true, role: true, createdAt: true },
-    });
+    const rows = await this.prisma.$queryRaw<LegacyUserRow[]>`
+      INSERT INTO "User" (email, password, role)
+      VALUES (${email}, ${hash}, ${role})
+      RETURNING id, email, password, name, role, "createdAt"
+    `;
+    const user = rows[0];
+
+    if (!user) {
+      throw new HttpException('Création du compte impossible.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
     const accessToken = signAuthToken({
-      sub: user.id,
+      sub: String(user.id),
       email: user.email,
       role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
     });
 
-    return { ok: true, user, access_token: accessToken };
+    return {
+      ok: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
+        createdAt: user.createdAt,
+      },
+      access_token: accessToken,
+    };
   }
 
   @Post('signup')
@@ -61,28 +97,19 @@ export class AuthController {
       throw new HttpException('Email ou mot de passe invalide.', HttpStatus.BAD_REQUEST);
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        passwordHash: true,
-      },
-    });
+    const user = await this.findLegacyUserByEmail(email);
 
-    if (!user?.passwordHash) {
+    if (!user?.password) {
       throw new HttpException('Identifiants invalides.', HttpStatus.UNAUTHORIZED);
     }
 
-    const passwordMatches = await bcrypt.compare(password, user.passwordHash);
+    const passwordMatches = await bcrypt.compare(password, user.password);
     if (!passwordMatches) {
       throw new HttpException('Identifiants invalides.', HttpStatus.UNAUTHORIZED);
     }
 
     const accessToken = signAuthToken({
-      sub: user.id,
+      sub: String(user.id),
       email: user.email,
       role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
     });
