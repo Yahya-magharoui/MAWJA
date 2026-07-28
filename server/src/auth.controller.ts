@@ -142,7 +142,7 @@ export class AuthController {
     const hash = await bcrypt.hash(password, 10);
     const rows = await this.prisma.$queryRaw<LegacyUserRow[]>`
       INSERT INTO "User" (email, password, role)
-      VALUES (${email}, ${hash}, ${role})
+      VALUES (${email}, ${hash}, CAST(${role} AS "Role"))
       RETURNING id, email, password, name, role, "createdAt", "patientProfileId", "doctorProfileId"
     `;
     const createdUser = rows[0];
