@@ -27,7 +27,7 @@ export class HistoriesController {
       Array<{ id: number; time: Date; state: string; patientId: number; createdAt: Date }>
     >`
       INSERT INTO "History" (time, state, "patientId")
-      VALUES (${body.time ? new Date(body.time) : new Date()}, ${body.state}, ${patientId})
+      VALUES (${body.time ? new Date(body.time) : new Date()}, CAST(${body.state} AS "HistoryState"), ${patientId})
       RETURNING id, time, state, "patientId", "createdAt"
     `;
     const history = rows[0];

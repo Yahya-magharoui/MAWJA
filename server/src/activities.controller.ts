@@ -59,7 +59,14 @@ export class ActivitiesController {
       }>
     >`
       INSERT INTO "ActivityLog" ("patientId", "historyId", category, "subType", detail, emotion)
-      VALUES (${patientId}, ${history.id}, ${body.category}, ${body.subType}, ${body.detail ?? null}, ${body.emotion ?? null})
+      VALUES (
+        ${patientId},
+        ${history.id},
+        CAST(${body.category} AS "ActivityCategory"),
+        ${body.subType},
+        ${body.detail ?? null},
+        CAST(${body.emotion ?? null} AS "EmotionType")
+      )
       RETURNING id, "patientId", "historyId", category, "subType", detail, emotion, "createdAt"
     `;
 

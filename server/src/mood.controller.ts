@@ -30,7 +30,7 @@ export class MoodController {
       Array<{ id: number; time: Date; state: string; patientId: number; createdAt: Date }>
     >`
       INSERT INTO "History" (time, state, "patientId")
-      VALUES (${new Date()}, ${toHistoryState(body.state)}, ${patientId})
+      VALUES (${new Date()}, CAST(${toHistoryState(body.state)} AS "HistoryState"), ${patientId})
       RETURNING id, time, state, "patientId", "createdAt"
     `;
 
