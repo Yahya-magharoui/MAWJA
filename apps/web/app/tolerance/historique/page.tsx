@@ -26,8 +26,12 @@ function formatTime(value: string) {
   if (Number.isNaN(date.getTime())) return '—';
 
   return new Intl.DateTimeFormat('fr-FR', {
+    year: '2-digit',
+    month: '2-digit',
+    day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    second: '2-digit',
   }).format(date);
 }
 
@@ -182,7 +186,7 @@ export default function HistoryPage() {
           }}
         >
           <div>ID</div>
-          <div>Heure</div>
+          <div>Date / heure</div>
           <div>État</div>
           <div>Racine d’émotion</div>
           <div style={{ textAlign: 'right' }}>Tps retour FT</div>

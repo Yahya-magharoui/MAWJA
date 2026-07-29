@@ -6,13 +6,40 @@ import { buildApiUrl } from '../../lib/api';
 import { DOCTOR_EXPERIENCE_ENABLED } from '../../lib/features';
 import { isAuthenticatedSession, persistAuthenticatedSession, type UserRole } from '../../lib/session';
 
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 128;
+const COMMON_PASSWORDS = new Set([
+  '12345678',
+  '123456789',
+  '1234567890',
+  '12345678910',
+  '123456789123456',
+  'azerty123456',
+  'azertyuiop',
+  'password',
+  'password123',
+  'password1234',
+  'qwerty123',
+  'qwertyuiop',
+  'motdepasse',
+  'motdepasse123',
+  'admin123456',
+  'welcome123',
+  'letmein123',
+  'bonjour123',
+]);
+
 export default function Signup() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [role] = useState<UserRole>('PATIENT');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [emailHint, setEmailHint] = useState<string | null>(null);
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
 
   useEffect(() => {
     if (isAuthenticatedSession()) {
@@ -20,16 +47,120 @@ export default function Signup() {
     }
   }, [router]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setMsg(null);
+  function normalizeEmail(value: string) {
+    return value.trim().toLowerCase();
+  }
+
+  function isValidEmail(value: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
+  }
+
+  function validatePassword(rawPassword: string, rawEmail: string) {
+    const normalizedPassword = rawPassword.trim();
+    const normalizedEmail = normalizeEmail(rawEmail);
+    const localPart = normalizedEmail.split('@')[0] || '';
+    const loweredPassword = normalizedPassword.toLowerCase();
+
+    if (normalizedPassword.length < MIN_PASSWORD_LENGTH) {
+      return `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`;
+    }
+
+    if (normalizedPassword.length > MAX_PASSWORD_LENGTH) {
+      return `Le mot de passe doit contenir au maximum ${MAX_PASSWORD_LENGTH} caractères.`;
+    }
+
+    if (COMMON_PASSWORDS.has(loweredPassword)) {
+      return 'Choisis un mot de passe moins courant.';
+    }
+
+    if (localPart && loweredPassword.includes(localPart)) {
+      return "Le mot de passe ne doit pas contenir ton adresse e-mail.";
+    }
+
+    if (loweredPassword.includes('mawja')) {
+      return "Le mot de passe ne doit pas contenir le nom de l'application.";
+    }
+
+    if (/^(.)\1{7,}$/.test(normalizedPassword)) {
+      return 'Le mot de passe est trop prévisible.';
+    }
+
+    return null;
+  }
+
+  async function checkEmailAvailability(rawEmail: string) {
+    const normalizedEmail = normalizeEmail(rawEmail);
+
+    if (!normalizedEmail) {
+      setEmailHint(null);
+      setEmailAvailable(null);
+      return true;
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      setEmailHint('Adresse e-mail invalide.');
+      setEmailAvailable(false);
+      return false;
+    }
 
     try {
+      const res = await fetch(buildApiUrl('/auth/check-email'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      const available = Boolean(data.available);
+      setEmailAvailable(available);
+      setEmailHint(
+        data.message || (available ? 'Adresse e-mail disponible.' : 'Cette adresse e-mail est déjà utilisée.')
+      );
+      return available;
+    } catch {
+      setEmailHint('Impossible de vérifier cette adresse pour le moment.');
+      setEmailAvailable(null);
+      return true;
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg(null);
+
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidEmail(normalizedEmail)) {
+      setEmailAvailable(false);
+      setEmailHint('Adresse e-mail invalide.');
+      setMsg('Vérifie ton adresse e-mail.');
+      return;
+    }
+
+    const passwordValidationMessage = validatePassword(password, normalizedEmail);
+    if (passwordValidationMessage) {
+      setMsg(passwordValidationMessage);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setMsg('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    setBusy(true);
+    setAwaitingVerification(false);
+
+    try {
+      const available = await checkEmailAvailability(normalizedEmail);
+      if (!available) {
+        throw new Error('Cette adresse e-mail est déjà utilisée.');
+      }
+
       const res = await fetch(buildApiUrl('/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ email: normalizedEmail, password, confirmPassword, role }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -37,8 +168,16 @@ export default function Signup() {
         throw new Error(data.message || 'Création impossible. Essaie avec une autre adresse.');
       }
 
+      if (data.requiresEmailVerification) {
+        setEmailHint(null);
+        setEmailAvailable(null);
+        setAwaitingVerification(true);
+        setMsg(data.message || "Un e-mail de confirmation vient d'être envoyé.");
+        return;
+      }
+
       const profile = data.user ?? {
-        email,
+        email: normalizedEmail,
         role,
         createdAt: new Date().toISOString(),
       };
@@ -46,12 +185,14 @@ export default function Signup() {
       persistAuthenticatedSession(
         {
           ...profile,
-          email: profile.email ?? email,
+          email: profile.email ?? normalizedEmail,
           role: profile.role === 'DOCTOR' || profile.role === 'PATIENT' ? profile.role : role,
         },
         data.access_token ?? null
       );
 
+      setEmailHint(null);
+      setEmailAvailable(null);
       setMsg('Compte créé ✅');
       setTimeout(() => {
         router.replace('/app');
@@ -109,24 +250,78 @@ export default function Signup() {
           required
           placeholder="Adresse e-mail"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setEmailHint(null);
+            setEmailAvailable(null);
+          }}
+          onBlur={() => void checkEmailAvailability(email)}
           style={inputStyle}
         />
+        {emailHint ? (
+          <p style={{ margin: '-4px 2px 0', fontSize: 13, color: emailAvailable === false ? '#b91c1c' : '#065f46' }}>
+            {emailHint}
+          </p>
+        ) : null}
         <input
           type="password"
           required
-          minLength={8}
+          minLength={MIN_PASSWORD_LENGTH}
           placeholder="Mot de passe"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={inputStyle}
         />
+        {password ? (
+          <p
+            style={{
+              margin: '-4px 2px 0',
+              fontSize: 13,
+              color: validatePassword(password, email) ? '#b91c1c' : '#065f46',
+            }}
+          >
+            {validatePassword(password, email) || 'Mot de passe acceptable.'}
+          </p>
+        ) : null}
+        <input
+          type="password"
+          required
+          minLength={MIN_PASSWORD_LENGTH}
+          placeholder="Confirmer le mot de passe"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          style={inputStyle}
+        />
+        {confirmPassword ? (
+          <p style={{ margin: '-4px 2px 0', fontSize: 13, color: password === confirmPassword ? '#065f46' : '#b91c1c' }}>
+            {password === confirmPassword ? 'Les mots de passe correspondent.' : 'Les mots de passe ne correspondent pas.'}
+          </p>
+        ) : null}
 
-        <button type="submit" disabled={busy} style={btnStyle}>
+        {awaitingVerification ? (
+          <p style={{ margin: '-2px 2px 0', fontSize: 13, color: '#475569' }}>
+            Vérifie ta boîte mail puis clique sur le lien de confirmation pour activer ton compte.
+          </p>
+        ) : null}
+
+        <button
+          type="submit"
+          disabled={busy || !email || !password || !confirmPassword}
+          style={{ ...btnStyle, opacity: busy || !email || !password || !confirmPassword ? 0.7 : 1, cursor: busy || !email || !password || !confirmPassword ? 'default' : 'pointer' }}
+        >
           {busy ? 'Création…' : 'Créer un compte'}
         </button>
 
-        {msg && <p style={{ margin: 0, color: '#065f46' }}>{msg}</p>}
+        {msg && (
+          <p
+            style={{
+              margin: 0,
+              color: msg.includes('✅') || awaitingVerification ? '#065f46' : '#b91c1c',
+            }}
+          >
+            {msg}
+          </p>
+        )}
       </form>
     </main>
   );

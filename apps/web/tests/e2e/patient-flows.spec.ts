@@ -65,10 +65,10 @@ test.describe('patient app flows', () => {
     await page.goto('/exercice/emotions/fear?from=hyper');
 
     await page.locator('svg [role="link"]').nth(4).click();
-    await page.waitForURL('**/exercice/emotions/fear/insecure?from=hyper');
+    await page.waitForURL('**/exercice/emotions/fear/anxieux?from=hyper');
 
-    await page.locator('svg [role="link"]').nth(1).click();
-    await page.waitForURL('**/exercice/emotions/fear/insecure/insignifiant?from=hyper');
+    await page.locator('svg [role="link"]').nth(0).click();
+    await page.waitForURL('**/exercice/emotions/fear/anxieux/preoccupe?from=hyper');
     await expect(page.getByRole('dialog')).toBeVisible();
   });
 
@@ -105,7 +105,7 @@ test.describe('patient app flows', () => {
     await page.getByRole('button', { name: 'Se déconnecter' }).click();
 
     await expect(page.getByText('Avant la déconnexion')).toBeVisible();
-    await page.route('https://mawja-back.onrender.com/api/histories', async (route) => {
+    await page.route('https://server-production-d277.up.railway.app/api/histories', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

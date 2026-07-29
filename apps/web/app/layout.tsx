@@ -8,8 +8,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body style={{ fontFamily: "system-ui, sans-serif", margin: 0 }}>
         <ThemeBootstrapScript />
         <ThemeColorSync />
-        <StateCheckinPrompt />
         {children}
+        <StateCheckinPrompt />
       </body>
     </html>
   );

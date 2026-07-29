@@ -111,7 +111,7 @@ export default function AppHome() {
     window.location.replace('/login');
   }
 
-  function handleStateSelection(_: HistoryState, href: string) {
+  function handleStateSelection(href: string) {
     if (selectionBusy) return;
 
     setSelectionBusy(true);
@@ -191,21 +191,21 @@ export default function AppHome() {
               caption="Fuite/lutte, rythme cardiaque rapide, irritabilité, respiration rapide, tension musculaire, sueurs, palpitations, colère, anxiété, agitation, hypervigilance"
               styleExtra={{ ...styles.top, background: theme.hyper.bg, boxShadow: theme.hyper.shadow }}
               disabled={selectionBusy}
-              onClick={() => handleStateSelection('HYPER', '/hyperactivation')}
+              onClick={() => handleStateSelection('/hyperactivation')}
             />
             <Card
               title="Fenêtre de tolérance"
               caption="Fenêtre d’activation optimale, équilibre, calme, attentif"
               styleExtra={{ background: theme.window.bg, boxShadow: theme.window.shadow }}
               disabled={selectionBusy}
-              onClick={() => handleStateSelection('TOLERANCE', '/tolerance')}
+              onClick={() => handleStateSelection('/tolerance')}
             />
             <Card
               title="Hypoactivation"
               caption="Paralysie, sensation de déconnexion, d’engourdissement, digestion perturbée, respiration impactée, déréalisation, apathie, retrait, confusion"
               styleExtra={{ ...styles.bottom, background: theme.hypo.bg, boxShadow: theme.hypo.shadow }}
               disabled={selectionBusy}
-              onClick={() => handleStateSelection('HYPO', '/hypoactivation')}
+              onClick={() => handleStateSelection('/hypoactivation')}
             />
           </section>
 

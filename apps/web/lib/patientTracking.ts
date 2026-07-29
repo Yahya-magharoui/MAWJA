@@ -1,8 +1,10 @@
 'use client';
 
 import { buildApiUrl } from './api';
-import { isPatientSession } from './session';
+import { getSessionProfile, isPatientSession } from './session';
 const LAST_HISTORY_ID_KEY = 'mawja-last-history-id';
+const LOCAL_FAVORITE_KEYS_PREFIX = 'mawja-favorite-exercise-keys';
+const FAVORITES_EVENT = 'mawja-favorites-changed';
 
 export type HistoryState = 'HYPER' | 'TOLERANCE' | 'HYPO';
 export type ActivityCategory =
@@ -37,6 +39,18 @@ export type PatientNote = {
   createdAt: string;
 };
 
+export type PatientFavorite = {
+  id: number;
+  patientId: number;
+  exerciseId: number;
+  createdAt: string;
+  exercise: {
+    id: number;
+    title: string;
+    description: string | null;
+  };
+};
+
 type ActivityPayload = {
   category: ActivityCategory;
   subType: string;
@@ -51,6 +65,12 @@ type GoalPayload = {
 
 type NotePayload = {
   text: string;
+};
+
+type FavoritePayload = {
+  key: string;
+  title: string;
+  description?: string | null;
 };
 
 function getAuthToken() {
@@ -101,6 +121,65 @@ export function setLastHistoryId(historyId: number | null) {
     return;
   }
   window.localStorage.setItem(LAST_HISTORY_ID_KEY, String(historyId));
+}
+
+function emitFavoritesChanged() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new Event(FAVORITES_EVENT));
+}
+
+export function getFavoriteEventName() {
+  return FAVORITES_EVENT;
+}
+
+function getScopedFavoriteStorageKey() {
+  const profile = getSessionProfile();
+  const userScope =
+    profile?.patientProfileId != null
+      ? `patient-${profile.patientProfileId}`
+      : profile?.id != null
+        ? `user-${String(profile.id)}`
+        : profile?.email
+          ? `email-${profile.email.toLowerCase()}`
+          : null;
+
+  return userScope ? `${LOCAL_FAVORITE_KEYS_PREFIX}:${userScope}` : null;
+}
+
+export function getLocalFavoriteKeys() {
+  if (typeof window === 'undefined') return [] as string[];
+  const storageKey = getScopedFavoriteStorageKey();
+  if (!storageKey) return [];
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function setLocalFavoriteKeys(keys: string[]) {
+  if (typeof window === 'undefined') return;
+  const storageKey = getScopedFavoriteStorageKey();
+  if (!storageKey) return;
+  window.localStorage.setItem(
+    storageKey,
+    JSON.stringify(Array.from(new Set(keys)))
+  );
+  emitFavoritesChanged();
+}
+
+export function addLocalFavoriteKey(key: string) {
+  if (!key) return;
+  const keys = getLocalFavoriteKeys();
+  if (keys.includes(key)) return;
+  setLocalFavoriteKeys([...keys, key]);
+}
+
+export function removeLocalFavoriteKey(key: string) {
+  if (!key) return;
+  setLocalFavoriteKeys(getLocalFavoriteKeys().filter((entry) => entry !== key));
 }
 
 export async function postHistoryEntry(state: HistoryState) {
@@ -308,6 +387,66 @@ export async function deletePatientNote(noteId: number) {
   const payload = await parseJson(response);
   if (!response.ok) {
     throw new Error(payload?.message || 'Impossible de supprimer la note.');
+  }
+
+  return payload;
+}
+
+export async function fetchPatientFavorites(): Promise<PatientFavorite[]> {
+  if (!isPatientSession()) return [];
+
+  const response = await fetch(buildApiUrl('/favorites/me'), {
+    headers: {
+      Authorization: `Bearer ${requireAuthToken()}`,
+    },
+    cache: 'no-store',
+  });
+
+  const payload = await parseJson(response);
+  if (!response.ok) {
+    throw new Error(payload?.message || 'Impossible de récupérer les favoris.');
+  }
+
+  return Array.isArray(payload) ? (payload as PatientFavorite[]) : [];
+}
+
+export async function createPatientFavorite(favorite: FavoritePayload): Promise<PatientFavorite> {
+  if (!isPatientSession()) {
+    throw new Error('Connecte-toi pour enregistrer un favori.');
+  }
+
+  const response = await fetch(buildApiUrl('/favorites'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${requireAuthToken()}`,
+    },
+    body: JSON.stringify(favorite),
+  });
+
+  const payload = await parseJson(response);
+  if (!response.ok) {
+    throw new Error(payload?.message || 'Impossible d’ajouter ce favori.');
+  }
+
+  return payload as PatientFavorite;
+}
+
+export async function deletePatientFavorite(favoriteId: number) {
+  if (!isPatientSession()) {
+    throw new Error('Connecte-toi pour supprimer un favori.');
+  }
+
+  const response = await fetch(buildApiUrl(`/favorites/${favoriteId}`), {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${requireAuthToken()}`,
+    },
+  });
+
+  const payload = await parseJson(response);
+  if (!response.ok) {
+    throw new Error(payload?.message || 'Impossible de supprimer ce favori.');
   }
 
   return payload;

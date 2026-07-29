@@ -1,14 +1,13 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { postHistoryEntry, type HistoryState } from '../lib/patientTracking';
-import { useSessionInfo } from '../lib/session';
+import { getAccountStatus, getSessionProfile, getUserRole, isAuthenticatedSession } from '../lib/session';
 
-const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
-const STORAGE_KEY = 'mawja-state-checkin-last-at';
 const LOGIN_PROMPT_KEY = 'mawja-state-checkin-login-prompted-at';
+const SESSION_EVENT = 'mawja-session-changed';
 
 const OPTIONS: Array<{ value: HistoryState; label: string; description: string }> = [
   {
@@ -36,18 +35,6 @@ function isEligiblePath(pathname: string | null) {
   return !HIDDEN_PATHS.has(pathname);
 }
 
-function readLastCheckinAt() {
-  if (typeof window === 'undefined') return 0;
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  const parsed = raw ? Number(raw) : 0;
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function writeLastCheckinAt(timestamp: number) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STORAGE_KEY, String(timestamp));
-}
-
 function readLoginPromptMarker() {
   if (typeof window === 'undefined') return null;
   return window.localStorage.getItem(LOGIN_PROMPT_KEY);
@@ -58,69 +45,67 @@ function writeLoginPromptMarker(value: string) {
   window.localStorage.setItem(LOGIN_PROMPT_KEY, value);
 }
 
+function getPromptContext() {
+  if (typeof window === 'undefined') {
+    return {
+      canShowPrompt: false,
+      loginMarker: null as string | null,
+    };
+  }
+
+  const session = getSessionProfile();
+  const authenticated = isAuthenticatedSession();
+  const role = getUserRole();
+  const status = getAccountStatus();
+
+  return {
+    canShowPrompt: authenticated && status === 'registered' && role === 'PATIENT',
+    loginMarker: session?.loggedInAt ?? null,
+  };
+}
+
 export default function StateCheckinPrompt() {
   const pathname = usePathname();
-  const session = useSessionInfo();
-  const timerRef = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const canShowPrompt = session?.status === 'registered' && session.role === 'PATIENT';
-  const loginMarker = session?.profile?.loggedInAt ?? null;
+  const [promptContext, setPromptContext] = useState(() => getPromptContext());
+  const canShowPrompt = promptContext.canShowPrompt;
+  const loginMarker = promptContext.loginMarker;
 
   useEffect(() => {
-    const promptEnabled = isEligiblePath(pathname) && canShowPrompt;
+    const sync = () => setPromptContext(getPromptContext());
 
-    if (!promptEnabled) {
+    sync();
+    window.addEventListener(SESSION_EVENT, sync);
+    window.addEventListener('storage', sync);
+    window.addEventListener('pageshow', sync);
+
+    return () => {
+      window.removeEventListener(SESSION_EVENT, sync);
+      window.removeEventListener('storage', sync);
+      window.removeEventListener('pageshow', sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isEligiblePath(pathname) || !canShowPrompt) {
       setOpen(false);
       setError(null);
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
       return;
     }
-
-    const scheduleNext = () => {
-      const now = Date.now();
-      const lastCheckinAt = readLastCheckinAt();
-      const remaining = Math.max(FIFTEEN_MINUTES_MS - (now - lastCheckinAt), 0);
-
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current);
-      }
-
-      timerRef.current = window.setTimeout(() => {
-        setError(null);
-        setOpen(true);
-      }, remaining);
-    };
 
     const hasShownInitialPromptForThisLogin =
       Boolean(loginMarker) && readLoginPromptMarker() === loginMarker;
-    const loginAt = loginMarker ? Date.parse(loginMarker) : 0;
-    const shouldOpenForNewLogin =
-      Boolean(loginMarker) && !hasShownInitialPromptForThisLogin && (!Number.isFinite(loginAt) || readLastCheckinAt() < loginAt);
+    const shouldOpenForNewLogin = Boolean(loginMarker) && !hasShownInitialPromptForThisLogin;
 
     if (shouldOpenForNewLogin) {
-      writeLoginPromptMarker(loginMarker as string);
       setError(null);
       setOpen(true);
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
       return;
     }
 
-    scheduleNext();
-
-    return () => {
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
+    setOpen(false);
   }, [pathname, canShowPrompt, loginMarker]);
 
   async function submitState(state: HistoryState) {
@@ -129,20 +114,11 @@ export default function StateCheckinPrompt() {
 
     try {
       await postHistoryEntry(state);
-      const now = Date.now();
-      writeLastCheckinAt(now);
       if (loginMarker) {
         writeLoginPromptMarker(loginMarker);
       }
       setOpen(false);
       setError(null);
-
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current);
-      }
-      timerRef.current = window.setTimeout(() => {
-        setOpen(true);
-      }, FIFTEEN_MINUTES_MS);
     } catch (err) {
       const nextError = err instanceof Error ? err.message : 'Une erreur est survenue.';
       setError(nextError);
@@ -152,20 +128,11 @@ export default function StateCheckinPrompt() {
   }
 
   function dismissForLater() {
-    const now = Date.now();
-    writeLastCheckinAt(now);
     if (loginMarker) {
       writeLoginPromptMarker(loginMarker);
     }
     setOpen(false);
     setError(null);
-
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
-    }
-    timerRef.current = window.setTimeout(() => {
-      setOpen(true);
-    }, FIFTEEN_MINUTES_MS);
   }
 
   if (!isEligiblePath(pathname) || !canShowPrompt || !open) return null;

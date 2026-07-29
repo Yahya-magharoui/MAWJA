@@ -7,6 +7,8 @@ import { MoodController } from './mood.controller';
 import { HistoriesController } from './histories.controller';
 import { GoalsController } from './goals.controller';
 import { NotesController } from './notes.controller';
+import { FavoritesController } from './favorites.controller';
+import { AuthVerificationService } from './auth-verification.service';
 
 @Module({
   imports: [],
@@ -17,8 +19,9 @@ import { NotesController } from './notes.controller';
     HistoriesController,
     GoalsController,
     NotesController,
+    FavoritesController,
     ActivitiesController,
   ],
-  providers: [PrismaService],
+  providers: [PrismaService, AuthVerificationService],
 })
 export class AppModule {}

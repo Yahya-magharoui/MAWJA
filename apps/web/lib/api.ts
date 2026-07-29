@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = 'https://mawja-back.onrender.com/api';
+const DEFAULT_API_URL = 'https://server-production-d277.up.railway.app/api';
 
 function normalizeApiBaseUrl(rawUrl?: string | null) {
   const value = rawUrl?.trim();
