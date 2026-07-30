@@ -132,13 +132,13 @@ export default function HyperactivationPage() {
     <main style={{ minHeight:'100dvh', background:bg, fontFamily:'system-ui, -apple-system, Segoe UI, Roboto, sans-serif', color:'#0f172a' }}>
       <style>{css}</style>
 
-      <header style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
+      <header className="zone-header" style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
         <BackLink href="/app" style={{ justifySelf: 'start' }} />
-        <h1 style={{ margin:0, fontSize:20, textAlign:'center' }}>Exercices hyperactivation</h1>
+        <h1 className="zone-title" style={{ margin:0, fontSize:20, textAlign:'center' }}>Exercices hyperactivation</h1>
         <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button>
       </header>
 
-      <p style={{ margin:'0 auto 12px', opacity:.7, fontSize:16, textAlign:'center', maxWidth:700 }}>
+      <p className="zone-intro" style={{ margin:'0 auto 12px', opacity:.7, fontSize:16, textAlign:'center', maxWidth:700, padding:'0 20px' }}>
         Choisis un exercice pour retrouver ton équilibre.
       </p>
 
@@ -183,11 +183,11 @@ export default function HyperactivationPage() {
         ))}
       </section>
 
-      <div style={{ display:'flex', gap:12, justifyContent:'center', margin:'10px 0 90px' }}>
+      <div className="zone-help" style={{ display:'flex', gap:12, justifyContent:'center', margin:'10px 0 90px', padding:'0 20px' }}>
         <a href="/sos?from=hyper" style={btnSecondary}>J’ai besoin d’aide</a>
       </div>
 
-      <button type="button" onClick={randomChoice} aria-label="Choix aléatoire" style={fab(color)}>🎲</button>
+      <button type="button" onClick={randomChoice} aria-label="Choix aléatoire" className="zone-fab" style={fab(color)}>🎲</button>
     </main>
   );
 }
@@ -210,4 +210,45 @@ const css = `
   .tile:active { transform: scale(0.975); filter: brightness(0.98); }
   @media (hover:hover){ .tile:hover{ transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,0,0,.08); } }
   .shuffle * { transition: transform .25s ease; }
+
+  @media (max-width: 760px){
+    .zone-header{
+      grid-template-columns: 1fr;
+      gap: 12px;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .zone-title{
+      font-size: 18px !important;
+    }
+
+    .zone-intro{
+      font-size: 15px !important;
+      margin-bottom: 16px !important;
+    }
+
+    .zone-help{
+      flex-direction: column;
+      margin-bottom: 92px !important;
+    }
+
+    .zone-help a{
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+
+    .tile{
+      min-height: 168px;
+    }
+
+    .zone-fab{
+      right: 16px !important;
+      bottom: 16px !important;
+      width: 60px !important;
+      height: 60px !important;
+      font-size: 22px !important;
+    }
+  }
 `;

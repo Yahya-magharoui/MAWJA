@@ -87,7 +87,7 @@ const styles: Record<string, React.CSSProperties> = {
   h1: { margin:0, fontSize:20, fontWeight:800 },
   gear: { justifySelf:'end', border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer' },
   subtitle: { margin:'8px 0 22px', opacity:.7, fontSize:14 },
-  grid: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:18, maxWidth:520, margin:'16px auto 0' },
+  grid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:18, maxWidth:520, margin:'16px auto 0' },
   card: {
     display:'grid', placeItems:'center', gap:8, padding:'22px 12px', borderRadius:22,
     textDecoration:'none', color:'#0f172a', border:'1px solid rgba(0,0,0,.06)',
@@ -110,5 +110,10 @@ const css = `
   .tile:active { transform: scale(0.98); filter: brightness(0.98); }
   @media (hover:hover) {
     .tile:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,.10); }
+  }
+  @media (max-width: 640px) {
+    .tile {
+      min-height: 132px;
+    }
   }
 `;

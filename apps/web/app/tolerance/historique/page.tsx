@@ -152,6 +152,7 @@ export default function HistoryPage() {
 
   return (
     <main style={{ ...wrap, background: bg }}>
+      <style>{css}</style>
       <header style={hdr}>
         <BackLink href="/tolerance" style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Mon historique</h1>
@@ -163,10 +164,13 @@ export default function HistoryPage() {
         {authenticated ? (
         <>
         <div
+          className="history-toolbar"
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
             marginBottom: 16,
           }}
         >
@@ -177,6 +181,7 @@ export default function HistoryPage() {
         </div>
 
         <div
+          className="history-table-head"
           style={{
             display: 'grid',
             gridTemplateColumns: '60px 120px 140px 1fr 120px',
@@ -199,6 +204,7 @@ export default function HistoryPage() {
         {!loading && !error && rows.map((r) => (
           <div
             key={r.id}
+            className="history-row"
             style={{
               display: 'grid',
               gridTemplateColumns: '60px 120px 140px 1fr 120px',
@@ -211,11 +217,13 @@ export default function HistoryPage() {
               alignItems: 'center',
             }}
           >
-            <div style={{ fontWeight: 700 }}>{r.id}</div>
-            <div>{r.time}</div>
-            <div>{stateBadge(r.state)}</div>
-            <div>{r.emotion}</div>
-            <div style={{ textAlign: 'right' }}>{r.backMins ? `${r.backMins} min` : '—'}</div>
+            <div className="history-cell" data-label="ID" style={{ fontWeight: 700 }}>{r.id}</div>
+            <div className="history-cell" data-label="Date / heure">{r.time}</div>
+            <div className="history-cell" data-label="État">{stateBadge(r.state)}</div>
+            <div className="history-cell" data-label="Racine d’émotion">{r.emotion}</div>
+            <div className="history-cell history-cell-right" data-label="Tps retour FT" style={{ textAlign: 'right' }}>
+              {r.backMins ? `${r.backMins} min` : '—'}
+            </div>
           </div>
         ))}
         </>
@@ -265,3 +273,35 @@ const infoCard = {
   borderRadius: 10,
   color: '#334155',
 } as const;
+
+const css = `
+  @media (max-width: 760px) {
+    .history-table-head {
+      display: none !important;
+    }
+
+    .history-row {
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+    }
+
+    .history-cell {
+      display: grid;
+      gap: 4px;
+      text-align: left !important;
+    }
+
+    .history-cell::before {
+      content: attr(data-label);
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .history-cell-right {
+      justify-items: start;
+    }
+  }
+`;

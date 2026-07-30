@@ -510,7 +510,7 @@ const styles = {
   cardInner: { padding: '26px 18px', textAlign: 'center' } as React.CSSProperties,
   cardTitle: { margin: 0, fontWeight: 700, fontSize: 16, letterSpacing: 0.4 } as React.CSSProperties,
   cardCaption: { margin: '6px 0 2px', fontSize: 13, opacity: 0.7 } as React.CSSProperties,
-  actions: { display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr', maxWidth: 520, margin: '4px auto 10px', padding: '0 20px', width: '100%' } as React.CSSProperties,
+  actions: { display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', maxWidth: 520, margin: '4px auto 10px', padding: '0 20px', width: '100%' } as React.CSSProperties,
   secondary: {
     padding: '12px 16px',
     borderRadius: 14,
@@ -576,4 +576,13 @@ const css = `
   }
   @keyframes fade { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: translateY(0) } }
   @keyframes up { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
+  @media (max-width: 640px) {
+    h1 {
+      font-size: 16px;
+    }
+
+    article:hover {
+      transform: none;
+    }
+  }
 `;

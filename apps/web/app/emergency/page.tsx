@@ -114,7 +114,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
     gap: 18,
     maxWidth: 520,
     margin: '16px auto 0',
@@ -151,5 +151,10 @@ const css = `
   .card:active { transform: scale(0.98); filter: brightness(0.98); }
   @media (hover:hover) {
     .card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,.10); }
+  }
+  @media (max-width: 640px) {
+    .card {
+      min-height: 136px;
+    }
   }
 `;

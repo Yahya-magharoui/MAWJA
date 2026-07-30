@@ -213,7 +213,7 @@ export default function Signup() {
       <form
         onSubmit={handleSubmit}
         style={{
-          width: 340,
+          width: 'min(420px, calc(100% - 32px))',
           display: 'grid',
           gap: 12,
           padding: 24,
@@ -342,7 +342,7 @@ const labelStyle: React.CSSProperties = {
 
 const roleGroupStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
   gap: 8,
 };
 

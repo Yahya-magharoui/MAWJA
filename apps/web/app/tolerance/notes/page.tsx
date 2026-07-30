@@ -122,6 +122,7 @@ export default function NotesPage() {
 
   return (
     <main style={wrap}>
+      <style>{css}</style>
       <header style={hdr}>
         <BackLink href="/tolerance" style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Mes Notes</h1>
@@ -134,7 +135,7 @@ export default function NotesPage() {
         {session && !authenticated ? <AuthRequiredNotice subject="tes notes" /> : null}
         {authenticated ? (
           <>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            <div className="notes-toolbar" style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
               <input
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
@@ -160,14 +161,14 @@ export default function NotesPage() {
 
             <div style={cards}>
               {!loading && notes.map((note) => (
-                <article key={note.id} style={card}>
+                <article key={note.id} className="note-card" style={card}>
                   <a
                     href={`/tolerance/notes/${note.id}`}
-                    style={{ textDecoration: 'none', color: '#0f172a', flex: 1 }}
+                    style={{ textDecoration: 'none', color: '#0f172a', flex: 1, width: '100%' }}
                   >
                     {note.text}
                   </a>
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div className="note-card-actions" style={{ display: 'flex', gap: 8 }}>
                     <button
                       onClick={(event) => {
                         event.preventDefault();
@@ -221,3 +222,39 @@ const smallButton = (color: string) => ({ padding: '8px 10px', borderRadius: 10,
 const dangerButton = { padding: '8px 10px', borderRadius: 10, border: '1px solid #fecaca', background: '#fff', color: '#b91c1c', fontWeight: 600, cursor: 'pointer' } as const;
 const emptyState = { textAlign: 'center', opacity: 0.65, padding: '20px 0' } as const;
 const errorCard = { marginBottom: 12, padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(239,68,68,.18)', background: '#fff', color: '#991b1b' } as const;
+const css = `
+  .notes-toolbar{
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .notes-toolbar input{
+    min-width: min(100%, 240px);
+  }
+
+  @media (max-width: 760px){
+    .notes-toolbar{
+      flex-direction: column;
+    }
+
+    .notes-toolbar a,
+    .notes-toolbar button{
+      width: 100%;
+      text-align: center;
+    }
+
+    .note-card{
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .note-card-actions{
+      width: 100%;
+      flex-direction: column;
+    }
+
+    .note-card-actions button{
+      width: 100%;
+    }
+  }
+`;

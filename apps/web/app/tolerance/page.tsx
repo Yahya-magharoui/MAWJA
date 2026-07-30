@@ -26,7 +26,7 @@ export default function ToleranceHome() {
         <div />
       </header>
 
-      <p style={{ margin:'6px 20px 14px', opacity:.7, maxWidth:720 }}>
+      <p style={{ margin:'6px auto 14px', opacity:.7, maxWidth:720, padding:'0 20px', textAlign:'center' }}>
         Choisis ce que tu veux faire.
       </p>
 
@@ -155,4 +155,12 @@ const lockedText: React.CSSProperties = {
   color: '#64748b',
   fontWeight: 600,
 };
-const css = `.tile span{display:block;font-size:14px}`;
+const css = `
+  .tile span{display:block;font-size:14px}
+
+  @media (max-width: 760px){
+    .tile{
+      min-height: 152px;
+    }
+  }
+`;
