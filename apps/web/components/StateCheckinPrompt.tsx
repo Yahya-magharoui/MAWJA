@@ -138,12 +138,13 @@ export default function StateCheckinPrompt() {
   if (!isEligiblePath(pathname) || !canShowPrompt || !open) return null;
 
   return (
-    <div style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="state-checkin-title">
-      <div style={cardStyle}>
-        <div style={headerStyle}>
+    <div className="state-checkin-overlay" style={overlayStyle} role="dialog" aria-modal="true" aria-labelledby="state-checkin-title">
+      <style>{css}</style>
+      <div className="state-checkin-card" style={cardStyle}>
+        <div className="state-checkin-header" style={headerStyle}>
           <div>
             <p style={eyebrowStyle}>Check-in</p>
-            <h2 id="state-checkin-title" style={titleStyle}>Comment tu te sens maintenant ?</h2>
+            <h2 id="state-checkin-title" className="state-checkin-title" style={titleStyle}>Comment tu te sens maintenant ?</h2>
             <p style={descriptionStyle}>Choisis l’état qui correspond le mieux à ta sensation actuelle.</p>
           </div>
           <button type="button" onClick={dismissForLater} style={laterButtonStyle} disabled={busy}>
@@ -179,7 +180,7 @@ const overlayStyle: CSSProperties = {
   backdropFilter: 'blur(6px)',
   display: 'grid',
   placeItems: 'center',
-  padding: 20,
+  padding: 'max(16px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))',
   zIndex: 1000,
 };
 
@@ -266,3 +267,22 @@ const errorStyle: CSSProperties = {
   color: '#b91c1c',
   fontSize: 14,
 };
+
+const css = `
+  @media (max-width: 640px){
+    .state-checkin-card{
+      padding: 20px 16px !important;
+      border-radius: 24px !important;
+    }
+
+    .state-checkin-header{
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .state-checkin-title{
+      font-size: clamp(22px, 6vw, 28px) !important;
+      overflow-wrap: anywhere;
+    }
+  }
+`;

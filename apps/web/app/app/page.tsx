@@ -155,13 +155,14 @@ export default function AppHome() {
   }
 
   return (
-    <main style={styles.page(theme.bg)}>
+    <main className="app-home-page" style={styles.page(theme.bg)}>
       <style>{css}</style>
 
-      <header style={styles.header}>
-        <BackLink href="/" style={styles.backBtn} aria-label="Retour à l’accueil" />
-        <h1 style={styles.h1}>{screenTitle}</h1>
+      <header className="app-home-header" style={styles.header}>
+        <BackLink href="/" className="app-home-back" style={styles.backBtn} aria-label="Retour à l’accueil" />
+        <h1 className="app-home-title" style={styles.h1}>{screenTitle}</h1>
         <button
+          className="app-home-gear"
           style={styles.gearBtn}
           aria-label="Paramètres"
           title="Paramètres"
@@ -185,7 +186,7 @@ export default function AppHome() {
         </section>
       ) : (
         <>
-          <section className="fade-in" style={styles.stack}>
+          <section className="fade-in app-home-stack" style={styles.stack}>
             <Card
               title="Hyperactivation"
               caption="Fuite/lutte, rythme cardiaque rapide, irritabilité, respiration rapide, tension musculaire, sueurs, palpitations, colère, anxiété, agitation, hypervigilance"
@@ -209,15 +210,15 @@ export default function AppHome() {
             />
           </section>
 
-          <nav className="float-up" style={styles.actions}>
+          <nav className="float-up app-home-actions" style={styles.actions}>
             <button style={styles.secondary} onClick={() => (window.location.href = '/sos?from=app')}>
               J’ai besoin d’aide
             </button>
           </nav>
 
-          <footer className="float-up" style={styles.footer}>
+          <footer className="float-up app-home-footer" style={styles.footer}>
             <span style={styles.subtle}>Couleur du thème</span>
-            <div style={styles.bubbles}>
+            <div className="theme-bubbles" style={styles.bubbles}>
               {PRESET.map((c) => (
                 <button
                   key={c}
@@ -226,7 +227,7 @@ export default function AppHome() {
                   onClick={() => setColor(c)}
                 />
               ))}
-              <label style={styles.hexWrap}>
+              <label className="theme-hex-wrap" style={styles.hexWrap}>
                 <span className="sr-only">Choisir une couleur</span>
                 <input
                   type="text"
@@ -252,16 +253,17 @@ export default function AppHome() {
       )}
 
       {openSettings && (
-        <div style={styles.settingsOverlay} role="dialog" aria-modal="true">
-          <div style={styles.settingsCard}>
+        <div className="settings-overlay" style={styles.settingsOverlay} role="dialog" aria-modal="true">
+          <div className="settings-card" style={styles.settingsCard}>
             <button onClick={() => setOpenSettings(false)} style={styles.closeBtn} aria-label="Fermer">✕</button>
 
             <button
+              className="settings-row"
               style={styles.settingRow}
               onClick={() => (window.location.href = accountStatus === 'registered' ? '/app' : '/login')}
             >
               <span style={styles.settingIcon}>👤</span>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
                 <div style={{ fontWeight: 600 }}>{accountName ?? 'Compte'}</div>
                 <div style={{ fontSize: 12, opacity: 0.6 }}>
                   {accountStatus === 'registered'
@@ -275,7 +277,7 @@ export default function AppHome() {
             </button>
 
             {accountStatus === 'registered' && (
-              <button style={{ ...styles.settingRow, color: '#b91c1c' }} onClick={handleLogout}>
+              <button className="settings-row" style={{ ...styles.settingRow, color: '#b91c1c' }} onClick={handleLogout}>
                 <span style={styles.settingIcon}>🚪</span>
                 <div style={{ flex: 1 }}>Se déconnecter</div>
                 <span aria-hidden>›</span>
@@ -284,6 +286,7 @@ export default function AppHome() {
 
             {DOCTOR_EXPERIENCE_ENABLED && isAuthenticatedPatient && (
               <button
+                className="settings-row"
                 style={styles.settingRow}
                 onClick={() => {
                   setOpenSettings(false);
@@ -298,7 +301,7 @@ export default function AppHome() {
 
             <div style={styles.settingSection}>
               <div style={styles.sectionTitle}>Personnaliser le thème</div>
-              <div style={styles.bubbles}>
+              <div className="theme-bubbles" style={styles.bubbles}>
                 {PRESET.map((c) => (
                   <button
                     key={`modal-${c}`}
@@ -312,7 +315,7 @@ export default function AppHome() {
 
             <div style={styles.settingSection}>
               <div style={styles.sectionTitle}>Langue</div>
-              <div style={styles.langRow}>
+              <div className="settings-lang-row" style={styles.langRow}>
                 {(['fr', 'en'] as Lang[]).map((lng) => (
                   <button
                     key={lng}
@@ -329,17 +332,17 @@ export default function AppHome() {
               </div>
             </div>
 
-            <button style={styles.settingRow} onClick={() => setReadingEnabled((v) => !v)}>
+            <button className="settings-row" style={styles.settingRow} onClick={() => setReadingEnabled((v) => !v)}>
               <span style={styles.settingIcon}>🔊</span>
               <div>Lecture des consignes</div>
               <span style={{ fontSize: 13, opacity: 0.7 }}>{readingEnabled ? 'Activé' : 'Désactivé'}</span>
             </button>
-            <button style={styles.settingRow} onClick={() => setHapticsEnabled((v) => !v)}>
+            <button className="settings-row" style={styles.settingRow} onClick={() => setHapticsEnabled((v) => !v)}>
               <span style={styles.settingIcon}>📳</span>
               <div>Retour haptique</div>
               <span style={{ fontSize: 13, opacity: 0.7 }}>{hapticsEnabled ? 'Activé' : 'Désactivé'}</span>
             </button>
-            <button style={styles.settingRow} onClick={() => setSoundEnabled((v) => !v)}>
+            <button className="settings-row" style={styles.settingRow} onClick={() => setSoundEnabled((v) => !v)}>
               <span style={styles.settingIcon}>🎵</span>
               <div>Effet sonore</div>
               <span style={{ fontSize: 13, opacity: 0.7 }}>{soundEnabled ? 'Activé' : 'Désactivé'}</span>
@@ -450,32 +453,54 @@ function Card({
 const styles = {
   page: (bg: string): React.CSSProperties => ({
     minHeight: '100dvh',
+    width: '100%',
+    maxWidth: '100%',
     background: bg,
     display: 'grid',
     gridTemplateRows: 'auto 1fr auto auto',
+    margin: '0 auto',
     fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
     color: '#0f172a',
+    overflowX: 'clip',
+    paddingLeft: 'max(12px, env(safe-area-inset-left))',
+    paddingRight: 'max(12px, env(safe-area-inset-right))',
+    paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
   }),
   header: {
+    width: '100%',
+    maxWidth: 680,
+    margin: '0 auto',
     display: 'grid',
-    gridTemplateColumns: '1fr auto 1fr',
+    gridTemplateColumns: '44px minmax(0, 1fr) 44px',
     alignItems: 'center',
-    padding: '16px 20px',
+    gap: 8,
+    padding: '16px 0',
   } as React.CSSProperties,
   backBtn: {
     justifySelf: 'start',
+    width: 44,
+    height: 44,
   } as React.CSSProperties,
-  h1: { margin: 0, fontSize: 18, textAlign: 'center', letterSpacing: 0.2 } as React.CSSProperties,
+  h1: {
+    margin: 0,
+    minWidth: 0,
+    fontSize: 18,
+    textAlign: 'center',
+    letterSpacing: 0.2,
+    overflowWrap: 'anywhere',
+  } as React.CSSProperties,
   gearBtn: {
     justifySelf: 'end',
+    width: 44,
+    height: 44,
     border: '1px solid #e5e7eb',
     background: '#fff',
     borderRadius: 12,
-    padding: '8px 10px',
+    padding: 0,
     cursor: 'pointer',
   } as React.CSSProperties,
-  stack: { display: 'grid', gap: 14, padding: '6px 20px 14px', maxWidth: 520, margin: '0 auto', width: '100%' } as React.CSSProperties,
-  disabledDoctorShell: { display: 'grid', alignContent: 'start', padding: '24px 20px', maxWidth: 720, margin: '0 auto', width: '100%' } as React.CSSProperties,
+  stack: { display: 'grid', gap: 14, padding: '6px 0 14px', maxWidth: 520, margin: '0 auto', width: '100%' } as React.CSSProperties,
+  disabledDoctorShell: { display: 'grid', alignContent: 'start', padding: '24px 0', maxWidth: 720, margin: '0 auto', width: '100%' } as React.CSSProperties,
   disabledDoctorCard: {
     background: '#fff',
     borderRadius: 24,
@@ -510,7 +535,7 @@ const styles = {
   cardInner: { padding: '26px 18px', textAlign: 'center' } as React.CSSProperties,
   cardTitle: { margin: 0, fontWeight: 700, fontSize: 16, letterSpacing: 0.4 } as React.CSSProperties,
   cardCaption: { margin: '6px 0 2px', fontSize: 13, opacity: 0.7 } as React.CSSProperties,
-  actions: { display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', maxWidth: 520, margin: '4px auto 10px', padding: '0 20px', width: '100%' } as React.CSSProperties,
+  actions: { display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', maxWidth: 520, margin: '4px auto 10px', padding: 0, width: '100%' } as React.CSSProperties,
   secondary: {
     padding: '12px 16px',
     borderRadius: 14,
@@ -520,18 +545,18 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
   } as React.CSSProperties,
-  footer: { padding: '6px 20px 18px', maxWidth: 520, margin: '0 auto', width: '100%' } as React.CSSProperties,
+  footer: { padding: '6px 0 18px', maxWidth: 520, margin: '0 auto', width: '100%' } as React.CSSProperties,
   subtle: { fontSize: 12, opacity: 0.7, display: 'inline-block', marginBottom: 6 } as React.CSSProperties,
   bubbles: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' } as React.CSSProperties,
   bubble: { width: 34, height: 34, borderRadius: 999, border: '1px solid rgba(0,0,0,.06)', cursor: 'pointer' } as React.CSSProperties,
-  hexWrap: { marginLeft: 4 } as React.CSSProperties,
-  hexInput: { width: 110, padding: '8px 10px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, outline: 'none' } as React.CSSProperties,
-  settingsOverlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,.35)', display: 'grid', placeItems: 'center', padding: 20, zIndex: 50 } as React.CSSProperties,
+  hexWrap: { marginLeft: 4, minWidth: 0 } as React.CSSProperties,
+  hexInput: { width: 110, maxWidth: '100%', padding: '8px 10px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, outline: 'none' } as React.CSSProperties,
+  settingsOverlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,.35)', display: 'grid', placeItems: 'center', padding: 'max(16px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))', zIndex: 50 } as React.CSSProperties,
   settingsCard: { width: 'min(420px,100%)', background: '#fff', borderRadius: 24, padding: '22px 12px 12px', boxShadow: '0 24px 40px rgba(15,23,42,.25)', display: 'grid', gap: 4, position: 'relative' } as React.CSSProperties,
   assignmentModalCard: { width: 'min(520px,100%)', background: '#fff', borderRadius: 24, padding: '22px 18px 18px', boxShadow: '0 24px 40px rgba(15,23,42,.25)', display: 'grid', gap: 4, position: 'relative' } as React.CSSProperties,
   logoutModalCard: { width: 'min(560px,100%)', background: '#fff', borderRadius: 24, padding: '22px 18px 18px', boxShadow: '0 24px 40px rgba(15,23,42,.25)', display: 'grid', gap: 4, position: 'relative' } as React.CSSProperties,
   closeBtn: { position: 'absolute', right: 12, top: 12, border: 'none', background: 'transparent', fontSize: 20, cursor: 'pointer' } as React.CSSProperties,
-  settingRow: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', background: 'transparent', padding: '10px 8px', borderRadius: 12, cursor: 'pointer', textAlign: 'left' } as React.CSSProperties,
+  settingRow: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', background: 'transparent', padding: '10px 8px', borderRadius: 12, cursor: 'pointer', textAlign: 'left', width: '100%', maxWidth: '100%' } as React.CSSProperties,
   settingIcon: { width: 28, textAlign: 'center', fontSize: 18 } as React.CSSProperties,
   settingSection: { padding: '6px 8px', borderRadius: 14, border: '1px solid rgba(0,0,0,.04)', background: '#fafaff', margin: '4px 0 6px' } as React.CSSProperties,
   sectionTitle: { fontWeight: 600, fontSize: 13, marginBottom: 6 } as React.CSSProperties,
@@ -576,13 +601,58 @@ const css = `
   }
   @keyframes fade { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: translateY(0) } }
   @keyframes up { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
+
+  .theme-bubbles{
+    width: 100%;
+  }
+
+  .theme-hex-wrap{
+    min-width: 0;
+  }
+
+  .theme-hex-wrap input{
+    width: min(110px, 100%);
+  }
+
   @media (max-width: 640px) {
-    h1 {
-      font-size: 16px;
+    .app-home-page{
+      padding-left: max(10px, env(safe-area-inset-left));
+      padding-right: max(10px, env(safe-area-inset-right));
+    }
+
+    .app-home-header{
+      padding-top: 12px !important;
+    }
+
+    .app-home-title {
+      font-size: clamp(20px, 5vw, 26px) !important;
+      line-height: 1.15;
     }
 
     article:hover {
       transform: none;
+    }
+
+    .app-home-stack{
+      gap: 12px !important;
+    }
+
+    .app-home-actions,
+    .app-home-footer{
+      max-width: 100% !important;
+    }
+
+    .settings-card{
+      padding: 20px 12px 12px !important;
+    }
+
+    .settings-row{
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .settings-lang-row{
+      flex-wrap: wrap;
     }
   }
 `;
