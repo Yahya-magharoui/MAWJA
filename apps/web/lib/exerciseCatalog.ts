@@ -12,7 +12,7 @@ export const HYPER_EXERCISES: ExerciseCard[] = [
   { key: 'anchoring', label: 'Ancrage sensoriel', href: '/exercice/anchoring', icon: '/icons/ancrage.svg' },
   { key: 'sba', label: 'SBA lentes', href: '/exercice/sba', icon: '/icons/sba.svg' },
   { key: 'coherence', label: 'Exercices de respiration', href: '/exercice/breathing', icon: '/icons/breathing.svg' },
-  { key: 'trousse', label: 'Trousses de sécurité émotionnelle', href: '/exercice/trousse', icon: '/icons/trousse.svg' },
+  { key: 'trousse', label: 'Trousse de sécurité émotionnelle', href: '/exercice/trousse', icon: '/icons/trousse.svg' },
   { key: 'plan', label: 'Mon plan de crise', href: '/plan', icon: '/icons/plan.svg' },
 ];
 

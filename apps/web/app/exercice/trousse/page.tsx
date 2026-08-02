@@ -73,7 +73,7 @@ export default function SafetyKitPage() {
 
       <header style={header}>
         <BackLink href={backHref} style={{ justifySelf: 'start' }} />
-        <h1 style={{ margin: 0, fontSize: 20 }}>Trousse de sécurité</h1>
+        <h1 style={{ margin: 0, fontSize: 20 }}>Trousse de sécurité émotionnelle</h1>
         <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>
           ⚙️
         </button>

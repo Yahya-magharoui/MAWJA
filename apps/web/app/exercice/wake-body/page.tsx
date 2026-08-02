@@ -60,9 +60,7 @@ export default function WakeBodyHome() {
         </a>
       </section>
 
-      <div style={{ textAlign:'center', margin:'18px 0 80px', opacity:.6, fontSize:12 }}>
-        Astuce : utilise un casque si tu actives les sons.
-      </div>
+      <div style={{ height: 32 }} />
     </main>
   );
 }

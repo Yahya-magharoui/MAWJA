@@ -99,7 +99,7 @@ export default function BreathingTube() {
       category: 'BREATHING',
       subType: 'Cohérence cardiaque',
       detail: '365 / 5 min',
-    }).catch(console.error);
+    }).catch(() => {});
   }
   function pause() { setPhase('paused'); }
   function resume() { setPhase('inspire'); }
@@ -114,7 +114,7 @@ export default function BreathingTube() {
   const isRun   = phase === 'inspire' || phase === 'expire';
   const isPause = phase === 'paused';
 
-  const motion = isRun ? `${phaseDuration}ms cubic-bezier(.22,.65,.2,1)` : '280ms ease';
+  const motion = isRun ? `${phaseDuration}ms linear` : '220ms ease';
 
   return (
     <main style={page}>

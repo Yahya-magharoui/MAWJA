@@ -9,7 +9,7 @@ type Step = { key: string; label: string; icon: string; seconds: number };
 const STEPS: Step[] = [
   { key: 'walk',    icon: '/icons/walk.svg',    label: 'Marche pendant quelques instants si tu peux te lever', seconds: 60 },
   { key: 'armsUp',  icon: '/icons/arms-up.svg', label: 'Lève les bras au-dessus de la tête et redescends-les calmement', seconds: 60 },
-  { key: 'sideBend',icon: '/icons/side-bend.svg',label: 'Étire-toi vers la gauche puis vers la droite', seconds: 60 },
+  { key: 'sideBend',icon: '/icons/etirement gauche.svg',label: 'Étire-toi vers la gauche puis vers la droite', seconds: 60 },
   { key: 'squat',   icon: '/icons/squat.svg',   label: 'Fais des descentes comme si tu t’asseyais sur une chaise', seconds: 60 },
   { key: 'water',   icon: '/icons/water.svg',   label: 'Va te chercher un verre d’eau et inspire profondément', seconds: 60 },
 ];

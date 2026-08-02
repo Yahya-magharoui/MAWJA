@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { useQueryParam } from '../../../../hooks/useQueryParam';
@@ -8,38 +8,39 @@ import { logActivity } from '../../../../lib/patientTracking';
 
 type BreathingPhase = 'idle' | 'inhale' | 'hold' | 'exhale' | 'completed';
 
-const PHASE_SEQUENCE: Array<Extract<BreathingPhase, 'inhale' | 'hold' | 'exhale'>> = [
+const BREATHING_CONFIG = {
+  inhaleDuration: 3000,
+  holdDuration: 1000,
+  exhaleDuration: 4000,
+  totalCycles: 20,
+} as const;
+
+const ACTIVE_PHASES: Array<Extract<BreathingPhase, 'inhale' | 'hold' | 'exhale'>> = [
   'inhale',
   'hold',
   'exhale',
 ];
 
-const PHASE_DURATION: Record<Extract<BreathingPhase, 'inhale' | 'hold' | 'exhale'>, number> = {
-  inhale: 6,
-  hold: 4,
-  exhale: 6,
-};
-
 const PHASE_COPY = {
   idle: {
     title: 'Appuie sur « Démarrer »',
-    subtitle: 'Le cycle commencera par une inspiration de 6 secondes.',
+    subtitle: 'Le cycle commencera par une inspiration de 3 secondes.',
   },
   inhale: {
     title: 'Inspire par le nez en laissant le ventre se gonfler',
-    subtitle: '6 secondes',
+    subtitle: '3 secondes',
   },
   hold: {
-    title: 'Bloque ta respiration',
-    subtitle: '4 secondes',
+    title: 'Garde doucement l’air',
+    subtitle: 'Pause • 1 seconde',
   },
   exhale: {
     title: 'Souffle par la bouche en rentrant doucement le ventre',
-    subtitle: '6 secondes',
+    subtitle: '4 secondes',
   },
   completed: {
-    title: 'Cycle terminé',
-    subtitle: 'Tu peux recommencer ou activer la boucle.',
+    title: 'Exercice terminé',
+    subtitle: 'Les 20 cycles sont terminés. Tu peux recommencer quand tu veux.',
   },
 } as const;
 
@@ -55,30 +56,37 @@ function vibe(ms = 10) {
   } catch {}
 }
 
+function getPhaseDuration(phase: Extract<BreathingPhase, 'inhale' | 'hold' | 'exhale'>) {
+  if (phase === 'inhale') return BREATHING_CONFIG.inhaleDuration;
+  if (phase === 'hold') return BREATHING_CONFIG.holdDuration;
+  return BREATHING_CONFIG.exhaleDuration;
+}
+
 function getNextPhase(phase: Extract<BreathingPhase, 'inhale' | 'hold' | 'exhale'>) {
-  const index = PHASE_SEQUENCE.indexOf(phase);
-  return PHASE_SEQUENCE[(index + 1) % PHASE_SEQUENCE.length];
+  const currentIndex = ACTIVE_PHASES.indexOf(phase);
+  return ACTIVE_PHASES[currentIndex + 1] ?? 'inhale';
 }
 
 export default function AbdominalBreathing() {
   const { backHref } = useOrigin();
 
   const [phase, setPhase] = useState<BreathingPhase>('idle');
-  const [secondsLeft, setSecondsLeft] = useState(PHASE_DURATION.inhale);
-  const [progress, setProgress] = useState(0);
-  const [loopEnabled, setLoopEnabled] = useState(false);
+  const [phaseProgress, setPhaseProgress] = useState(0);
+  const [secondsLeft, setSecondsLeft] = useState(BREATHING_CONFIG.inhaleDuration / 1000);
+  const [completedCycles, setCompletedCycles] = useState(0);
   const [completionOpen, setCompletionOpen] = useState(false);
 
   const rafRef = useRef<number | null>(null);
-  const phaseStartRef = useRef(0);
+  const runTokenRef = useRef(0);
 
   const isRunning = phase === 'inhale' || phase === 'hold' || phase === 'exhale';
   const statusCopy = PHASE_COPY[phase];
+  const currentCycle = phase === 'completed' ? BREATHING_CONFIG.totalCycles : Math.min(completedCycles + 1, BREATHING_CONFIG.totalCycles);
 
   const barPercent = (() => {
-    if (phase === 'inhale') return progress * 100;
+    if (phase === 'inhale') return phaseProgress * 100;
     if (phase === 'hold') return 100;
-    if (phase === 'exhale') return (1 - progress) * 100;
+    if (phase === 'exhale') return (1 - phaseProgress) * 100;
     return 0;
   })();
 
@@ -91,31 +99,34 @@ export default function AbdominalBreathing() {
     }
   }
 
-  function resetCycle(nextPhase: BreathingPhase = 'idle') {
+  function resetExercise(nextPhase: BreathingPhase = 'idle') {
+    runTokenRef.current += 1;
     cancelFrame();
     setPhase(nextPhase);
-    setProgress(0);
-    setSecondsLeft(PHASE_DURATION.inhale);
+    setPhaseProgress(0);
+    setSecondsLeft(BREATHING_CONFIG.inhaleDuration / 1000);
+    setCompletedCycles(0);
   }
 
-  function startCycle() {
+  function startExercise() {
+    runTokenRef.current += 1;
     cancelFrame();
     setCompletionOpen(false);
+    setCompletedCycles(0);
+    setPhaseProgress(0);
+    setSecondsLeft(BREATHING_CONFIG.inhaleDuration / 1000);
     setPhase('inhale');
-    setProgress(0);
-    setSecondsLeft(PHASE_DURATION.inhale);
-    phaseStartRef.current = 0;
-    vibe(10);
+    vibe(12);
     void logActivity({
       category: 'BREATHING',
       subType: 'Respiration abdominale',
-      detail: '6-4-6',
-    }).catch(console.error);
+      detail: '3-1-4 / 20 cycles',
+    }).catch(() => {});
   }
 
-  function stopCycle() {
+  function stopExercise() {
     setCompletionOpen(false);
-    resetCycle('idle');
+    resetExercise('idle');
   }
 
   useEffect(() => {
@@ -124,40 +135,52 @@ export default function AbdominalBreathing() {
       return;
     }
 
-    const currentPhase = phase;
-    const duration = PHASE_DURATION[currentPhase];
+    const currentPhase = phase as Extract<BreathingPhase, 'inhale' | 'hold' | 'exhale'>;
+    const duration = getPhaseDuration(currentPhase);
+    const startedAt = performance.now();
+    const runToken = runTokenRef.current;
 
-    phaseStartRef.current = performance.now();
+    setSecondsLeft(Math.ceil(duration / 1000));
+    if (currentPhase !== 'hold') {
+      setPhaseProgress(0);
+    }
 
     const tick = (now: number) => {
-      const elapsed = Math.min((now - phaseStartRef.current) / 1000, duration);
-      const nextProgress = duration === 0 ? 1 : elapsed / duration;
-      const remaining = Math.max(1, Math.ceil(duration - elapsed));
+      if (runToken !== runTokenRef.current) return;
 
-      setProgress(nextProgress);
-      setSecondsLeft(elapsed >= duration ? 1 : remaining);
+      const elapsed = Math.min(now - startedAt, duration);
+      const progress = elapsed / duration;
+      const remainingMs = Math.max(0, duration - elapsed);
+
+      setPhaseProgress(progress);
+      setSecondsLeft(Math.max(0, Math.ceil(remainingMs / 1000)));
 
       if (elapsed >= duration) {
-        vibe(6);
+        vibe(currentPhase === 'hold' ? 6 : 8);
 
         if (currentPhase === 'exhale') {
-          if (loopEnabled) {
-            setPhase('inhale');
-            setProgress(0);
-            setSecondsLeft(PHASE_DURATION.inhale);
-          } else {
+          const nextCompletedCycles = completedCycles + 1;
+          setCompletedCycles(nextCompletedCycles);
+
+          if (nextCompletedCycles >= BREATHING_CONFIG.totalCycles) {
+            cancelFrame();
             setPhase('completed');
-            setProgress(0);
-            setSecondsLeft(PHASE_DURATION.inhale);
+            setPhaseProgress(0);
+            setSecondsLeft(0);
             setCompletionOpen(true);
+            return;
           }
+
+          setPhase('inhale');
+          setPhaseProgress(0);
+          setSecondsLeft(BREATHING_CONFIG.inhaleDuration / 1000);
           return;
         }
 
         const nextPhase = getNextPhase(currentPhase);
         setPhase(nextPhase);
-        setProgress(0);
-        setSecondsLeft(PHASE_DURATION[nextPhase]);
+        setPhaseProgress(nextPhase === 'hold' ? 1 : 0);
+        setSecondsLeft(Math.ceil(getPhaseDuration(nextPhase) / 1000));
         return;
       }
 
@@ -165,17 +188,10 @@ export default function AbdominalBreathing() {
     };
 
     rafRef.current = requestAnimationFrame(tick);
+    return () => cancelFrame();
+  }, [completedCycles, isRunning, phase]);
 
-    return () => {
-      cancelFrame();
-    };
-  }, [isRunning, loopEnabled, phase]);
-
-  useEffect(() => {
-    return () => {
-      cancelFrame();
-    };
-  }, []);
+  useEffect(() => () => cancelFrame(), []);
 
   const countdownLabel = isRunning ? `${secondsLeft}` : statusCopy.subtitle;
 
@@ -208,8 +224,8 @@ export default function AbdominalBreathing() {
         <div>
           <h1 style={{ margin: 0, fontSize: 18, textAlign: 'left' }}>Respiration abdominale</h1>
           <p style={{ margin: '2px 0 0', opacity: 0.72, fontSize: 12, textAlign: 'left' }}>
-            Cycle 6 - 4 - 6 (inspire, bloque, expire). Inspire par le nez, gonfle le ventre
-            (main du bas), bloque quelques instants, puis souffle par la bouche en rentrant
+            Cycle 3 - 1 - 4 (inspire, pause douce, expire). Inspire par le nez, gonfle le ventre
+            (main du bas), garde doucement l’air, puis souffle par la bouche en rentrant
             doucement le ventre. Ta main sur la poitrine ne doit pas bouger : respire
             uniquement avec le ventre.
           </p>
@@ -220,6 +236,9 @@ export default function AbdominalBreathing() {
         <p style={instructionTitle}>{statusCopy.title}</p>
         <p style={instructionMeta}>
           {isRunning ? `${countdownLabel} seconde${secondsLeft > 1 ? 's' : ''}` : countdownLabel}
+        </p>
+        <p style={cycleMeta}>
+          Cycle {Math.max(0, currentCycle)} sur {BREATHING_CONFIG.totalCycles}
         </p>
       </section>
 
@@ -251,27 +270,18 @@ export default function AbdominalBreathing() {
             type="button"
             onClick={() => {
               if (isRunning) {
-                stopCycle();
+                stopExercise();
                 return;
               }
-              startCycle();
+              startExercise();
             }}
             style={primaryButton}
           >
-            {isRunning ? 'Arrêter' : 'Démarrer'}
+            {isRunning ? 'Arrêter' : phase === 'completed' ? 'Recommencer' : 'Démarrer'}
           </button>
 
-          <button
-            type="button"
-            aria-pressed={loopEnabled}
-            onClick={() => setLoopEnabled((value) => !value)}
-            style={{
-              ...secondaryButton,
-              background: loopEnabled ? 'rgba(var(--theme-color-rgb), 0.14)' : '#fff',
-              borderColor: loopEnabled ? 'rgba(var(--theme-color-rgb), 0.38)' : 'rgba(15,23,42,0.08)',
-            }}
-          >
-            {loopEnabled ? 'Loop activé' : 'Loop'}
+          <button type="button" onClick={() => resetExercise('idle')} style={secondaryButton}>
+            Réinitialiser
           </button>
         </div>
       </section>
@@ -306,6 +316,13 @@ const instructionMeta: React.CSSProperties = {
   fontSize: 'clamp(14px, 2vw, 18px)',
   color: 'rgba(32,16,63,0.72)',
   fontWeight: 600,
+};
+
+const cycleMeta: React.CSSProperties = {
+  margin: 0,
+  fontSize: 14,
+  color: 'rgba(32,16,63,0.64)',
+  fontWeight: 700,
 };
 
 const sceneSection: React.CSSProperties = {
