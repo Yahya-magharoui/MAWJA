@@ -63,8 +63,8 @@ export default function BreathingTube() {
     phaseForVisual === 'inspire' ? phaseProgress : 1 - phaseProgress;
   const safeProgress = clamp(logicalBubbleProgress);
   const bubbleTop = bottomPosition - safeProgress * (bottomPosition - topPosition);
-  const bubbleBottom = bubbleTop + bubbleSize;
-  const fillHeight = Math.min(trackHeight - EDGE_PADDING, bubbleBottom);
+  const bubbleCenter = bubbleTop + bubbleSize / 2;
+  const fillHeight = Math.max(0, Math.min(trackHeight, trackHeight - bubbleCenter));
 
   const isIdle = phase === 'idle';
   const isPreparing = phase === 'preparing';
