@@ -15,12 +15,18 @@
       "**/*"
     ],
     "plugins": [
-      "expo-asset"
+      "expo-asset",
+      "expo-router"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yayakalymap.mawjamobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.yayakalymap.mawjamobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -28,6 +34,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "458e95e5-3482-4308-8e62-c6ec30318599"
+      }
     }
   }
 }
