@@ -59,10 +59,20 @@ workflows:
 
           path = Path("app/build.gradle")
           text = path.read_text()
-          pattern = re.compile(r"(?m)^[ \t]*[A-Za-z0-9_.]+[ \t]*=[ \t]*file\((['\"])\1\)[ \t]*\n?")
-          text, replacements = pattern.subn("", text)
+          empty_file_pattern = re.compile(r"(?m)^[ \t]*[A-Za-z0-9_.]+[ \t]*=[ \t]*file\((['\"])\1\)[ \t]*\n?")
+          text, empty_replacements = empty_file_pattern.subn("", text)
+          entry_pattern = re.compile(
+              r'(?m)^(?P<indent>\s*)entryFile\s*=\s*file\(\s*\["node",\s*"-e",\s*"require\(\\\'expo/scripts/resolveAppEntry\\\'\)".*$'
+          )
+          text, entry_replacements = entry_pattern.subn(
+              lambda m: f'{m.group("indent")}entryFile = file("../index.js")',
+              text,
+          )
           path.write_text(text)
-          print(f"Removed {replacements} empty file() assignment(s) from {path}")
+          print(
+              f"Removed {empty_replacements} empty file() assignment(s) and "
+              f"replaced {entry_replacements} dynamic entryFile assignment(s) in {path}"
+          )
           PY
           echo "Normalized android/app/build.gradle:"
           nl -ba app/build.gradle | sed -n '1,140p'
