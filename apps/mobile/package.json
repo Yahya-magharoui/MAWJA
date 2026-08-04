@@ -7,6 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "doctor:build": "node ./scripts/doctor-build.mjs",
+    "doctor:android-gradle": "node ./scripts/normalize-android-gradle.mjs",
     "eas:build:preview:android": "npx eas-cli build --platform android --profile preview",
     "eas:build:preview:ios": "npx eas-cli build --platform ios --profile preview",
     "eas:build:production:android": "npx eas-cli build --platform android --profile production",
@@ -33,6 +35,8 @@
     "react-native-web": "~0.19.13"
   },
   "devDependencies": {
+    "@expo/cli": "0.18.31",
+    "@react-native/codegen": "0.74.87",
     "@react-native/gradle-plugin": "0.74.87",
     "@types/react": "^18.2.66"
   }
