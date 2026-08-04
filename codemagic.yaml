@@ -1,0 +1,130 @@
+workflows:
+  android-debug:
+    name: Android Debug APK
+    max_build_duration: 60
+    instance_type: linux_x2
+    working_directory: apps/mobile
+    environment:
+      node: 20.18.0
+      java: 17
+      vars:
+        CI: "1"
+        EXPO_NO_TELEMETRY: "1"
+    cache:
+      cache_paths:
+        - ~/.pnpm-store
+        - ~/.gradle/caches
+        - ~/.gradle/wrapper
+    scripts:
+      - name: Diagnostic
+        script: |
+          set -euxo pipefail
+          echo "CM_BUILD_DIR=$CM_BUILD_DIR"
+          pwd
+          node --version
+          java --version
+          corepack --version || true
+          echo "Package manager from root package.json:"
+          node -p "require('$CM_BUILD_DIR/package.json').packageManager"
+          echo "Repository root:"
+          ls -la "$CM_BUILD_DIR"
+          echo "apps/mobile:"
+          ls -la "$CM_BUILD_DIR/apps/mobile"
+          echo "Native folders before prebuild:"
+          test -d "$CM_BUILD_DIR/apps/mobile/android" && echo "android exists" || echo "android missing"
+          test -d "$CM_BUILD_DIR/apps/mobile/ios" && echo "ios exists" || echo "ios missing"
+      - name: Install pnpm and workspace dependencies
+        script: |
+          set -euxo pipefail
+          cd "$CM_BUILD_DIR"
+          corepack enable
+          corepack prepare pnpm@9.0.0 --activate
+          pnpm install --frozen-lockfile
+      - name: Generate Android native project with Expo prebuild
+        script: |
+          set -euxo pipefail
+          cd "$CM_BUILD_DIR/apps/mobile"
+          npx expo prebuild --platform android --non-interactive --no-install
+          test -d android
+          ls -la android
+      - name: Build debug APK with Gradle
+        script: |
+          set -euxo pipefail
+          cd "$CM_BUILD_DIR/apps/mobile/android"
+          chmod +x gradlew
+          ./gradlew --version
+          ./gradlew assembleDebug
+    artifacts:
+      - apps/mobile/android/app/build/outputs/**/*.apk
+      - apps/mobile/android/app/build/reports/**/*
+
+  ios-test:
+    name: iOS Simulator Build
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+    working_directory: apps/mobile
+    environment:
+      node: 20.18.0
+      xcode: latest
+      cocoapods: default
+      vars:
+        CI: "1"
+        EXPO_NO_TELEMETRY: "1"
+        IOS_SCHEME: "mawja-mobile"
+    cache:
+      cache_paths:
+        - ~/.pnpm-store
+        - ~/Library/Caches/CocoaPods
+        - ~/.cocoapods/repos
+    scripts:
+      - name: Diagnostic
+        script: |
+          set -euxo pipefail
+          echo "CM_BUILD_DIR=$CM_BUILD_DIR"
+          pwd
+          node --version
+          xcodebuild -version
+          pod --version
+          echo "Repository root:"
+          ls -la "$CM_BUILD_DIR"
+          echo "apps/mobile:"
+          ls -la "$CM_BUILD_DIR/apps/mobile"
+          echo "Native folders before prebuild:"
+          test -d "$CM_BUILD_DIR/apps/mobile/android" && echo "android exists" || echo "android missing"
+          test -d "$CM_BUILD_DIR/apps/mobile/ios" && echo "ios exists" || echo "ios missing"
+      - name: Install pnpm and workspace dependencies
+        script: |
+          set -euxo pipefail
+          cd "$CM_BUILD_DIR"
+          corepack enable
+          corepack prepare pnpm@9.0.0 --activate
+          pnpm install --frozen-lockfile
+      - name: Generate iOS native project with Expo prebuild
+        script: |
+          set -euxo pipefail
+          cd "$CM_BUILD_DIR/apps/mobile"
+          npx expo prebuild --platform ios --non-interactive --no-install
+          test -d ios
+          ls -la ios
+      - name: Install CocoaPods
+        script: |
+          set -euxo pipefail
+          cd "$CM_BUILD_DIR/apps/mobile/ios"
+          pod install
+      - name: Build iOS app for simulator
+        script: |
+          set -euxo pipefail
+          cd "$CM_BUILD_DIR/apps/mobile"
+          WORKSPACE_PATH="$(find ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
+          test -n "$WORKSPACE_PATH"
+          xcodebuild \
+            -workspace "$WORKSPACE_PATH" \
+            -scheme "$IOS_SCHEME" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath ios/build \
+            build
+    artifacts:
+      - apps/mobile/ios/build/Build/Products/Debug-iphonesimulator/*.app
+      - apps/mobile/ios/build/Build/Products/**/*.dSYM
