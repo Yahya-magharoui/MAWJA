@@ -51,6 +51,21 @@ workflows:
         script: |
           set -euxo pipefail
           cd "$CM_BUILD_DIR/apps/mobile/android"
+          echo "Generated android/app/build.gradle:"
+          nl -ba app/build.gradle | sed -n '1,140p'
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("app/build.gradle")
+          text = path.read_text()
+          pattern = re.compile(r"(?m)^[ \t]*[A-Za-z0-9_.]+[ \t]*=[ \t]*file\((['\"])\1\)[ \t]*\n?")
+          text, replacements = pattern.subn("", text)
+          path.write_text(text)
+          print(f"Removed {replacements} empty file() assignment(s) from {path}")
+          PY
+          echo "Normalized android/app/build.gradle:"
+          nl -ba app/build.gradle | sed -n '1,140p'
           chmod +x gradlew
           ./gradlew --version
           ./gradlew assembleDebug
