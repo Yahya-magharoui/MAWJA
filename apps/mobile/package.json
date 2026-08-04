@@ -33,6 +33,7 @@
     "react-native-web": "~0.19.13"
   },
   "devDependencies": {
+    "@react-native/gradle-plugin": "0.74.87",
     "@types/react": "^18.2.66"
   }
 }
