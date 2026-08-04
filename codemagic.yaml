@@ -59,6 +59,17 @@ workflows:
 
           path = Path("app/build.gradle")
           text = path.read_text()
+          react_block_pattern = re.compile(r"react\s*\{.*?^\}", re.MULTILINE | re.DOTALL)
+          explicit_react_block = """react {
+              root = file("../..")
+              reactNativeDir = file("../../../../node_modules/react-native")
+              codegenDir = file("../../../../node_modules/@react-native/codegen")
+              cliFile = file("../../../../node_modules/@expo/cli/build/bin/cli")
+              entryFile = file("../../index.js")
+              bundleCommand = "export:embed"
+              hermesCommand = "../../../../node_modules/react-native/sdks/hermesc/%OS-BIN%/hermesc"
+          }"""
+          text, react_replacements = react_block_pattern.subn(explicit_react_block, text, count=1)
           empty_file_pattern = re.compile(r"(?m)^[ \t]*[A-Za-z0-9_.]+[ \t]*=[ \t]*file\((['\"])\1\)[ \t]*\n?")
           text, empty_replacements = empty_file_pattern.subn("", text)
           entry_pattern = re.compile(
@@ -70,7 +81,8 @@ workflows:
           )
           path.write_text(text)
           print(
-              f"Removed {empty_replacements} empty file() assignment(s) and "
+              f"Replaced {react_replacements} react block(s), removed "
+              f"{empty_replacements} empty file() assignment(s) and "
               f"replaced {entry_replacements} dynamic entryFile assignment(s) in {path}"
           )
           PY
