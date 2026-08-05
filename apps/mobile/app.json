@@ -2,6 +2,7 @@
   "expo": {
     "name": "mawja-mobile",
     "slug": "mawja-mobile",
+    "scheme": "kalymap",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,6 +17,7 @@
     ],
     "plugins": [
       "expo-asset",
+      "expo-dev-client",
       "expo-router"
     ],
     "ios": {
