@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../components/BackLink';
 import ExerciseCompletionPrompt from '../../../components/ExerciseCompletionPrompt';
@@ -35,14 +36,13 @@ const srcFor = (t: Track) => t.src ?? `/audio/mindful/${t.id}.mp3`;
 function RenderIcon({ icon, size = 40 }: { icon?: string; size?: number }) {
   if (!icon) return <span aria-hidden="true" style={{ fontSize: size }}>🎧</span>;
   return (
-    <img
+    <Image
       src={icon}
       alt=""                // décoratif (le label textuel est déjà présent)
       aria-hidden="true"
       width={size}
       height={size}
       style={{ display: 'block', objectFit: 'contain' }}
-      loading="lazy"
     />
   );
 }
@@ -56,9 +56,10 @@ export default function MindfulAudiosPage() {
 
   // libère les audios quand on quitte la page
   useEffect(() => {
+    const audios = audioMap.current;
     return () => {
-      audioMap.current.forEach(a => { a.pause(); a.src = ''; a.load(); });
-      audioMap.current.clear();
+      audios.forEach(a => { a.pause(); a.src = ''; a.load(); });
+      audios.clear();
     };
   }, []);
 

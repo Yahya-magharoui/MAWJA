@@ -8,10 +8,13 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  ParseIntPipe,
   Post,
 } from '@nestjs/common';
 import { requireAuthenticatedUser } from './auth-token';
 import { PrismaService } from './prisma.service';
+import { z } from 'zod';
+import { validateInput } from './validation';
 
 type FavoriteBody = {
   key: string;
@@ -19,13 +22,22 @@ type FavoriteBody = {
   description?: string | null;
 };
 
+const favoriteBodySchema = z.object({
+  key: z.string().trim().min(1).max(128),
+  title: z.string().trim().min(1).max(255),
+  description: z.string().trim().max(1000).nullable().optional(),
+});
+
 @Controller('favorites')
 export class FavoritesController {
   constructor(private prisma: PrismaService) {}
 
   @Get('me')
-  async listMine(@Headers('authorization') authorization: string | undefined) {
-    const user = await requireAuthenticatedUser(this.prisma, authorization);
+  async listMine(
+    @Headers('authorization') authorization: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined
+  ) {
+    const user = await requireAuthenticatedUser(this.prisma, authorization, cookieHeader);
     const patientId = user.patientProfileId;
 
     if (!patientId) {
@@ -71,11 +83,13 @@ export class FavoritesController {
   @Post()
   async create(
     @Headers('authorization') authorization: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
     @Body() body: FavoriteBody
   ) {
-    const user = await requireAuthenticatedUser(this.prisma, authorization);
+    const validatedBody = validateInput(favoriteBodySchema, body);
+    const user = await requireAuthenticatedUser(this.prisma, authorization, cookieHeader);
     const patientId = user.patientProfileId;
-    const title = body.title?.trim();
+    const title = validatedBody.title?.trim();
 
     if (!patientId) {
       throw new HttpException('Profil patient introuvable.', HttpStatus.BAD_REQUEST);
@@ -103,7 +117,7 @@ export class FavoritesController {
           Array<{ id: number; title: string; description: string | null }>
         >`
           INSERT INTO "Exercice" (title, description)
-          VALUES (${title}, ${body.description?.trim() || null})
+          VALUES (${title}, ${validatedBody.description?.trim() || null})
           RETURNING id, title, description
         `
       )[0];
@@ -145,11 +159,11 @@ export class FavoritesController {
   @Delete(':id')
   async remove(
     @Headers('authorization') authorization: string | undefined,
-    @Param('id') id: string
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Param('id', ParseIntPipe) favoriteId: number
   ) {
-    const user = await requireAuthenticatedUser(this.prisma, authorization);
+    const user = await requireAuthenticatedUser(this.prisma, authorization, cookieHeader);
     const patientId = user.patientProfileId;
-    const favoriteId = Number(id);
 
     const favoriteRows = await this.prisma.$queryRaw<Array<{ id: number }>>`
       SELECT id

@@ -28,6 +28,7 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
       try {
         const res = await fetch(buildApiUrl('/auth/verify-email'), {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),
         });
@@ -40,8 +41,8 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
 
         if (cancelled) return;
 
-        if (data.access_token && data.user) {
-          persistAuthenticatedSession(data.user, data.access_token);
+        if (data.user) {
+          persistAuthenticatedSession(data.user);
         }
 
         setStatus('success');
@@ -103,7 +104,7 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
 
         {status === 'error' ? (
           <a href="/signup" style={linkButtonStyle}>
-            Revenir à l'inscription
+            Revenir à l&apos;inscription
           </a>
         ) : null}
 

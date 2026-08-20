@@ -73,19 +73,6 @@ type FavoritePayload = {
   description?: string | null;
 };
 
-function getAuthToken() {
-  if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem('authToken');
-}
-
-function requireAuthToken() {
-  const token = getAuthToken();
-  if (!token || !isPatientSession()) {
-    throw new Error('Utilisateur non authentifié.');
-  }
-  return token;
-}
-
 async function parseJson(response: Response) {
   return response.json().catch(() => ({}));
 }
@@ -187,9 +174,9 @@ export async function postHistoryEntry(state: HistoryState) {
 
   const response = await fetch(buildApiUrl('/histories'), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${requireAuthToken()}`,
     },
     body: JSON.stringify({
       time: new Date().toISOString(),
@@ -214,9 +201,7 @@ export async function fetchPatientHistories(): Promise<PatientHistory[]> {
   if (!isPatientSession()) return [];
 
   const response = await fetch(buildApiUrl('/histories/me'), {
-    headers: {
-      Authorization: `Bearer ${requireAuthToken()}`,
-    },
+    credentials: 'include',
     cache: 'no-store',
   });
 
@@ -232,9 +217,7 @@ export async function fetchPatientGoals(): Promise<PatientGoal[]> {
   if (!isPatientSession()) return [];
 
   const response = await fetch(buildApiUrl('/goals/me'), {
-    headers: {
-      Authorization: `Bearer ${requireAuthToken()}`,
-    },
+    credentials: 'include',
     cache: 'no-store',
   });
 
@@ -253,9 +236,9 @@ export async function createPatientGoal(goal: GoalPayload): Promise<PatientGoal>
 
   const response = await fetch(buildApiUrl('/goals'), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${requireAuthToken()}`,
     },
     body: JSON.stringify(goal),
   });
@@ -275,9 +258,9 @@ export async function updatePatientGoal(goalId: number, goal: GoalPayload): Prom
 
   const response = await fetch(buildApiUrl(`/goals/${goalId}`), {
     method: 'PUT',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${requireAuthToken()}`,
     },
     body: JSON.stringify(goal),
   });
@@ -297,9 +280,7 @@ export async function deletePatientGoal(goalId: number) {
 
   const response = await fetch(buildApiUrl(`/goals/${goalId}`), {
     method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${requireAuthToken()}`,
-    },
+    credentials: 'include',
   });
 
   const payload = await parseJson(response);
@@ -314,9 +295,7 @@ export async function fetchPatientNotes(): Promise<PatientNote[]> {
   if (!isPatientSession()) return [];
 
   const response = await fetch(buildApiUrl('/notes/me'), {
-    headers: {
-      Authorization: `Bearer ${requireAuthToken()}`,
-    },
+    credentials: 'include',
     cache: 'no-store',
   });
 
@@ -335,9 +314,9 @@ export async function createPatientNote(note: NotePayload): Promise<PatientNote>
 
   const response = await fetch(buildApiUrl('/notes'), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${requireAuthToken()}`,
     },
     body: JSON.stringify(note),
   });
@@ -357,9 +336,9 @@ export async function updatePatientNote(noteId: number, note: NotePayload): Prom
 
   const response = await fetch(buildApiUrl(`/notes/${noteId}`), {
     method: 'PUT',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${requireAuthToken()}`,
     },
     body: JSON.stringify(note),
   });
@@ -379,9 +358,7 @@ export async function deletePatientNote(noteId: number) {
 
   const response = await fetch(buildApiUrl(`/notes/${noteId}`), {
     method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${requireAuthToken()}`,
-    },
+    credentials: 'include',
   });
 
   const payload = await parseJson(response);
@@ -396,9 +373,7 @@ export async function fetchPatientFavorites(): Promise<PatientFavorite[]> {
   if (!isPatientSession()) return [];
 
   const response = await fetch(buildApiUrl('/favorites/me'), {
-    headers: {
-      Authorization: `Bearer ${requireAuthToken()}`,
-    },
+    credentials: 'include',
     cache: 'no-store',
   });
 
@@ -417,9 +392,9 @@ export async function createPatientFavorite(favorite: FavoritePayload): Promise<
 
   const response = await fetch(buildApiUrl('/favorites'), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${requireAuthToken()}`,
     },
     body: JSON.stringify(favorite),
   });
@@ -439,9 +414,7 @@ export async function deletePatientFavorite(favoriteId: number) {
 
   const response = await fetch(buildApiUrl(`/favorites/${favoriteId}`), {
     method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${requireAuthToken()}`,
-    },
+    credentials: 'include',
   });
 
   const payload = await parseJson(response);
@@ -477,9 +450,9 @@ export async function logActivity(activity: ActivityPayload) {
 
   const response = await fetch(buildApiUrl('/activities'), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${requireAuthToken()}`,
     },
     body: JSON.stringify({
       category: activity.category,

@@ -1,16 +1,26 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 import { UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
+import { getAuthTokenSecret, getAuthTokenTtlSeconds } from './runtime-config';
+
+export const LEGACY_AUTH_COOKIE_NAME = 'mawja_auth';
+export const AUTH_COOKIE_NAME =
+  process.env.NODE_ENV === 'production'
+    ? `__Secure-${LEGACY_AUTH_COOKIE_NAME}`
+    : LEGACY_AUTH_COOKIE_NAME;
 
 type TokenPayload = {
   sub: string;
   email: string;
   role: 'PATIENT' | 'DOCTOR';
+  iat?: number;
+  exp?: number;
 };
 
 type LegacyAuthenticatedUser = {
   id: number;
   email: string;
+  name: string | null;
   role: string | null;
   password: string | null;
   createdAt: Date;
@@ -21,6 +31,7 @@ type LegacyAuthenticatedUser = {
 type AuthenticatedUser = {
   id: number;
   email: string;
+  name: string | null;
   role: 'PATIENT' | 'DOCTOR';
   passwordHash: string | null;
   createdAt: Date;
@@ -42,15 +53,17 @@ function fromBase64Url(value: string) {
   return Buffer.from(padded, 'base64').toString('utf8');
 }
 
-function getSecret() {
-  return process.env.AUTH_TOKEN_SECRET || process.env.JWT_SECRET || 'mawja-dev-secret';
-}
-
 export function signAuthToken(payload: TokenPayload) {
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const tokenPayload: TokenPayload = {
+    ...payload,
+    iat: issuedAt,
+    exp: issuedAt + getAuthTokenTtlSeconds(),
+  };
   const header = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const body = toBase64Url(JSON.stringify(payload));
+  const body = toBase64Url(JSON.stringify(tokenPayload));
   const unsignedToken = `${header}.${body}`;
-  const signature = createHmac('sha256', getSecret()).update(unsignedToken).digest();
+  const signature = createHmac('sha256', getAuthTokenSecret()).update(unsignedToken).digest();
   return `${unsignedToken}.${toBase64Url(signature)}`;
 }
 
@@ -61,7 +74,7 @@ export function verifyAuthToken(token: string): TokenPayload {
   }
 
   const unsignedToken = `${header}.${body}`;
-  const expectedSignature = createHmac('sha256', getSecret()).update(unsignedToken).digest();
+  const expectedSignature = createHmac('sha256', getAuthTokenSecret()).update(unsignedToken).digest();
   const receivedSignature = Buffer.from(
     signature.replace(/-/g, '+').replace(/_/g, '/').padEnd(signature.length + ((4 - (signature.length % 4)) % 4), '='),
     'base64'
@@ -79,12 +92,23 @@ export function verifyAuthToken(token: string): TokenPayload {
     if (!parsed.sub || !parsed.email) {
       throw new Error('payload');
     }
+
+    if (typeof parsed.exp === 'number' && parsed.exp < Math.floor(Date.now() / 1000)) {
+      throw new UnauthorizedException('Session expirée.');
+    }
+
     return {
       sub: parsed.sub,
       email: parsed.email,
       role: parsed.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
+      iat: typeof parsed.iat === 'number' ? parsed.iat : undefined,
+      exp: typeof parsed.exp === 'number' ? parsed.exp : undefined,
     };
-  } catch {
+  } catch (error) {
+    if (error instanceof UnauthorizedException) {
+      throw error;
+    }
+
     throw new UnauthorizedException('Token invalide.');
   }
 }
@@ -97,8 +121,63 @@ export function extractBearerToken(authorization?: string) {
   return authorization.slice('Bearer '.length).trim();
 }
 
-export async function requireAuthenticatedUser(prisma: PrismaService, authorization?: string) {
-  const token = extractBearerToken(authorization);
+export function extractCookieValue(cookieHeader: string | undefined, key: string) {
+  if (!cookieHeader?.trim()) {
+    return null;
+  }
+
+  for (const part of cookieHeader.split(';')) {
+    const separatorIndex = part.indexOf('=');
+    if (separatorIndex <= 0) {
+      continue;
+    }
+
+    const name = part.slice(0, separatorIndex).trim();
+    if (name !== key) {
+      continue;
+    }
+
+    const value = part.slice(separatorIndex + 1).trim();
+    if (!value) {
+      return null;
+    }
+
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+export function extractAuthToken(authorization?: string, cookieHeader?: string) {
+  if (authorization?.startsWith('Bearer ')) {
+    return authorization.slice('Bearer '.length).trim();
+  }
+
+  const cookieToken = extractCookieValue(cookieHeader, AUTH_COOKIE_NAME);
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  if (AUTH_COOKIE_NAME !== LEGACY_AUTH_COOKIE_NAME) {
+    const legacyCookieToken = extractCookieValue(cookieHeader, LEGACY_AUTH_COOKIE_NAME);
+    if (legacyCookieToken) {
+      return legacyCookieToken;
+    }
+  }
+
+  throw new UnauthorizedException('Authentification requise.');
+}
+
+export async function requireAuthenticatedUser(
+  prisma: PrismaService,
+  authorization?: string,
+  cookieHeader?: string
+) {
+  const token = extractAuthToken(authorization, cookieHeader);
   const payload = verifyAuthToken(token);
   const userId = Number(payload.sub);
 
@@ -107,7 +186,7 @@ export async function requireAuthenticatedUser(prisma: PrismaService, authorizat
   }
 
   const rows = await prisma.$queryRaw<LegacyAuthenticatedUser[]>`
-    SELECT id, email, role, password, "createdAt", "patientProfileId", "doctorProfileId"
+    SELECT id, email, name, role, password, "createdAt", "patientProfileId", "doctorProfileId"
     FROM "User"
     WHERE id = ${userId}
     LIMIT 1
@@ -121,6 +200,7 @@ export async function requireAuthenticatedUser(prisma: PrismaService, authorizat
   return {
     id: user.id,
     email: user.email,
+    name: user.name ?? null,
     role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
     passwordHash: user.password,
     createdAt: user.createdAt,

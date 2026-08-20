@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useMemo } from 'react';
 import AuthRequiredNotice from '../../components/AuthRequiredNotice';
 import BackLink from '../../components/BackLink';
@@ -32,27 +33,33 @@ export default function ToleranceHome() {
 
       <section style={grid}>
         <a href="/exercice/emotions?from=tolerance" className="tile" style={tileStyle}>
-         <img
+         <Image
             src="/icons/emotion.svg"
             alt="Roue des émotions"
+            width={48}
+            height={48}
             style={{ width: 48, height: 48, objectFit: 'contain', display: 'block', margin: '0 auto 8px' }}
             />
         <span>Roue des émotions</span>
         </a>
         {isAuthenticatedPatient ? (
         <a href="/tolerance/objectifs" className="tile" style={tileStyle}>
-         <img
+         <Image
             src="/icons/objectif.svg"
             alt="Mes objectifs"
+            width={48}
+            height={48}
             style={{ width: 48, height: 48, objectFit: 'contain', display: 'block', margin: '0 auto 8px' }}
             />
         <span>Mes objectifs</span>
         </a>
         ) : (
         <div style={lockedTileStyle}>
-          <img
+          <Image
             src="/icons/objectif.svg"
             alt="Mes objectifs"
+            width={48}
+            height={48}
             style={{ width: 48, height: 48, objectFit: 'contain', display: 'block', margin: '0 auto 8px', opacity: 0.55 }}
           />
           <span>Mes objectifs</span>
@@ -61,18 +68,22 @@ export default function ToleranceHome() {
         )}
         {isAuthenticatedPatient ? (
         <a href="/tolerance/notes" className="tile" style={tileStyle}>
-         <img
+         <Image
             src="/icons/notes.svg"
             alt="Mes notes"
+            width={48}
+            height={48}
             style={{ width: 48, height: 48, objectFit: 'contain', display: 'block', margin: '0 auto 8px' }}
             />
         <span>Mes notes</span>
         </a>
         ) : (
         <div style={lockedTileStyle}>
-          <img
+          <Image
             src="/icons/notes.svg"
             alt="Mes notes"
+            width={48}
+            height={48}
             style={{ width: 48, height: 48, objectFit: 'contain', display: 'block', margin: '0 auto 8px', opacity: 0.55 }}
           />
           <span>Mes notes</span>
@@ -81,18 +92,22 @@ export default function ToleranceHome() {
         )}
         {isAuthenticatedPatient ? (
         <a href="/tolerance/routine" className="tile" style={tileStyle}>
-         <img
+         <Image
             src="/icons/routine.svg"
             alt="Ma routine"
+            width={48}
+            height={48}
             style={{ width: 48, height: 48, objectFit: 'contain', display: 'block', margin: '0 auto 8px' }}
             />
         <span>Ma routine</span>
         </a>
         ) : (
         <div style={lockedTileStyle}>
-          <img
+          <Image
             src="/icons/routine.svg"
             alt="Ma routine"
+            width={48}
+            height={48}
             style={{ width: 48, height: 48, objectFit: 'contain', display: 'block', margin: '0 auto 8px', opacity: 0.55 }}
           />
           <span>Ma routine</span>
@@ -101,18 +116,22 @@ export default function ToleranceHome() {
         )}
         {isAuthenticatedPatient ? (
         <a href="/tolerance/historique" className="tile" style={tileStyle}>
-         <img
+         <Image
             src="/icons/historique.svg"
             alt="Historique"
+            width={48}
+            height={48}
             style={{ width: 48, height: 48, objectFit: 'contain', display: 'block', margin: '0 auto 8px' }}
             />
         <span>Historique</span>
         </a>
         ) : (
         <div style={lockedTileStyle}>
-          <img
+          <Image
             src="/icons/historique.svg"
             alt="Historique"
+            width={48}
+            height={48}
             style={{ width: 48, height: 48, objectFit: 'contain', display: 'block', margin: '0 auto 8px', opacity: 0.55 }}
           />
           <span>Historique</span>

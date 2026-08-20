@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 import BackLink from '../../components/BackLink';
 
@@ -45,13 +46,12 @@ export default function EmergencyPage({ searchParams }: { searchParams?: PageSea
           className="card"
         >
           <div style={styles.iconWrap}>
-            <img
+            <Image
               src="/icons/numero.svg"
               alt="Numéros d’urgence"
               width={44}
               height={44}
               style={{ display:'block', objectFit:'contain' }}
-              loading="lazy"
             />
           </div>
           <div style={styles.label}>Numéros d’urgence</div>
@@ -64,13 +64,12 @@ export default function EmergencyPage({ searchParams }: { searchParams?: PageSea
           className="card"
         >
           <div style={styles.iconWrap}>
-            <img
+            <Image
               src="/icons/plan.svg"
               alt="Mon plan de crise"
               width={44}
               height={44}
               style={{ display:'block', objectFit:'contain' }}
-              loading="lazy"
             />
           </div>
           <div style={styles.label}>Mon plan de crise</div>

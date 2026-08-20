@@ -159,6 +159,7 @@ export default function Signup() {
 
       const res = await fetch(buildApiUrl('/auth/register'), {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: normalizedEmail, password, confirmPassword, role }),
       });
@@ -187,8 +188,7 @@ export default function Signup() {
           ...profile,
           email: profile.email ?? normalizedEmail,
           role: profile.role === 'DOCTOR' || profile.role === 'PATIENT' ? profile.role : role,
-        },
-        data.access_token ?? null
+        }
       );
 
       setEmailHint(null);

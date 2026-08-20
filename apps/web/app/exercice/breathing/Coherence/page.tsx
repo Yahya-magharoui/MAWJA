@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { logActivity } from '../../../../lib/patientTracking';
@@ -81,7 +81,7 @@ export default function BreathingTube() {
     }
   }
 
-  function chime(phaseName: ActivePhase) {
+  const chime = useCallback((phaseName: ActivePhase) => {
     if (muted) return;
     try {
       if (!audioRef.current) {
@@ -111,9 +111,9 @@ export default function BreathingTube() {
       env.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.3);
       osc.stop(startAt + 0.32);
     } catch {}
-  }
+  }, [muted]);
 
-  function launchPhase(nextPhase: ActivePhase, initialElapsed = 0) {
+  const launchPhase = useCallback((nextPhase: ActivePhase, initialElapsed = 0) => {
     activePhaseRef.current = nextPhase;
     pausedPhaseRef.current = nextPhase;
     pausedElapsedRef.current = initialElapsed;
@@ -122,7 +122,7 @@ export default function BreathingTube() {
     setPhase(nextPhase);
     chime(nextPhase);
     vibe(8);
-  }
+  }, [chime]);
 
   useEffect(() => {
     if (!trackRef.current) return;
@@ -181,7 +181,7 @@ export default function BreathingTube() {
 
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelFrame();
-  }, [cycle, isRun, phase]);
+  }, [cycle, isRun, launchPhase, phase]);
 
   useEffect(() => {
     return () => {

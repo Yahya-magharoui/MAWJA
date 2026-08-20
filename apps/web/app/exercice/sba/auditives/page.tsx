@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
@@ -174,13 +175,12 @@ function RenderIcon({ icon, size = 36 }: { icon?: string; size?: number }) {
 
   if (typeof icon === 'string' && icon.startsWith('/')) {
     return (
-      <img
+      <Image
         src={icon}
         alt="" /* décoratif (le label est affiché) */
         aria-hidden="true"
         width={size}
         height={size}
-        loading="lazy"
         style={{ display: 'block', objectFit: 'contain' }}
       />
     );

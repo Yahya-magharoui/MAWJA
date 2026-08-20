@@ -26,6 +26,7 @@ export default function Login() {
     try {
       const res = await fetch(buildApiUrl('/auth/login'), {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
@@ -43,8 +44,7 @@ export default function Login() {
           email: profile.email ?? email,
           name: profile.name ?? null,
           role: profile.role === 'DOCTOR' || profile.role === 'PATIENT' ? profile.role : null,
-        },
-        data.access_token ?? null
+        }
       );
 
       setMsg('Connexion réussie ✅');
@@ -88,6 +88,19 @@ export default function Login() {
         <button type="submit" disabled={busy} style={btnStyle}>
           {busy ? 'Connexion…' : 'Se connecter'}
         </button>
+
+        <a
+          href="/forgot-password"
+          style={{
+            justifySelf: 'start',
+            fontSize: 14,
+            color: '#4f46e5',
+            textDecoration: 'none',
+            fontWeight: 600,
+          }}
+        >
+          Mot de passe oublié ?
+        </a>
 
         {msg && <p style={{ margin: 0, color: '#065f46' }}>{msg}</p>}
       </form>

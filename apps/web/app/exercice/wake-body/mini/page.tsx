@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import BackLink from '../../../../components/BackLink';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
@@ -142,18 +143,22 @@ export default function MiniWake() {
           const mmx = String(Math.floor(left/60)).padStart(2,'0');
           const ssx = String(left%60).padStart(2,'0');
           return (
-            <article key={x.key} style={card}>
-              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                <div style={icon}>
-                  {isImageSrc(x.icon) ? <img src={x.icon} alt={x.label} width={36} height={36} /> : <span>{x.icon}</span>}
+            <article key={x.key} style={card} className="mini-exercise-card">
+              <div style={content} className="mini-exercise-content">
+                <div style={icon} className="mini-exercise-icon-container">
+                  {isImageSrc(x.icon) ? (
+                    <Image src={x.icon} alt={x.label} width={64} height={64} className="mini-exercise-icon" />
+                  ) : (
+                    <span>{x.icon}</span>
+                  )}
                 </div>
-                <div>
+                <div style={textBlock}>
                   <div style={{ fontWeight:700 }}>{x.label}</div>
                   <div style={{ opacity:.6, fontSize:12 }}>{mmx}:{ssx}</div>
                 </div>
               </div>
 
-              <div style={{ display:'flex', gap:8 }}>
+              <div style={actions} className="mini-exercise-actions">
                 <button onClick={() => { toggle(x.key); }} style={btnPrimary(running)}>{running ? 'Stop' : 'Lancer'}</button>
                 <button onClick={() => { resetTimer(x.key); }} style={btnGhost}>Réinit</button>
               </div>
@@ -170,7 +175,7 @@ export default function MiniWake() {
 
             <div className="overlay-icon-wrap">
               {isImageSrc(current.icon) ? (
-                <img src={current.icon} alt={current.label} className="overlay-icon" />
+                <Image src={current.icon} alt={current.label} width={180} height={180} className="overlay-icon" />
               ) : (
                 <span style={{ fontSize:120 }}>{current.icon}</span>
               )}
@@ -195,11 +200,25 @@ export default function MiniWake() {
 /* --- Styles --- */
 const grid: React.CSSProperties = { display:'grid', gap:12, maxWidth:780, margin:'8px auto 0', padding:'0 20px' };
 const card: React.CSSProperties = {
-  display:'grid', gridTemplateColumns:'1fr auto', alignItems:'center', gap:12,
+  display:'grid', gridTemplateColumns:'minmax(0, 1fr) auto', alignItems:'center', gap:12,
   border:'1px solid rgba(0,0,0,.06)', borderRadius:18, padding:'12px 14px', background:'#fff',
   boxShadow:'0 8px 18px rgba(0,0,0,.06)'
 };
-const icon: React.CSSProperties = { width:44, height:44, borderRadius:14, display:'grid', placeItems:'center', background:'rgba(var(--theme-color-rgb),0.2)' };
+const content: React.CSSProperties = { display:'grid', gridTemplateColumns:'auto minmax(0, 1fr)', alignItems:'center', gap:12, minWidth:0 };
+const textBlock: React.CSSProperties = { minWidth:0 };
+const icon: React.CSSProperties = {
+  width:'clamp(48px, 12vw, 64px)',
+  height:'clamp(48px, 12vw, 64px)',
+  minWidth:48,
+  minHeight:48,
+  flexShrink:0,
+  borderRadius:14,
+  display:'grid',
+  placeItems:'center',
+  background:'rgba(var(--theme-color-rgb),0.12)',
+  overflow:'hidden',
+};
+const actions: React.CSSProperties = { display:'flex', alignItems:'center', gap:8, flexShrink:0 };
 const btnPrimary = (active:boolean): React.CSSProperties => ({
   padding:'10px 14px', borderRadius:12, border:'none',
   background: active ? '#ef4444' : 'var(--theme-color)',
@@ -286,9 +305,37 @@ const miniCss = `
 article { position: relative; z-index: 1; }
 button { z-index: 2; }
 
+.mini-exercise-icon-container img,
+.mini-exercise-icon {
+  width: 70%;
+  height: 70%;
+  display: block;
+  object-fit: contain;
+}
+
+.mini-exercise-content > div:last-child {
+  min-width: 0;
+}
+
+.mini-exercise-content > div:last-child > div:first-child {
+  line-height: 1.25;
+}
+
 /* small screen tweaks */
 @media (max-width:420px) {
   .overlay-icon { width: 110px; height: 110px; }
   .overlay-card { padding: 22px; min-width: 220px; }
+}
+
+@media (max-width: 360px) {
+  .mini-exercise-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .mini-exercise-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    padding-left: calc(clamp(48px, 12vw, 64px) + 12px);
+  }
 }
 `;

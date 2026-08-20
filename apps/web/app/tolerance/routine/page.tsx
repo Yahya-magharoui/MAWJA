@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import BackLink from '../../../components/BackLink';
@@ -99,7 +100,7 @@ export default function RoutinePage(){
           <a key={`${c.key}-${c.favoriteId ?? 'local'}`} href={c.href} style={tileStyle}>
             <span style={{ position:'absolute', right:10, top:10, fontSize:18, cursor:'pointer', color:'#111111' }} onClick={(e)=>{ e.preventDefault(); void remove(c); }}>★</span>
             <div style={{ marginBottom:8 }}>
-              {c.icon ? <img src={c.icon} alt="" aria-hidden="true" style={{ width: 42, height: 42, objectFit: 'contain' }} /> : <span style={{ fontSize:36 }}>✨</span>}
+              {c.icon ? <Image src={c.icon} alt="" aria-hidden="true" width={42} height={42} style={{ width: 42, height: 42, objectFit: 'contain' }} /> : <span style={{ fontSize:36 }}>✨</span>}
             </div>
             <div style={{ fontWeight:700 }}>{c.label}</div>
           </a>

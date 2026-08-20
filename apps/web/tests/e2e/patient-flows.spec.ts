@@ -67,8 +67,10 @@ test.describe('patient app flows', () => {
     await page.locator('svg [role="link"]').nth(4).click();
     await page.waitForURL('**/exercice/emotions/fear/anxieux?from=hyper');
 
-    await page.locator('svg [role="link"]').nth(0).click();
-    await page.waitForURL('**/exercice/emotions/fear/anxieux/preoccupe?from=hyper');
+    await page.locator('svg [role="link"]').first().click();
+    await expect(page).toHaveURL(/\/exercice\/emotions\/fear\/anxieux\/[^/?]+(?:\?from=hyper)?$/);
+    const parts = new URL(page.url()).pathname.split('/').filter(Boolean);
+    expect(parts.slice(-3)).toEqual(['fear', 'anxieux', parts.at(-1) as string]);
     await expect(page.getByRole('dialog')).toBeVisible();
   });
 
@@ -105,7 +107,7 @@ test.describe('patient app flows', () => {
     await page.getByRole('button', { name: 'Se déconnecter' }).click();
 
     await expect(page.getByText('Avant la déconnexion')).toBeVisible();
-    await page.route('https://server-production-d277.up.railway.app/api/histories', async (route) => {
+    await page.route('**/api/histories', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

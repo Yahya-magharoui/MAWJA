@@ -54,6 +54,16 @@ cp server/.env.example server/.env
 cp apps/web/.env.example apps/web/.env
 ```
 
+Variables minimales :
+- `apps/web/.env` : `NEXT_PUBLIC_API_URL`
+- `server/.env` : `DATABASE_URL`, `AUTH_TOKEN_SECRET`, `PORT`, `ALLOWED_ORIGINS`
+
+Exemple production backend :
+```env
+AUTH_TOKEN_SECRET=une-cle-longue-et-aleatoire
+ALLOWED_ORIGINS=https://mawja.app,https://www.mawja.app
+```
+
 ---
 
 ## ⚙️ Backend (NestJS + Prisma)
@@ -63,15 +73,22 @@ Depuis la racine :
 # Générer le client Prisma
 pnpm --filter server prisma:generate
 
-# Appliquer les migrations (crée les tables User, MoodEntry…)
-pnpm --filter server prisma:migrate dev --name init
+# Valider le schéma Prisma miroir
+pnpm --filter server prisma:validate
 
 # Lancer le backend
 pnpm --filter server dev
 ```
 
+Important :
+- les migrations Prisma historiques de `server/prisma/migrations/` ne doivent plus être exécutées ;
+- l’API Nest utilise encore une base PostgreSQL legacy via SQL brut ;
+- pour resynchroniser Prisma avec la base réelle, utilise `pnpm --filter server prisma:db:pull`.
+- en production, limite toujours le CORS avec `ALLOWED_ORIGINS=https://ton-web.vercel.app` ;
+- l’API applique une limitation simple des requêtes via `API_RATE_LIMIT_*` et `AUTH_RATE_LIMIT_*`.
+
 API dispo sur : [http://localhost:3000](http://localhost:3000)  
-Healthcheck : [http://localhost:3000/health](http://localhost:3000/health)
+Healthcheck : [http://localhost:3000/api/health](http://localhost:3000/api/health)
 
 ---
 
@@ -82,6 +99,11 @@ Depuis la racine :
 # Lancer le web
 pnpm --filter web dev
 ```
+
+Important :
+- en local, le frontend utilise `http://localhost:3000/api` par défaut si `NEXT_PUBLIC_API_URL` n’est pas défini ;
+- en preview ou en production, `NEXT_PUBLIC_API_URL` est obligatoire ;
+- ne laisse jamais une URL d’API de production en fallback dans le code.
 
 Frontend dispo sur : [http://localhost:3001](http://localhost:3001)  
 (assure-toi que le backend est bien lancé en parallèle)
@@ -106,7 +128,7 @@ pnpm --filter mobile start
 
 - API :
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:3000/api/health
 # → {"ok":true}
 ```
 
@@ -127,6 +149,51 @@ packages/
   ui/         # UI partagée (boutons, thèmes…)
 server/       # Backend API (NestJS + Prisma + PostgreSQL)
 infra/        # Docker compose (Postgres)
+```
+
+---
+
+## 🚀 Déploiement web/API
+
+### Frontend web
+
+- cible recommandée : Vercel ;
+- root directory : `apps/web` ;
+- variable requise :
+  - `NEXT_PUBLIC_API_URL=https://ton-api.example.com/api`
+
+### Backend API
+
+- cible recommandée : Railway ;
+- build command : `pnpm --filter server build`
+- start command : `pnpm --filter server start:railway`
+- healthcheck : `/api/health`
+
+Variables minimales de production :
+
+```env
+DATABASE_URL=postgresql://...
+PORT=3000
+AUTH_TOKEN_SECRET=une-cle-longue-et-aleatoire
+TRUST_PROXY=true
+ALLOWED_ORIGINS=https://ton-web.vercel.app,https://ton-domaine.com
+WEB_APP_URL=https://ton-web.vercel.app
+```
+
+Notes session/cookies :
+
+- le frontend web fonctionne avec une session par cookie HttpOnly ;
+- en production, l’API doit être servie en HTTPS ;
+- avec Vercel + Railway sur deux domaines différents, le cookie est émis en `Secure` + `SameSite=None` ;
+- `ALLOWED_ORIGINS` et `WEB_APP_URL` doivent être strictement alignés avec le domaine public du frontend.
+
+Si tu actives la confirmation d’e-mail ou le reset mot de passe par mail :
+
+```env
+EMAIL_VERIFICATION_ENABLED=true
+PASSWORD_RESET_EMAIL_ENABLED=true
+RESEND_API_KEY=...
+RESEND_FROM_EMAIL=...
 ```
 
 ---

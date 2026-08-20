@@ -23,5 +23,21 @@ export class AuthVerificationService implements OnModuleInit {
       CREATE INDEX IF NOT EXISTS "PendingSignup_token_hash_idx"
       ON "PendingSignup" (token_hash)
     `);
+
+    await this.prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "PendingPasswordReset" (
+        id SERIAL PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        token_hash TEXT NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        consumed_at TIMESTAMP NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await this.prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "PendingPasswordReset_token_hash_idx"
+      ON "PendingPasswordReset" (token_hash)
+    `);
   }
 }

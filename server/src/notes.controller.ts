@@ -8,23 +8,33 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  ParseIntPipe,
   Post,
   Put,
 } from '@nestjs/common';
 import { requireAuthenticatedUser } from './auth-token';
 import { PrismaService } from './prisma.service';
+import { z } from 'zod';
+import { validateInput } from './validation';
 
 type NoteBody = {
   text: string;
 };
+
+const noteBodySchema = z.object({
+  text: z.string().trim().min(1).max(2000),
+});
 
 @Controller('notes')
 export class NotesController {
   constructor(private prisma: PrismaService) {}
 
   @Get('me')
-  async listMine(@Headers('authorization') authorization: string | undefined) {
-    const user = await requireAuthenticatedUser(this.prisma, authorization);
+  async listMine(
+    @Headers('authorization') authorization: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined
+  ) {
+    const user = await requireAuthenticatedUser(this.prisma, authorization, cookieHeader);
     const patientId = user.patientProfileId;
 
     if (!patientId) {
@@ -44,9 +54,11 @@ export class NotesController {
   @Post()
   async create(
     @Headers('authorization') authorization: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
     @Body() body: NoteBody
   ) {
-    const user = await requireAuthenticatedUser(this.prisma, authorization);
+    const validatedBody = validateInput(noteBodySchema, body);
+    const user = await requireAuthenticatedUser(this.prisma, authorization, cookieHeader);
     const patientId = user.patientProfileId;
 
     if (!patientId) {
@@ -57,7 +69,7 @@ export class NotesController {
       Array<{ id: number; text: string; patientId: number; createdAt: Date }>
     >`
       INSERT INTO "Note" (text, "patientId")
-      VALUES (${body.text.trim()}, ${patientId})
+      VALUES (${validatedBody.text}, ${patientId})
       RETURNING id, text, "patientId", "createdAt"
     `;
 
@@ -67,11 +79,12 @@ export class NotesController {
   @Put(':id')
   async update(
     @Headers('authorization') authorization: string | undefined,
-    @Param('id') id: string,
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Param('id', ParseIntPipe) noteId: number,
     @Body() body: NoteBody
   ) {
-    const user = await requireAuthenticatedUser(this.prisma, authorization);
-    const noteId = Number(id);
+    const validatedBody = validateInput(noteBodySchema, body);
+    const user = await requireAuthenticatedUser(this.prisma, authorization, cookieHeader);
     const patientId = user.patientProfileId;
 
     const noteRows = await this.prisma.$queryRaw<Array<{ id: number }>>`
@@ -90,7 +103,7 @@ export class NotesController {
       Array<{ id: number; text: string; patientId: number; createdAt: Date }>
     >`
       UPDATE "Note"
-      SET text = ${body.text.trim()}
+      SET text = ${validatedBody.text}
       WHERE id = ${noteId}
       RETURNING id, text, "patientId", "createdAt"
     `;
@@ -101,10 +114,10 @@ export class NotesController {
   @Delete(':id')
   async remove(
     @Headers('authorization') authorization: string | undefined,
-    @Param('id') id: string
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Param('id', ParseIntPipe) noteId: number
   ) {
-    const user = await requireAuthenticatedUser(this.prisma, authorization);
-    const noteId = Number(id);
+    const user = await requireAuthenticatedUser(this.prisma, authorization, cookieHeader);
     const patientId = user.patientProfileId;
 
     const noteRows = await this.prisma.$queryRaw<Array<{ id: number }>>`

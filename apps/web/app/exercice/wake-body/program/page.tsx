@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { useQueryParam } from '../../../../hooks/useQueryParam';
@@ -39,6 +40,26 @@ export default function WakeProgram() {
 
   const done = index >= STEPS.length;
 
+  function startPause() {
+    if (done) return;
+    setRunning(r => !r);
+    vibe(10);
+  }
+
+  const nextStep = useCallback(() => {
+    const ni = index + 1;
+    if (ni >= STEPS.length) {
+      setRunning(false);
+      setIndex(ni);
+      setCompletionOpen(true);
+      vibe(40);
+      return;
+    }
+    setIndex(ni);
+    setLeft(STEPS[ni].seconds);
+    vibe(10);
+  }, [index]);
+
   useEffect(() => {
     if (!running || done) return;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -54,27 +75,7 @@ export default function WakeProgram() {
     }, 1000);
 
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [running, index, done]);
-
-  function startPause() {
-    if (done) return;
-    setRunning(r => !r);
-    vibe(10);
-  }
-
-  function nextStep() {
-    const ni = index + 1;
-    if (ni >= STEPS.length) {
-      setRunning(false);
-      setIndex(ni);
-      setCompletionOpen(true);
-      vibe(40);
-      return;
-    }
-    setIndex(ni);
-    setLeft(STEPS[ni].seconds);
-    vibe(10);
-  }
+  }, [done, nextStep, running]);
 
   function resetAll() {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -155,7 +156,7 @@ export default function WakeProgram() {
         <article style={card}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={icon}>
-              <img src={current.icon} alt={current.label} width={40} height={40} />
+              <Image src={current.icon} alt={current.label} width={40} height={40} />
             </div>
             <div>
               <div style={{ fontWeight: 700 }}>{current.label}</div>

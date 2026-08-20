@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import { logActivity } from '../../../../lib/patientTracking';
@@ -204,8 +205,8 @@ export default function BuildSafePlace() {
             }}
             style={safeIconWrap}
           >
-            <img
-              src="/icons/lieusur.svg"
+            <Image
+              src="/icons/lieusur.png"
               alt="Icône du lieu sûr"
               width={138}
               height={138}

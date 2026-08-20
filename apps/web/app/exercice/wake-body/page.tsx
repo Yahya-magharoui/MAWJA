@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useMemo } from 'react';
 import BackLink from '../../../components/BackLink';
 import { useQueryParam } from '../../../hooks/useQueryParam';
@@ -42,7 +43,7 @@ export default function WakeBodyHome() {
         >
           <div style={{ fontSize:34, marginBottom:8 }}>
             {/* affiche l'icône réelle depuis public/icons/exercices.svg */}
-            <img src="/icons/exercices.svg" alt="Mini exercices" width={48} height={48} style={{ display:'inline-block' }} />
+            <Image src="/icons/exercices.svg" alt="Mini exercices" width={48} height={48} style={{ display:'inline-block' }} />
           </div>
           <div style={{ fontWeight:700 }}>Mini exercices</div>
         </a>
@@ -54,7 +55,7 @@ export default function WakeBodyHome() {
           style={tile}
         >
           <div style={{ fontSize:34, marginBottom:8 }}>
-            <img src="/icons/programme.svg" alt="Programme" width={48} height={48} style={{ display:'inline-block' }} />
+            <Image src="/icons/programme.svg" alt="Programme" width={48} height={48} style={{ display:'inline-block' }} />
           </div>
           <div style={{ fontWeight:700 }}>Programme</div>
         </a>

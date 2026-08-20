@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryParam } from '../hooks/useQueryParam';
 import { isAuthenticatedSession, persistGuestSession } from '../lib/session';
 
@@ -88,13 +88,28 @@ export default function Home() {
   const startX = useRef<number | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const accountStatus = localStorage.getItem('accountStatus');
-
-    if (token && accountStatus === 'registered') {
+    if (isAuthenticatedSession()) {
       router.replace('/app');
     }
   }, [router]);
+
+  const vibe = useCallback((ms = 10) => {
+    try { (navigator as any)?.vibrate?.(ms); } catch {}
+  }, []);
+
+  const prev = useCallback(() => {
+    if (i > 0) {
+      vibe();
+      setI(i - 1);
+    }
+  }, [i, vibe]);
+
+  const next = useCallback(() => {
+    if (i < last) {
+      vibe();
+      setI(i + 1);
+    }
+  }, [i, last, vibe]);
 
   useEffect(() => {
     if (isAuthenticatedSession()) {
@@ -108,11 +123,7 @@ export default function Home() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
-  function vibe(ms = 10) { try { (navigator as any)?.vibrate?.(ms); } catch {} }
-  function prev()  { if (i > 0) { vibe(); setI(i - 1); } }
-  function next()  { if (i < last) { vibe(); setI(i + 1); } }
+  }, [next, prev, router]);
 
   function onTouchStart(e: React.TouchEvent) { startX.current = e.touches[0].clientX; }
   function onTouchEnd(e: React.TouchEvent) {

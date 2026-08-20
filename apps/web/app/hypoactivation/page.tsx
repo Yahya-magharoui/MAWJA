@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../components/BackLink';
 import { tintColor, useThemeColor, withAlpha } from '../../components/theme';
@@ -132,13 +133,12 @@ export default function HypoactivationPage() {
     if (!icon) return <span aria-hidden="true" style={{ fontSize: size }}>🌿</span>;
     if (icon.startsWith('/')) {
       return (
-        <img
+        <Image
           src={icon}
           alt=""
           aria-hidden="true"
           width={size}
           height={size}
-          loading="lazy"
           style={{ display: 'block', objectFit: 'contain' }}
         />
       );

@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../components/BackLink';
 import { tintColor, useThemeColor, withAlpha } from '../../components/theme';
@@ -172,9 +173,11 @@ export default function HyperactivationPage() {
             </span>
 
             <div style={{ marginBottom: 10 }}>
-              <img
+              <Image
                 src={c.icon ?? '/icons/default.svg'}
                 alt={c.label}
+                width={48}
+                height={48}
                 style={{ width: 48, height: 48, objectFit: 'contain' }}
               />
             </div>

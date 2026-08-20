@@ -7,73 +7,175 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id          String      @id @default(cuid())
-  email       String      @unique
-  passwordHash String
-  role        String      @default("PATIENT")
-  createdAt   DateTime    @default(now())
-  mood        MoodEntry[]
-  histories   History[]
-  goals       Goal[]
-  notes       Note[]
-  activities  Activity[]
+// This schema intentionally mirrors the legacy PostgreSQL tables that are
+// currently used by the Nest API through raw SQL. Keep it aligned with the
+// real database shape before reintroducing Prisma migrations or model-based
+// queries.
+
+enum Role {
+  PATIENT
+  DOCTOR
 }
 
-model MoodEntry {
-  id        String   @id @default(cuid())
-  userId    String
-  state     String
-  value     Int
-  context   String?
-  timestamp DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+enum HistoryState {
+  HYPER
+  TOLERANCE
+  HYPO
+}
+
+enum ActivityCategory {
+  EMOTION
+  SAFE_PLACE
+  AUDIO
+  GROUNDING
+  SBA
+  BREATHING
+  TOOL
+  HELP
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  password         String?
+  name             String?
+  role             Role      @default(PATIENT)
+  createdAt        DateTime  @default(now())
+  patientProfileId Int?      @unique
+  doctorProfileId  Int?      @unique
+  patientProfile   Patient?  @relation("UserPatientProfile", fields: [patientProfileId], references: [id])
+  doctorProfile    Doctor?   @relation("UserDoctorProfile", fields: [doctorProfileId], references: [id])
+  patientAccount   Patient?  @relation("PatientOwner")
+  doctorAccount    Doctor?   @relation("DoctorOwner")
+
+  @@map("User")
+}
+
+model Patient {
+  id               Int        @id @default(autoincrement())
+  userId           Int        @unique
+  doctorId         Int?
+  currentSituation String?
+  createdAt        DateTime   @default(now())
+  user             User       @relation("PatientOwner", fields: [userId], references: [id])
+  profileOwner     User?      @relation("UserPatientProfile")
+  doctor           Doctor?    @relation(fields: [doctorId], references: [id])
+  histories        History[]
+  goals            Goal[]
+  notes            Note[]
+  favorites        Favorite[]
+  activityLogs     ActivityLog[]
+
+  @@map("Patient")
+}
+
+model Doctor {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @unique
+  doctor_code String    @unique
+  createdAt   DateTime  @default(now())
+  user        User      @relation("DoctorOwner", fields: [userId], references: [id])
+  profileOwner User?    @relation("UserDoctorProfile")
+  patients    Patient[]
+
+  @@map("Doctor")
 }
 
 model History {
-  id        Int        @id @default(autoincrement())
-  time      DateTime
-  state     String
-  userId    String
-  createdAt DateTime   @default(now())
-  user      User       @relation(fields: [userId], references: [id])
-  activities Activity[]
+  id         Int            @id @default(autoincrement())
+  time       DateTime
+  state      HistoryState
+  patientId  Int
+  createdAt  DateTime       @default(now())
+  patient    Patient        @relation(fields: [patientId], references: [id])
+  activities ActivityLog[]
 
-  @@index([userId, createdAt])
+  @@index([patientId, createdAt])
+  @@map("History")
+}
+
+model ActivityLog {
+  id         Int               @id @default(autoincrement())
+  patientId  Int
+  historyId  Int?
+  category   ActivityCategory
+  subType    String
+  detail     String?
+  emotion    String?
+  createdAt  DateTime          @default(now())
+  patient    Patient           @relation(fields: [patientId], references: [id])
+  history    History?          @relation(fields: [historyId], references: [id])
+
+  @@index([patientId, createdAt])
+  @@index([historyId, createdAt])
+  @@map("ActivityLog")
 }
 
 model Goal {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   text      String
-  userId    String
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  patientId Int
+  createdAt DateTime  @default(now())
+  patient   Patient   @relation(fields: [patientId], references: [id])
 
-  @@index([userId, createdAt])
+  @@index([patientId, createdAt])
+  @@map("Goal")
 }
 
 model Note {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
+  patientId Int
   text      String
-  userId    String
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  patient   Patient   @relation(fields: [patientId], references: [id])
 
-  @@index([userId, createdAt])
+  @@index([patientId, createdAt])
+  @@map("Note")
 }
 
-model Activity {
-  id        Int      @id @default(autoincrement())
-  category  String
-  subType   String
-  detail    String?
-  emotion   String?
-  historyId Int
-  userId    String
-  createdAt DateTime @default(now())
-  history   History  @relation(fields: [historyId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+model Favorite {
+  id         Int       @id @default(autoincrement())
+  patientId  Int
+  exerciseId Int
+  createdAt  DateTime  @default(now())
+  patient    Patient   @relation(fields: [patientId], references: [id])
+  exercise   Exercice  @relation(fields: [exerciseId], references: [id])
 
-  @@index([historyId, createdAt])
-  @@index([userId, createdAt])
+  @@map("Favorite")
+}
+
+model Exercice {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String?
+  createdAt   DateTime   @default(now())
+  favorites   Favorite[]
+
+  @@map("Exercice")
+}
+
+model PendingSignup {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         String
+  tokenHash    String    @map("token_hash")
+  expiresAt    DateTime  @map("expires_at")
+  consumedAt   DateTime? @map("consumed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([tokenHash])
+  @@map("PendingSignup")
+}
+
+model PendingPasswordReset {
+  id         Int       @id @default(autoincrement())
+  email      String    @unique
+  tokenHash  String    @map("token_hash")
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([tokenHash])
+  @@map("PendingPasswordReset")
 }

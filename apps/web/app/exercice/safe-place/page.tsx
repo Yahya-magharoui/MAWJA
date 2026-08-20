@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useCallback, useMemo } from 'react';
 import BackLink from '../../../components/BackLink';
 import { useThemeColor, withAlpha } from '../../../components/theme';
@@ -31,11 +32,13 @@ export default function SafePlaceHub() {
           style={{ ...styles.card, background: cardBackground }}
       >
        <div style={styles.icon}>
-         <img
-        src="/icons/safeplace.svg"
-        alt="Construire mon lieu sûr"
-        style={{ width: 48, height: 48, display: 'block', margin: '0 auto' }}
-       />
+         <Image
+          src="/icons/safeplace.svg"
+          alt="Construire mon lieu sûr"
+          width={48}
+          height={48}
+          style={{ display: 'block', margin: '0 auto' }}
+         />
         </div>
       <div style={styles.label}>Construire mon{"\n"}lieu sûr</div>
     </a>
@@ -47,10 +50,12 @@ export default function SafePlaceHub() {
         style={{ ...styles.card, background: cardBackground }}
       >
         <div style={styles.icon}>
-          <img
+          <Image
             src="/icons/safe.svg"
             alt="Aller dans mon lieu sûr"
-            style={{ width: 48, height: 48, display: 'block', margin: '0 auto' }}
+            width={48}
+            height={48}
+            style={{ display: 'block', margin: '0 auto' }}
           />
         </div>
         <div style={styles.label}>Aller dans mon{"\n"}lieu sûr</div>

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
@@ -245,7 +246,7 @@ export default function AbdominalBreathing() {
       <section style={sceneSection}>
         <div style={sceneLayout}>
           <div style={imageCard}>
-            <img src="/abdo/base.png" alt="" style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <Image src="/abdo/base.png" alt="" width={720} height={720} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
 
           <div style={meterColumn} aria-hidden>

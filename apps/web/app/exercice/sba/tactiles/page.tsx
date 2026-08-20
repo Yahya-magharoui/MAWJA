@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import { logActivity } from '../../../../lib/patientTracking';
@@ -87,9 +88,11 @@ function EndpointBody({ side }: { side: 'L' | 'R' }) {
   const bubble = side === 'L' ? styles.bubbleLeft : styles.bubbleRight;
   return (
     <div style={{ position:'relative', width:'min(360px, 75vw)', maxWidth:360 }}>
-      <img
+      <Image
         src="/icons/hug.png"
         alt="Bras croisés sur les épaules"
+        width={360}
+        height={360}
         style={{ width:'100%', height:'auto', display:'block', filter:'drop-shadow(0 14px 32px rgba(15,23,42,.15))' }}
       />
       <span style={bubble}>

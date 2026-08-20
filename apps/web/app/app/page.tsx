@@ -1,14 +1,21 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../components/BackLink';
 import DoctorDashboard from '../../components/DoctorDashboard';
 import PatientAssignmentCard from '../../components/PatientAssignmentCard';
 import { getStoredThemeColor, setThemeColor, tintColor, withAlpha } from '../../components/theme';
 import type { Lang } from '../../i18n';
+import { buildApiUrl } from '../../lib/api';
 import { DOCTOR_EXPERIENCE_ENABLED } from '../../lib/features';
 import { postHistoryEntry, type HistoryState } from '../../lib/patientTracking';
-import { clearSession, type AccountStatus, type UserRole, useSessionInfo } from '../../lib/session';
+import {
+  clearSession,
+  persistAuthenticatedSession,
+  type AccountStatus,
+  type UserRole,
+  useSessionInfo,
+} from '../../lib/session';
 
 const PRESET = ['#A78BFA', '#93C5FD', '#A7F3D0', '#FDE68A', '#F9A8D4', '#D1D5DB'];
 const STATE_OPTIONS: Array<{ value: HistoryState; label: string; description: string }> = [
@@ -31,6 +38,7 @@ const STATE_OPTIONS: Array<{ value: HistoryState; label: string; description: st
 
 export default function AppHome() {
   const session = useSessionInfo();
+  const validatedSessionKeyRef = useRef<string | null>(null);
   const [color, setColor] = useState(PRESET[0]);
   const [openSettings, setOpenSettings] = useState(false);
   const [openAssignmentModal, setOpenAssignmentModal] = useState(false);
@@ -65,6 +73,64 @@ export default function AppHome() {
   useEffect(() => { window.localStorage.setItem('readingEnabled', String(readingEnabled)); }, [readingEnabled]);
   useEffect(() => { window.localStorage.setItem('hapticsEnabled', String(hapticsEnabled)); }, [hapticsEnabled]);
   useEffect(() => { window.localStorage.setItem('soundEnabled', String(soundEnabled)); }, [soundEnabled]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const currentProfile = session?.profile ?? null;
+    const sessionKey =
+      session?.status === 'registered'
+        ? `${session.status}:${session.profile?.id ?? 'unknown'}:${session.profile?.email ?? 'unknown'}`
+        : null;
+
+    async function validateRegisteredSession() {
+      if (!sessionKey) {
+        validatedSessionKeyRef.current = null;
+        return;
+      }
+
+      if (validatedSessionKeyRef.current === sessionKey) {
+        return;
+      }
+
+      try {
+        const response = await fetch(buildApiUrl('/auth/me'), {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload?.user) {
+          throw new Error('Session invalide');
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        validatedSessionKeyRef.current = sessionKey;
+        persistAuthenticatedSession({
+          ...payload.user,
+          email: payload.user.email ?? currentProfile?.email ?? null,
+          name: payload.user.name ?? currentProfile?.name ?? null,
+          role: payload.user.role === 'DOCTOR' || payload.user.role === 'PATIENT' ? payload.user.role : null,
+          loggedInAt: currentProfile?.loggedInAt,
+        });
+      } catch {
+        if (cancelled) {
+          return;
+        }
+
+        clearSession();
+        window.location.replace('/login');
+      }
+    }
+
+    void validateRegisteredSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
 
   const theme = useMemo(() => ({
     bg: `radial-gradient(1200px 800px at 50% -10%, ${tintColor(color, 0.82)} 0%, #F6F7FE 55%)`,
@@ -104,11 +170,7 @@ export default function AppHome() {
       return;
     }
 
-    clearSession();
-    setOpenAssignmentModal(false);
-    setOpenLogoutCheckin(false);
-    setOpenSettings(false);
-    window.location.replace('/login');
+    void finalizeLogout();
   }
 
   function handleStateSelection(href: string) {
@@ -118,7 +180,16 @@ export default function AppHome() {
     window.location.href = href;
   }
 
-  function finalizeLogout() {
+  async function finalizeLogout() {
+    try {
+      await fetch(buildApiUrl('/auth/logout'), {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {
+      // Best effort local cleanup.
+    }
+
     clearSession();
     setOpenAssignmentModal(false);
     setOpenSettings(false);
@@ -145,13 +216,13 @@ export default function AppHome() {
     } catch (error) {
       console.error(error);
     } finally {
-      finalizeLogout();
+      void finalizeLogout();
     }
   }
 
   function handleLogoutLater() {
     if (logoutBusy) return;
-    finalizeLogout();
+    void finalizeLogout();
   }
 
   return (

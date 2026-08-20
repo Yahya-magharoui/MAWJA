@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import BackLink from '../../../components/BackLink';
 
 function vibe() { try { (navigator as any)?.vibrate?.(15); } catch {} }
@@ -25,13 +26,12 @@ export default function AnchoringHub() {
           className="tile"
         >
           <div style={iconWrap}>
-            <img
+            <Image
               src="/icons/sens.svg"
               alt="Réveiller les sens"
               width={44}
               height={44}
               style={{ display:'block', objectFit:'contain' }}
-              loading="lazy"
             />
           </div>
           <div style={label}>Réveiller les sens avec un objet</div>
@@ -44,13 +44,12 @@ export default function AnchoringHub() {
           className="tile"
         >
           <div style={iconWrap}>
-            <img
+            <Image
               src="/icons/exercice.svg"
               alt="Exercice 5-4-3-2-1"
               width={44}
               height={44}
               style={{ display:'block', objectFit:'contain' }}
-              loading="lazy"
             />
           </div>
           <div style={label}>Exercice 5-4-3-2-1</div>

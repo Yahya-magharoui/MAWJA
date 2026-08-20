@@ -1,23 +1,23 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import * as bcrypt from 'bcrypt';
-import { signAuthToken } from './auth-token';
+import { AUTH_COOKIE_NAME, requireAuthenticatedUser, signAuthToken } from './auth-token';
 import { createHash, randomBytes } from 'crypto';
-
-type AuthBody = {
-  email: string;
-  password: string;
-  confirmPassword?: string;
-  role?: 'PATIENT' | 'DOCTOR';
-};
-
-type EmailCheckBody = {
-  email: string;
-};
-
-type VerifyEmailBody = {
-  token?: string;
-};
+import { z } from 'zod';
+import { validateInput } from './validation';
+import type { Response } from 'express';
+import { getAuthTokenTtlSeconds } from './runtime-config';
 
 type LegacyUserRow = {
   id: number;
@@ -49,6 +49,20 @@ type PendingSignupRow = {
   created_at: Date;
 };
 
+type PendingPasswordResetRow = {
+  id: number;
+  email: string;
+  token_hash: string;
+  expires_at: Date;
+  consumed_at: Date | null;
+  created_at: Date;
+};
+
+type SerializableUser = Pick<
+  LegacyUserRow,
+  'id' | 'email' | 'name' | 'role' | 'createdAt' | 'patientProfileId' | 'doctorProfileId'
+>;
+
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
 const COMMON_PASSWORDS = new Set([
@@ -72,9 +86,71 @@ const COMMON_PASSWORDS = new Set([
   'bonjour123',
 ]);
 
+const authBodySchema = z.object({
+  email: z.string().trim().max(254),
+  password: z.string().max(MAX_PASSWORD_LENGTH),
+  confirmPassword: z.string().max(MAX_PASSWORD_LENGTH).optional(),
+  role: z.enum(['PATIENT', 'DOCTOR']).optional(),
+});
+
+const emailCheckBodySchema = z.object({
+  email: z.string().trim().max(254),
+});
+
+const verifyEmailBodySchema = z.object({
+  token: z.string().trim().min(1).optional(),
+});
+
+const forgotPasswordBodySchema = z.object({
+  email: z.string().trim().max(254),
+});
+
+const resetPasswordBodySchema = z.object({
+  token: z.string().trim().min(1),
+  password: z.string().max(MAX_PASSWORD_LENGTH),
+  confirmPassword: z.string().max(MAX_PASSWORD_LENGTH),
+});
+
+type AuthBody = z.infer<typeof authBodySchema>;
+type EmailCheckBody = z.infer<typeof emailCheckBodySchema>;
+type VerifyEmailBody = z.infer<typeof verifyEmailBodySchema>;
+type ForgotPasswordBody = z.infer<typeof forgotPasswordBodySchema>;
+type ResetPasswordBody = z.infer<typeof resetPasswordBodySchema>;
+
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(private prisma: PrismaService) {}
+
+  private usesSecureCookies() {
+    return process.env.NODE_ENV === 'production';
+  }
+
+  private getAuthCookieOptions() {
+    const secure = this.usesSecureCookies();
+
+    return {
+      httpOnly: true,
+      secure,
+      sameSite: secure ? ('none' as const) : ('lax' as const),
+      path: '/',
+      maxAge: getAuthTokenTtlSeconds() * 1000,
+    };
+  }
+
+  private writeAuthCookie(response: Response, accessToken: string) {
+    response.cookie(AUTH_COOKIE_NAME, accessToken, this.getAuthCookieOptions());
+  }
+
+  private clearAuthCookie(response: Response) {
+    response.clearCookie(AUTH_COOKIE_NAME, {
+      httpOnly: true,
+      secure: this.usesSecureCookies(),
+      sameSite: this.usesSecureCookies() ? ('none' as const) : ('lax' as const),
+      path: '/',
+    });
+  }
 
   private emailVerificationEnabled() {
     return process.env.EMAIL_VERIFICATION_ENABLED === 'true';
@@ -82,6 +158,15 @@ export class AuthController {
 
   private getVerificationExpiryDate() {
     const hours = Number(process.env.EMAIL_VERIFICATION_EXPIRY_HOURS || 24);
+    return new Date(Date.now() + Math.max(hours, 1) * 60 * 60 * 1000);
+  }
+
+  private passwordResetEnabled() {
+    return process.env.PASSWORD_RESET_EMAIL_ENABLED === 'true';
+  }
+
+  private getPasswordResetExpiryDate() {
+    const hours = Number(process.env.PASSWORD_RESET_EXPIRY_HOURS || 2);
     return new Date(Date.now() + Math.max(hours, 1) * 60 * 60 * 1000);
   }
 
@@ -101,6 +186,11 @@ export class AuthController {
   private buildVerificationLink(token: string) {
     const baseUrl = this.getWebBaseUrl();
     return `${baseUrl}/verify-email?token=${encodeURIComponent(token)}`;
+  }
+
+  private buildPasswordResetLink(token: string) {
+    const baseUrl = this.getWebBaseUrl();
+    return `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
   }
 
   private async createPendingSignup(email: string, passwordHash: string, role: 'PATIENT' | 'DOCTOR') {
@@ -146,29 +236,109 @@ export class AuthController {
     `;
   }
 
-  private async sendVerificationEmail(email: string, token: string) {
+  private async createPendingPasswordReset(email: string) {
+    const token = randomBytes(32).toString('hex');
+    const tokenHash = this.hashVerificationToken(token);
+    const expiresAt = this.getPasswordResetExpiryDate();
+
+    await this.prisma.$executeRaw`
+      DELETE FROM "PendingPasswordReset"
+      WHERE email = ${email}
+    `;
+
+    const rows = await this.prisma.$queryRaw<PendingPasswordResetRow[]>`
+      INSERT INTO "PendingPasswordReset" (email, token_hash, expires_at)
+      VALUES (${email}, ${tokenHash}, ${expiresAt})
+      RETURNING id, email, token_hash, expires_at, consumed_at, created_at
+    `;
+
+    return {
+      pendingPasswordReset: rows[0] ?? null,
+      token,
+      expiresAt,
+    };
+  }
+
+  private async findPendingPasswordResetByToken(token: string) {
+    const tokenHash = this.hashVerificationToken(token);
+    const rows = await this.prisma.$queryRaw<PendingPasswordResetRow[]>`
+      SELECT id, email, token_hash, expires_at, consumed_at, created_at
+      FROM "PendingPasswordReset"
+      WHERE token_hash = ${tokenHash}
+      LIMIT 1
+    `;
+
+    return rows[0] ?? null;
+  }
+
+  private async markPendingPasswordResetConsumed(id: number) {
+    await this.prisma.$executeRaw`
+      UPDATE "PendingPasswordReset"
+      SET consumed_at = NOW()
+      WHERE id = ${id}
+    `;
+  }
+
+  private async sendResendEmail(payload: {
+    to: string;
+    subject: string;
+    html: string;
+    missingConfigMessage: string;
+  }) {
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.RESEND_FROM_EMAIL;
 
     if (!apiKey || !from) {
+      throw new HttpException(payload.missingConfigMessage, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    let response: globalThis.Response;
+
+    try {
+      response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from,
+          to: [payload.to],
+          subject: payload.subject,
+          html: payload.html,
+        }),
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown-error';
+      this.logger.error(`Échec de connexion au service d'e-mail: ${message}`);
       throw new HttpException(
-        "La configuration de l'e-mail de confirmation est incomplète.",
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "Le service d'envoi d'e-mail est temporairement indisponible.",
+        HttpStatus.BAD_GATEWAY
       );
     }
 
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => '');
+      this.logger.error(
+        `Échec d'envoi d'e-mail Resend (${response.status} ${response.statusText})${
+          errorBody ? `: ${errorBody}` : ''
+        }`
+      );
+      throw new HttpException(
+        "L'e-mail n'a pas pu être envoyé pour le moment. Réessaie plus tard.",
+        HttpStatus.BAD_GATEWAY
+      );
+    }
+  }
+
+  private async sendVerificationEmail(email: string, token: string) {
     const verificationLink = this.buildVerificationLink(token);
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from,
-        to: [email],
-        subject: 'Confirme ton compte Mawja',
-        html: `
+    await this.sendResendEmail({
+      to: email,
+      subject: 'Confirme ton compte Mawja',
+      missingConfigMessage: "La configuration de l'e-mail de confirmation est incomplète.",
+      html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
             <h2 style="margin-bottom: 16px;">Bienvenue sur Mawja</h2>
             <p>Confirme ton adresse e-mail pour finaliser la création de ton compte.</p>
@@ -185,16 +355,33 @@ export class AuthController {
             <p>Ce lien expirera dans ${process.env.EMAIL_VERIFICATION_EXPIRY_HOURS || '24'} heures.</p>
           </div>
         `,
-      }),
     });
+  }
 
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => '');
-      throw new HttpException(
-        `Envoi de l'e-mail impossible.${errorBody ? ` ${errorBody}` : ''}`,
-        HttpStatus.BAD_GATEWAY
-      );
-    }
+  private async sendPasswordResetEmail(email: string, token: string) {
+    const resetLink = this.buildPasswordResetLink(token);
+    await this.sendResendEmail({
+      to: email,
+      subject: 'Réinitialise ton mot de passe Mawja',
+      missingConfigMessage: "La configuration de l'e-mail de réinitialisation est incomplète.",
+      html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
+            <h2 style="margin-bottom: 16px;">Réinitialisation du mot de passe</h2>
+            <p>Tu as demandé à définir un nouveau mot de passe pour ton compte Mawja.</p>
+            <p style="margin: 24px 0;">
+              <a
+                href="${resetLink}"
+                style="display:inline-block;padding:12px 18px;border-radius:10px;background:#4f46e5;color:#ffffff;text-decoration:none;font-weight:600;"
+              >
+                Définir un nouveau mot de passe
+              </a>
+            </p>
+            <p>Si le bouton ne fonctionne pas, copie-colle ce lien dans ton navigateur :</p>
+            <p><a href="${resetLink}">${resetLink}</a></p>
+            <p>Ce lien expirera dans ${process.env.PASSWORD_RESET_EXPIRY_HOURS || '2'} heures.</p>
+          </div>
+        `,
+    });
   }
 
   private normalizeEmail(email: string) {
@@ -319,7 +506,7 @@ export class AuthController {
     return user;
   }
 
-  private serializeUser(user: LegacyUserRow) {
+  private serializeUser(user: SerializableUser) {
     return {
       id: user.id,
       email: user.email,
@@ -328,6 +515,24 @@ export class AuthController {
       createdAt: user.createdAt,
       patientProfileId: user.patientProfileId,
       doctorProfileId: user.doctorProfileId,
+    };
+  }
+
+  private issueAuthenticatedSession(user: LegacyUserRow, response?: Response) {
+    const accessToken = signAuthToken({
+      sub: String(user.id),
+      email: user.email,
+      role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
+    });
+
+    if (response) {
+      this.writeAuthCookie(response, accessToken);
+    }
+
+    return {
+      ok: true,
+      user: this.serializeUser(user),
+      access_token: accessToken,
     };
   }
 
@@ -346,7 +551,7 @@ export class AuthController {
     return this.syncUserProfiles(createdUser);
   }
 
-  private async registerUser(body: AuthBody) {
+  private async registerUser(body: AuthBody, response?: Response) {
     const email = this.normalizeEmail(body.email || '');
     const password = body.password || '';
     const confirmPassword = body.confirmPassword ?? '';
@@ -391,32 +596,25 @@ export class AuthController {
 
     const user = await this.createLegacyUser(email, hash, role);
 
-    const accessToken = signAuthToken({
-      sub: String(user.id),
-      email: user.email,
-      role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
-    });
-
-    return {
-      ok: true,
-      user: this.serializeUser(user),
-      access_token: accessToken,
-    };
+    return this.issueAuthenticatedSession(user, response);
   }
 
   @Post('signup')
-  async signup(@Body() body: AuthBody) {
-    return this.registerUser(body);
+  async signup(@Body() body: AuthBody, @Res({ passthrough: true }) response: Response) {
+    const validatedBody: AuthBody = validateInput(authBodySchema, body);
+    return this.registerUser(validatedBody, response);
   }
 
   @Post('register')
-  async register(@Body() body: AuthBody) {
-    return this.registerUser(body);
+  async register(@Body() body: AuthBody, @Res({ passthrough: true }) response: Response) {
+    const validatedBody: AuthBody = validateInput(authBodySchema, body);
+    return this.registerUser(validatedBody, response);
   }
 
   @Post('check-email')
   async checkEmail(@Body() body: EmailCheckBody) {
-    const email = this.normalizeEmail(body.email || '');
+    const validatedBody = validateInput(emailCheckBodySchema, body);
+    const email = this.normalizeEmail(validatedBody.email || '');
 
     if (!email || !this.isValidEmail(email)) {
       return {
@@ -440,8 +638,9 @@ export class AuthController {
   }
 
   @Post('verify-email')
-  async verifyEmail(@Body() body: VerifyEmailBody) {
-    const token = body.token?.trim();
+  async verifyEmail(@Body() body: VerifyEmailBody, @Res({ passthrough: true }) response: Response) {
+    const validatedBody = validateInput(verifyEmailBodySchema, body);
+    const token = validatedBody.token?.trim();
 
     if (!token) {
       throw new HttpException('Lien de confirmation invalide.', HttpStatus.BAD_REQUEST);
@@ -474,29 +673,128 @@ export class AuthController {
 
     await this.markPendingSignupConsumed(pendingSignup.id);
 
-    const accessToken = signAuthToken({
-      sub: String(user.id),
-      email: user.email,
-      role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
-    });
-
     return {
-      ok: true,
+      ...this.issueAuthenticatedSession(user, response),
       message: 'Adresse e-mail confirmée.',
-      access_token: accessToken,
-      user: this.serializeUser(user),
     };
   }
 
   @Get('verify-email')
-  async verifyEmailFromQuery(@Query('token') token?: string) {
-    return this.verifyEmail({ token });
+  async verifyEmailFromQuery(
+    @Query('token') token: string | undefined,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    return this.verifyEmail({ token }, response);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: ForgotPasswordBody) {
+    const validatedBody = validateInput(forgotPasswordBodySchema, body);
+    const email = this.normalizeEmail(validatedBody.email || '');
+
+    if (!email || !this.isValidEmail(email)) {
+      return {
+        ok: true,
+        message:
+          "Si un compte existe pour cette adresse, un lien de réinitialisation va être envoyé.",
+      };
+    }
+
+    const existingUser = await this.findLegacyUserByEmail(email);
+    if (!existingUser) {
+      return {
+        ok: true,
+        message:
+          "Si un compte existe pour cette adresse, un lien de réinitialisation va être envoyé.",
+      };
+    }
+
+    const { pendingPasswordReset, token } = await this.createPendingPasswordReset(email);
+
+    if (!pendingPasswordReset) {
+      throw new HttpException(
+        'Préparation de la réinitialisation impossible.',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+
+    if (this.passwordResetEnabled()) {
+      await this.sendPasswordResetEmail(email, token);
+
+      return {
+        ok: true,
+        message:
+          "Si un compte existe pour cette adresse, un lien de réinitialisation va être envoyé.",
+      };
+    }
+
+    const debugResetLink =
+      process.env.NODE_ENV !== 'production' ? this.buildPasswordResetLink(token) : undefined;
+
+    return {
+      ok: true,
+      message:
+        "Si un compte existe pour cette adresse, un lien de réinitialisation va être envoyé.",
+      debugResetLink,
+    };
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() body: ResetPasswordBody) {
+    const validatedBody = validateInput(resetPasswordBodySchema, body);
+    const token = validatedBody.token.trim();
+    const password = validatedBody.password || '';
+    const confirmPassword = validatedBody.confirmPassword || '';
+
+    if (password !== confirmPassword) {
+      throw new HttpException('Les mots de passe ne correspondent pas.', HttpStatus.BAD_REQUEST);
+    }
+
+    const pendingPasswordReset = await this.findPendingPasswordResetByToken(token);
+    if (!pendingPasswordReset) {
+      throw new HttpException('Lien de réinitialisation invalide ou déjà utilisé.', HttpStatus.BAD_REQUEST);
+    }
+
+    if (pendingPasswordReset.consumed_at) {
+      throw new HttpException('Ce lien de réinitialisation a déjà été utilisé.', HttpStatus.BAD_REQUEST);
+    }
+
+    if (pendingPasswordReset.expires_at.getTime() < Date.now()) {
+      throw new HttpException('Ce lien de réinitialisation a expiré.', HttpStatus.BAD_REQUEST);
+    }
+
+    const existingUser = await this.findLegacyUserByEmail(this.normalizeEmail(pendingPasswordReset.email));
+    if (!existingUser) {
+      await this.markPendingPasswordResetConsumed(pendingPasswordReset.id);
+      throw new HttpException('Utilisateur introuvable.', HttpStatus.NOT_FOUND);
+    }
+
+    const passwordValidationMessage = this.validatePassword(password, existingUser.email);
+    if (passwordValidationMessage) {
+      throw new HttpException(passwordValidationMessage, HttpStatus.BAD_REQUEST);
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    await this.prisma.$executeRaw`
+      UPDATE "User"
+      SET password = ${passwordHash}
+      WHERE id = ${existingUser.id}
+    `;
+
+    await this.markPendingPasswordResetConsumed(pendingPasswordReset.id);
+
+    return {
+      ok: true,
+      message: 'Mot de passe réinitialisé avec succès.',
+    };
   }
 
   @Post('login')
-  async login(@Body() body: AuthBody) {
-    const email = this.normalizeEmail(body.email || '');
-    const password = body.password || '';
+  async login(@Body() body: AuthBody, @Res({ passthrough: true }) response: Response) {
+    const validatedBody = validateInput(authBodySchema.omit({ confirmPassword: true, role: true }), body);
+    const email = this.normalizeEmail(validatedBody.email || '');
+    const password = validatedBody.password || '';
 
     if (!email || !password) {
       throw new HttpException('Email ou mot de passe invalide.', HttpStatus.BAD_REQUEST);
@@ -514,17 +812,26 @@ export class AuthController {
     }
 
     const user = await this.syncUserProfiles(existingUser);
+    return this.issueAuthenticatedSession(user, response);
+  }
 
-    const accessToken = signAuthToken({
-      sub: String(user.id),
-      email: user.email,
-      role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
-    });
-
+  @Get('me')
+  async me(
+    @Headers('authorization') authorization: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined
+  ) {
+    const user = await requireAuthenticatedUser(this.prisma, authorization, cookieHeader);
     return {
       ok: true,
-      access_token: accessToken,
       user: this.serializeUser(user),
+    };
+  }
+
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) response: Response) {
+    this.clearAuthCookie(response);
+    return {
+      ok: true,
     };
   }
 }

@@ -8,9 +8,11 @@
     "build": "pnpm prisma:generate && nest build",
     "start": "node dist/main.js",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init",
-    "prisma:deploy": "prisma migrate deploy",
-    "start:railway": "pnpm prisma:deploy && node dist/main.js",
+    "prisma:validate": "prisma validate",
+    "prisma:db:pull": "prisma db pull",
+    "prisma:migrate": "node ./scripts/block-legacy-prisma-migrate.cjs",
+    "prisma:deploy": "node ./scripts/block-legacy-prisma-migrate.cjs",
+    "start:railway": "node dist/main.js",
     "lint": "eslint ."
   },
   "dependencies": {
