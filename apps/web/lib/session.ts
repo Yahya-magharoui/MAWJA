@@ -19,6 +19,7 @@ export type SessionProfile = {
 };
 
 const SESSION_PROFILE_KEY = 'guestProfile';
+const AUTH_TOKEN_KEY = 'kalymapAuthToken';
 const SESSION_EVENT = 'mawja-session-changed';
 
 function normalizeRole(value: unknown): UserRole | null {
@@ -31,7 +32,13 @@ export function getAccountStatus(): AccountStatus {
 }
 
 export function getAuthToken() {
-  return null;
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function getAuthHeaders(): Record<string, string> {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export function getSessionProfile(): SessionProfile | null {
@@ -81,6 +88,9 @@ export function persistAuthenticatedSession(profile: SessionProfile, token?: str
   if (typeof window === 'undefined') return;
 
   window.localStorage.setItem('accountStatus', 'registered');
+  if (token) {
+    window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+  }
   window.localStorage.setItem(
     SESSION_PROFILE_KEY,
     JSON.stringify({
@@ -115,6 +125,7 @@ export function clearSession() {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem('accountStatus');
   window.localStorage.removeItem(SESSION_PROFILE_KEY);
+  window.localStorage.removeItem(AUTH_TOKEN_KEY);
   window.dispatchEvent(new Event(SESSION_EVENT));
 }
 

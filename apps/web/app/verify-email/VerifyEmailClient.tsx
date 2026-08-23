@@ -42,7 +42,7 @@ export default function VerifyEmailClient({ token }: VerifyEmailClientProps) {
         if (cancelled) return;
 
         if (data.user) {
-          persistAuthenticatedSession(data.user);
+          persistAuthenticatedSession(data.user, data.access_token);
         }
 
         setStatus('success');

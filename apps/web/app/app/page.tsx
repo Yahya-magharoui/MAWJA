@@ -11,6 +11,8 @@ import { DOCTOR_EXPERIENCE_ENABLED } from '../../lib/features';
 import { postHistoryEntry, type HistoryState } from '../../lib/patientTracking';
 import {
   clearSession,
+  getAuthHeaders,
+  getAuthToken,
   persistAuthenticatedSession,
   type AccountStatus,
   type UserRole,
@@ -115,6 +117,7 @@ export default function AppHome() {
         const response = await fetch(buildApiUrl('/auth/me'), {
           credentials: 'include',
           cache: 'no-store',
+          headers: getAuthHeaders(),
         });
 
         const payload = await response.json().catch(() => ({}));
@@ -133,7 +136,7 @@ export default function AppHome() {
           name: payload.user.name ?? currentProfile?.name ?? null,
           role: payload.user.role === 'DOCTOR' || payload.user.role === 'PATIENT' ? payload.user.role : null,
           loggedInAt: currentProfile?.loggedInAt,
-        });
+        }, getAuthToken());
       } catch {
         if (cancelled) {
           return;
@@ -204,6 +207,7 @@ export default function AppHome() {
       await fetch(buildApiUrl('/auth/logout'), {
         method: 'POST',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
     } catch {
       // Best effort local cleanup.
@@ -261,6 +265,7 @@ export default function AppHome() {
       const response = await fetch(buildApiUrl('/auth/account'), {
         method: 'DELETE',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
       const payload = await response.json().catch(() => ({}));
 
@@ -286,6 +291,7 @@ export default function AppHome() {
       const response = await fetch(buildApiUrl('/auth/account/export'), {
         credentials: 'include',
         cache: 'no-store',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
