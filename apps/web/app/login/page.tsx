@@ -44,8 +44,7 @@ export default function Login() {
           email: profile.email ?? email,
           name: profile.name ?? null,
           role: profile.role === 'DOCTOR' || profile.role === 'PATIENT' ? profile.role : null,
-        },
-        data.access_token
+        }
       );
 
       setMsg('Connexion réussie ✅');

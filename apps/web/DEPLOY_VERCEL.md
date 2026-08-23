@@ -39,7 +39,7 @@ WEB_APP_URL=https://votre-app.vercel.app
 - Le backend doit donc répondre en HTTPS en production.
 - `ALLOWED_ORIGINS` doit contenir exactement les origines Vercel utilisées.
 - L’origine exacte de `WEB_APP_URL` doit aussi être présente dans `ALLOWED_ORIGINS`.
-- Avec un frontend Vercel et une API Railway sur des domaines différents, les cookies sont envoyés avec `SameSite=None` et `Secure=true`.
+- En production, utiliser deux sous-domaines du même site (`www.kalymap.com` et `api.kalymap.com`) afin que la session reste limitée à un cookie `HttpOnly`, `Secure` et `SameSite=Lax`.
 - En production, le cookie d’auth est émis avec un nom `__Secure-...`.
 - Si `TRUST_PROXY` n’est pas activé derrière Railway ou un proxy HTTPS, l’API peut mal évaluer le contexte sécurisé et casser la session.
 

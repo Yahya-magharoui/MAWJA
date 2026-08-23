@@ -136,7 +136,7 @@ export class AuthController {
     return {
       httpOnly: true,
       secure,
-      sameSite: secure ? ('none' as const) : ('lax' as const),
+      sameSite: 'lax' as const,
       path: '/',
       maxAge: getAuthTokenTtlSeconds() * 1000,
     };
@@ -150,7 +150,7 @@ export class AuthController {
     response.clearCookie(AUTH_COOKIE_NAME, {
       httpOnly: true,
       secure: this.usesSecureCookies(),
-      sameSite: this.usesSecureCookies() ? ('none' as const) : ('lax' as const),
+      sameSite: 'lax' as const,
       path: '/',
     });
   }
@@ -550,7 +550,6 @@ export class AuthController {
     return {
       ok: true,
       user: this.serializeUser(user),
-      access_token: accessToken,
     };
   }
 

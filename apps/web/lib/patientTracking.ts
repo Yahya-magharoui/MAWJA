@@ -1,21 +1,15 @@
 'use client';
 
 import { buildApiUrl } from './api';
-import { getAuthHeaders, getSessionProfile, isPatientSession } from './session';
+import { getSessionProfile, isPatientSession } from './session';
 const LAST_HISTORY_ID_KEY = 'mawja-last-history-id';
 const LOCAL_FAVORITE_KEYS_PREFIX = 'mawja-favorite-exercise-keys';
 const FAVORITES_EVENT = 'mawja-favorites-changed';
 
 function authenticatedFetch(path: string, init: RequestInit = {}) {
-  const headers = new Headers(init.headers);
-  for (const [name, value] of Object.entries(getAuthHeaders())) {
-    headers.set(name, value);
-  }
-
   return fetch(buildApiUrl(path), {
     ...init,
     credentials: 'include',
-    headers,
   });
 }
 

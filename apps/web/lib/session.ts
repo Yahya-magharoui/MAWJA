@@ -19,8 +19,13 @@ export type SessionProfile = {
 };
 
 const SESSION_PROFILE_KEY = 'guestProfile';
-const AUTH_TOKEN_KEY = 'kalymapAuthToken';
+const LEGACY_AUTH_TOKEN_KEY = 'kalymapAuthToken';
 const SESSION_EVENT = 'mawja-session-changed';
+
+function removeLegacyAuthToken() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+}
 
 function normalizeRole(value: unknown): UserRole | null {
   return value === 'DOCTOR' || value === 'PATIENT' ? value : null;
@@ -28,17 +33,8 @@ function normalizeRole(value: unknown): UserRole | null {
 
 export function getAccountStatus(): AccountStatus {
   if (typeof window === 'undefined') return 'guest';
+  removeLegacyAuthToken();
   return window.localStorage.getItem('accountStatus') === 'registered' ? 'registered' : 'guest';
-}
-
-export function getAuthToken() {
-  if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(AUTH_TOKEN_KEY);
-}
-
-export function getAuthHeaders(): Record<string, string> {
-  const token = getAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export function getSessionProfile(): SessionProfile | null {
@@ -84,13 +80,11 @@ export function isDoctorSession() {
   return isAuthenticatedSession() && getUserRole() === 'DOCTOR';
 }
 
-export function persistAuthenticatedSession(profile: SessionProfile, token?: string | null) {
+export function persistAuthenticatedSession(profile: SessionProfile) {
   if (typeof window === 'undefined') return;
 
+  removeLegacyAuthToken();
   window.localStorage.setItem('accountStatus', 'registered');
-  if (token) {
-    window.localStorage.setItem(AUTH_TOKEN_KEY, token);
-  }
   window.localStorage.setItem(
     SESSION_PROFILE_KEY,
     JSON.stringify({
@@ -123,9 +117,9 @@ export function persistGuestSession(profile?: Partial<SessionProfile>) {
 
 export function clearSession() {
   if (typeof window === 'undefined') return;
+  removeLegacyAuthToken();
   window.localStorage.removeItem('accountStatus');
   window.localStorage.removeItem(SESSION_PROFILE_KEY);
-  window.localStorage.removeItem(AUTH_TOKEN_KEY);
   window.dispatchEvent(new Event(SESSION_EVENT));
 }
 

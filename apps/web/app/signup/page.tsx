@@ -200,8 +200,7 @@ export default function Signup() {
           ...profile,
           email: profile.email ?? normalizedEmail,
           role: profile.role === 'DOCTOR' || profile.role === 'PATIENT' ? profile.role : role,
-        },
-        data.access_token
+        }
       );
 
       setEmailHint(null);

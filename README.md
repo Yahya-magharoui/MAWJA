@@ -184,7 +184,7 @@ Notes session/cookies :
 
 - le frontend web fonctionne avec une session par cookie HttpOnly ;
 - en production, l’API doit être servie en HTTPS ;
-- avec Vercel + Railway sur deux domaines différents, le cookie est émis en `Secure` + `SameSite=None` ;
+- en production, le web et l’API utilisent deux sous-domaines du même site afin d’émettre le cookie en `HttpOnly` + `Secure` + `SameSite=Lax` ;
 - `ALLOWED_ORIGINS` et `WEB_APP_URL` doivent être strictement alignés avec le domaine public du frontend.
 
 Si tu actives la confirmation d’e-mail ou le reset mot de passe par mail :
