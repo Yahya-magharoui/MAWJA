@@ -43,6 +43,22 @@ export class AuthVerificationService implements OnModuleInit, OnModuleDestroy {
       ON "PendingPasswordReset" (token_hash)
     `);
 
+    await this.prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "AuthSession" (
+        id BIGSERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+        token_hash TEXT NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        revoked_at TIMESTAMP NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await this.prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "AuthSession_user_id_idx"
+      ON "AuthSession" (user_id)
+    `);
+
     await this.cleanupTemporaryAuthData();
 
     const configuredInterval = Number(process.env.TEMP_DATA_CLEANUP_INTERVAL_MS || 21_600_000);
@@ -92,6 +108,12 @@ export class AuthVerificationService implements OnModuleInit, OnModuleDestroy {
         },
       }),
     ]);
+
+    await this.prisma.$executeRaw`
+      DELETE FROM "AuthSession"
+      WHERE expires_at < ${now}
+         OR (revoked_at IS NOT NULL AND revoked_at < ${consumedBefore})
+    `;
 
     const deletedCount = pendingSignups.count + pendingPasswordResets.count;
     if (deletedCount > 0) {

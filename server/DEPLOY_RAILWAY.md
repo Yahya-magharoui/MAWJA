@@ -54,6 +54,8 @@ Générer `AUTH_TOKEN_SECRET` localement avec `openssl rand -base64 48`, puis co
 - Le frontend web doit pointer vers l'URL Railway complète avec le suffixe `/api`.
 - En production, `AUTH_TOKEN_SECRET` ne peut pas utiliser la valeur par défaut de développement.
 - En production, le cookie de session est émis en `HttpOnly` + `Secure` + `SameSite=Lax` avec un nom préfixé `__Secure-`.
+- Le serveur crée automatiquement la table isolée `AuthSession` avec `CREATE TABLE IF NOT EXISTS`; aucune migration Prisma legacy ne doit être lancée.
+- Une déconnexion révoque la session courante et une réinitialisation du mot de passe révoque toutes les sessions du compte.
 - `ALLOWED_ORIGINS` et `WEB_APP_URL` doivent être des URL HTTPS valides.
 - L’origine de `WEB_APP_URL` doit aussi être présente dans `ALLOWED_ORIGINS`.
 - `TRUST_PROXY=true` est requis derrière Railway pour refléter correctement le contexte HTTPS côté Express.

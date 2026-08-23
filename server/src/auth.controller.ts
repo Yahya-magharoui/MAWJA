@@ -13,7 +13,13 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import * as bcrypt from 'bcrypt';
-import { AUTH_COOKIE_NAME, requireAuthenticatedUser, signAuthToken } from './auth-token';
+import {
+  AUTH_COOKIE_NAME,
+  hashSessionId,
+  requireAuthenticatedUser,
+  revokeAuthenticatedSession,
+  signAuthToken,
+} from './auth-token';
 import { createHash, randomBytes } from 'crypto';
 import { z } from 'zod';
 import { validateInput } from './validation';
@@ -536,11 +542,20 @@ export class AuthController {
     };
   }
 
-  private issueAuthenticatedSession(user: LegacyUserRow, response?: Response) {
+  private async issueAuthenticatedSession(user: LegacyUserRow, response?: Response) {
+    const sessionId = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + getAuthTokenTtlSeconds() * 1000);
+
+    await this.prisma.$executeRaw`
+      INSERT INTO "AuthSession" (user_id, token_hash, expires_at)
+      VALUES (${user.id}, ${hashSessionId(sessionId)}, ${expiresAt})
+    `;
+
     const accessToken = signAuthToken({
       sub: String(user.id),
       email: user.email,
       role: user.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
+      sid: sessionId,
     });
 
     if (response) {
@@ -691,7 +706,7 @@ export class AuthController {
     await this.markPendingSignupConsumed(pendingSignup.id);
 
     return {
-      ...this.issueAuthenticatedSession(user, response),
+      ...(await this.issueAuthenticatedSession(user, response)),
       message: 'Adresse e-mail confirmée.',
     };
   }
@@ -793,13 +808,26 @@ export class AuthController {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    await this.prisma.$executeRaw`
-      UPDATE "User"
-      SET password = ${passwordHash}
-      WHERE id = ${existingUser.id}
-    `;
+    await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`
+        UPDATE "User"
+        SET password = ${passwordHash}
+        WHERE id = ${existingUser.id}
+      `;
 
-    await this.markPendingPasswordResetConsumed(pendingPasswordReset.id);
+      await tx.$executeRaw`
+        UPDATE "AuthSession"
+        SET revoked_at = NOW()
+        WHERE user_id = ${existingUser.id}
+          AND revoked_at IS NULL
+      `;
+
+      await tx.$executeRaw`
+        UPDATE "PendingPasswordReset"
+        SET consumed_at = NOW()
+        WHERE id = ${pendingPasswordReset.id}
+      `;
+    });
 
     return {
       ok: true,
@@ -915,7 +943,16 @@ export class AuthController {
   }
 
   @Post('logout')
-  async logout(@Res({ passthrough: true }) response: Response) {
+  async logout(
+    @Headers('authorization') authorization: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    try {
+      await revokeAuthenticatedSession(this.prisma, authorization, cookieHeader);
+    } catch {
+      // La suppression locale du cookie reste possible si la session est déjà invalide.
+    }
     this.clearAuthCookie(response);
     return {
       ok: true,

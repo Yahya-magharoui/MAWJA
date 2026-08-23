@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import { UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { getAuthTokenSecret, getAuthTokenTtlSeconds } from './runtime-config';
@@ -13,6 +13,7 @@ type TokenPayload = {
   sub: string;
   email: string;
   role: 'PATIENT' | 'DOCTOR';
+  sid: string;
   iat?: number;
   exp?: number;
 };
@@ -89,7 +90,7 @@ export function verifyAuthToken(token: string): TokenPayload {
 
   try {
     const parsed = JSON.parse(fromBase64Url(body)) as Partial<TokenPayload>;
-    if (!parsed.sub || !parsed.email) {
+    if (!parsed.sub || !parsed.email || !parsed.sid) {
       throw new Error('payload');
     }
 
@@ -101,6 +102,7 @@ export function verifyAuthToken(token: string): TokenPayload {
       sub: parsed.sub,
       email: parsed.email,
       role: parsed.role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT',
+      sid: parsed.sid,
       iat: typeof parsed.iat === 'number' ? parsed.iat : undefined,
       exp: typeof parsed.exp === 'number' ? parsed.exp : undefined,
     };
@@ -111,6 +113,10 @@ export function verifyAuthToken(token: string): TokenPayload {
 
     throw new UnauthorizedException('Token invalide.');
   }
+}
+
+export function hashSessionId(sessionId: string) {
+  return createHash('sha256').update(sessionId).digest('hex');
 }
 
 export function extractBearerToken(authorization?: string) {
@@ -185,10 +191,15 @@ export async function requireAuthenticatedUser(
     throw new UnauthorizedException('Utilisateur introuvable.');
   }
 
+  const sessionHash = hashSessionId(payload.sid);
   const rows = await prisma.$queryRaw<LegacyAuthenticatedUser[]>`
-    SELECT id, email, name, role, password, "createdAt", "patientProfileId", "doctorProfileId"
-    FROM "User"
-    WHERE id = ${userId}
+    SELECT u.id, u.email, u.name, u.role, u.password, u."createdAt", u."patientProfileId", u."doctorProfileId"
+    FROM "User" u
+    INNER JOIN "AuthSession" s ON s.user_id = u.id
+    WHERE u.id = ${userId}
+      AND s.token_hash = ${sessionHash}
+      AND s.revoked_at IS NULL
+      AND s.expires_at > NOW()
     LIMIT 1
   `;
   const user = rows[0] ?? null;
@@ -207,4 +218,21 @@ export async function requireAuthenticatedUser(
     patientProfileId: user.patientProfileId,
     doctorProfileId: user.doctorProfileId,
   } satisfies AuthenticatedUser;
+}
+
+export async function revokeAuthenticatedSession(
+  prisma: PrismaService,
+  authorization?: string,
+  cookieHeader?: string
+) {
+  const token = extractAuthToken(authorization, cookieHeader);
+  const payload = verifyAuthToken(token);
+  const sessionHash = hashSessionId(payload.sid);
+
+  await prisma.$executeRaw`
+    UPDATE "AuthSession"
+    SET revoked_at = NOW()
+    WHERE token_hash = ${sessionHash}
+      AND revoked_at IS NULL
+  `;
 }

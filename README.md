@@ -185,6 +185,7 @@ Notes session/cookies :
 - le frontend web fonctionne avec une session par cookie HttpOnly ;
 - en production, l’API doit être servie en HTTPS ;
 - en production, le web et l’API utilisent deux sous-domaines du même site afin d’émettre le cookie en `HttpOnly` + `Secure` + `SameSite=Lax` ;
+- les sessions sont vérifiées côté serveur et peuvent être révoquées à la déconnexion ou lors d’une réinitialisation du mot de passe ;
 - `ALLOWED_ORIGINS` et `WEB_APP_URL` doivent être strictement alignés avec le domaine public du frontend.
 
 Si tu actives la confirmation d’e-mail ou le reset mot de passe par mail :
