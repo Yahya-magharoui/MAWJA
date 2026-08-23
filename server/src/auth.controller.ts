@@ -165,7 +165,10 @@ export class AuthController {
   }
 
   private passwordResetEnabled() {
-    return process.env.PASSWORD_RESET_EMAIL_ENABLED === 'true';
+    return (
+      process.env.PASSWORD_RESET_EMAIL_ENABLED === 'true' ||
+      this.emailVerificationEnabled()
+    );
   }
 
   private getPasswordResetExpiryDate() {

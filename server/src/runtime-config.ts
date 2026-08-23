@@ -97,7 +97,8 @@ export function assertRuntimeConfig() {
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.trim() || '';
   const webAppUrl = process.env.WEB_APP_URL || process.env.APP_WEB_URL;
   const emailVerificationEnabled = process.env.EMAIL_VERIFICATION_ENABLED === 'true';
-  const passwordResetEnabled = process.env.PASSWORD_RESET_EMAIL_ENABLED === 'true';
+  const passwordResetEnabled =
+    process.env.PASSWORD_RESET_EMAIL_ENABLED === 'true' || emailVerificationEnabled;
   const mailFeaturesEnabled = emailVerificationEnabled || passwordResetEnabled;
 
   requireEnv('DATABASE_URL', process.env.DATABASE_URL);
