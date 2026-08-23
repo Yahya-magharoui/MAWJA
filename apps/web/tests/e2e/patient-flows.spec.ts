@@ -98,6 +98,33 @@ test.describe('patient app flows', () => {
     await expect(page.getByRole('heading', { name: 'Comment tu te sens maintenant ?' })).toHaveCount(0);
   });
 
+  test('authenticated patient can revisit the landing page without a redirect loop', async ({ page }) => {
+    await seedAuthenticatedSession(page, 'PATIENT');
+    await page.goto('/');
+
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole('link', { name: 'Se connecter' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'Se connecter' }).click();
+    await expect(page).toHaveURL(/\/app$/);
+  });
+
+  test('activation buttons are restored after browser back navigation', async ({ page }) => {
+    await seedAuthenticatedSession(page, 'PATIENT');
+    await page.goto('/app');
+    await page.getByRole('button', { name: 'Plus tard' }).click();
+
+    await page.getByRole('button', { name: 'Hyperactivation' }).click();
+    await expect(page).toHaveURL(/\/hyperactivation$/);
+    await page.goBack();
+
+    const hyperactivationButton = page.getByRole('button', { name: 'Hyperactivation' });
+    await expect(page).toHaveURL(/\/app$/);
+    await expect(hyperactivationButton).toBeEnabled();
+    await hyperactivationButton.click();
+    await expect(page).toHaveURL(/\/hyperactivation$/);
+  });
+
   test('temporary session validation failure does not log out the patient', async ({ page }) => {
     await seedAuthenticatedSession(page, 'PATIENT');
     await page.unroute('**/api/auth/me');

@@ -4,7 +4,7 @@ import localFont from 'next/font/local';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryParam } from '../hooks/useQueryParam';
-import { isAuthenticatedSession, persistGuestSession } from '../lib/session';
+import { persistGuestSession } from '../lib/session';
 
 const sourGummy = localFont({
   src: './fonts/SourGummy-variable.ttf',
@@ -95,12 +95,6 @@ export default function Home() {
   /* swipe */
   const startX = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (isAuthenticatedSession()) {
-      router.replace('/app');
-    }
-  }, [router]);
-
   const vibe = useCallback((ms = 10) => {
     try { (navigator as any)?.vibrate?.(ms); } catch {}
   }, []);
@@ -120,11 +114,6 @@ export default function Home() {
   }, [i, last, vibe]);
 
   useEffect(() => {
-    if (isAuthenticatedSession()) {
-      router.replace('/app');
-      return;
-    }
-
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') next();
       if (e.key === 'ArrowLeft') prev();

@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import type { Route } from 'next';
 import BackLink from '../../components/BackLink';
 import DoctorDashboard from '../../components/DoctorDashboard';
 import PatientAssignmentCard from '../../components/PatientAssignmentCard';
@@ -39,6 +41,7 @@ const STATE_OPTIONS: Array<{ value: HistoryState; label: string; description: st
 ];
 
 export default function AppHome() {
+  const router = useRouter();
   const session = useSessionInfo();
   const validatedSessionKeyRef = useRef<string | null>(null);
   const [color, setColor] = useState(PRESET[0]);
@@ -83,6 +86,17 @@ export default function AppHome() {
   useEffect(() => { window.localStorage.setItem('readingEnabled', String(readingEnabled)); }, [readingEnabled]);
   useEffect(() => { window.localStorage.setItem('hapticsEnabled', String(hapticsEnabled)); }, [hapticsEnabled]);
   useEffect(() => { window.localStorage.setItem('soundEnabled', String(soundEnabled)); }, [soundEnabled]);
+
+  useEffect(() => {
+    const restoreInteractiveState = () => setSelectionBusy(false);
+    window.addEventListener('pageshow', restoreInteractiveState);
+    window.addEventListener('focus', restoreInteractiveState);
+
+    return () => {
+      window.removeEventListener('pageshow', restoreInteractiveState);
+      window.removeEventListener('focus', restoreInteractiveState);
+    };
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -202,7 +216,7 @@ export default function AppHome() {
     if (selectionBusy) return;
 
     setSelectionBusy(true);
-    window.location.href = href;
+    router.push(href as Route);
   }
 
   async function finalizeLogout() {
