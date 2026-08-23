@@ -83,9 +83,10 @@ export function radialBackground(color: string, intensity = 0.85) {
   return `radial-gradient(1200px 800px at 50% -10%, ${tintColor(color, intensity)} 0%, #F6F7FE 55%)`;
 }
 
-export function ThemeBootstrapScript() {
+export function ThemeBootstrapScript({ nonce }: { nonce?: string }) {
   return (
     <script
+      nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: `(function(){try{var c=localStorage.getItem('themeColor');if(!c)return;c=c.replace(/#/g,'');if(c.length===3){c=c[0]+c[0]+c[1]+c[1]+c[2]+c[2];}c=(c+'000000').slice(0,6);var full='#'+c;var r=parseInt(c.slice(0,2),16);var g=parseInt(c.slice(2,4),16);var b=parseInt(c.slice(4,6),16);document.documentElement.style.setProperty('--theme-color',full);document.documentElement.style.setProperty('--theme-color-rgb',r+','+g+','+b);window.__THEME_COLOR__=full;}catch(e){}})();`
       }}

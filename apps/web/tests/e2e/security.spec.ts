@@ -18,6 +18,10 @@ test('critical pages are protected by CSP without browser violations', async ({ 
     expect(policy).toContain("default-src 'self'");
     expect(policy).toContain("object-src 'none'");
     expect(policy).toContain("frame-ancestors 'none'");
+    const scriptPolicy = policy.match(/(?:^|;\s*)script-src\s+([^;]+)/)?.[1] ?? '';
+    expect(scriptPolicy).toContain("'strict-dynamic'");
+    expect(scriptPolicy).toMatch(/'nonce-[A-Za-z0-9+/=]+'/);
+    expect(scriptPolicy).not.toContain("'unsafe-inline'");
     await expect(page.locator('body')).toBeVisible();
   }
 

@@ -34,9 +34,10 @@ function hasSeenSplash() {
   }
 }
 
-export function SplashBootstrapScript() {
+export function SplashBootstrapScript({ nonce }: { nonce?: string }) {
   return (
     <script
+      nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: `(function(){try{var seen=sessionStorage.getItem('${SESSION_KEY}')==='true';document.documentElement.dataset.mawjaSplashSeen=seen?'true':'false';}catch(e){document.documentElement.dataset.mawjaSplashSeen='false';}})();`,
       }}
