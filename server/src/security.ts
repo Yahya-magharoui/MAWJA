@@ -32,6 +32,11 @@ function cleanupExpiredEntries(now: number) {
 
 export function createRateLimitMiddleware(options: RateLimitOptions) {
   return (request: Request, response: Response, next: NextFunction) => {
+    if (request.method === 'OPTIONS') {
+      next();
+      return;
+    }
+
     const now = Date.now();
     cleanupExpiredEntries(now);
 

@@ -25,6 +25,13 @@ async function bootstrap() {
 
   expressApp.disable('x-powered-by');
   expressApp.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : 0);
+  app.enableCors({
+    origin: createCorsOriginChecker(allowedOrigins),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Disposition'],
+  });
   app.use(securityHeadersMiddleware);
   app.use(json({ limit: '1mb' }));
   app.use(
@@ -44,13 +51,6 @@ async function bootstrap() {
     })
   );
   app.setGlobalPrefix('api');
-  app.enableCors({
-    origin: createCorsOriginChecker(allowedOrigins),
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Content-Disposition'],
-  });
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(
