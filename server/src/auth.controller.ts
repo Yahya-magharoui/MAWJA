@@ -952,6 +952,10 @@ export class AuthController {
             where: { id: user.id },
             data: { doctorProfileId: null },
           });
+          await tx.$executeRaw`
+            DELETE FROM "DoctorAssignmentRequest"
+            WHERE "doctorId" = ${doctor.id}
+          `;
           await tx.doctor.delete({
             where: { id: doctor.id },
           });
@@ -978,6 +982,14 @@ export class AuthController {
             where: { id: user.id },
             data: { patientProfileId: null },
           });
+          await tx.$executeRaw`
+            DELETE FROM "DoctorAssignmentRequest"
+            WHERE "patientId" = ${patient.id}
+          `;
+          await tx.$executeRaw`
+            DELETE FROM "NavigationEvent"
+            WHERE "patientId" = ${patient.id}
+          `;
           await tx.activityLog.deleteMany({
             where: { patientId: patient.id },
           });
