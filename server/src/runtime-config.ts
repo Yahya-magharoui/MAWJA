@@ -100,6 +100,7 @@ export function assertRuntimeConfig() {
   const passwordResetEnabled =
     process.env.PASSWORD_RESET_EMAIL_ENABLED === 'true' || emailVerificationEnabled;
   const mailFeaturesEnabled = emailVerificationEnabled || passwordResetEnabled;
+  const redisUrl = process.env.REDIS_URL?.trim();
 
   requireEnv('DATABASE_URL', process.env.DATABASE_URL);
   parsePositiveInteger('PORT', process.env.PORT, 3000);
@@ -115,6 +116,13 @@ export function assertRuntimeConfig() {
     15 * 60_000
   );
   parsePositiveInteger('AUTH_RATE_LIMIT_MAX', process.env.AUTH_RATE_LIMIT_MAX, 30);
+  if (redisUrl) {
+    assertUrl('REDIS_URL', redisUrl);
+    const protocol = new URL(redisUrl).protocol;
+    if (protocol !== 'redis:' && protocol !== 'rediss:') {
+      throw new Error('REDIS_URL doit utiliser le protocole redis:// ou rediss://.');
+    }
+  }
   parsePositiveInteger(
     'EMAIL_VERIFICATION_EXPIRY_HOURS',
     process.env.EMAIL_VERIFICATION_EXPIRY_HOURS,

@@ -9,6 +9,7 @@ NODE_ENV=production
 DATABASE_URL=COLLER_URL_SUPABASE_TRANSACTION_POOLER
 AUTH_TOKEN_SECRET=GENERER_UN_SECRET_LONG_ET_ALEATOIRE
 AUTH_TOKEN_TTL_SECONDS=604800
+REDIS_URL=${{Redis.REDIS_URL}}
 TRUST_PROXY=true
 ALLOWED_ORIGINS=WEB_PUBLIC_URL
 WEB_APP_URL=WEB_PUBLIC_URL
@@ -35,6 +36,7 @@ RESEND_FROM_EMAIL=no-reply@mail.kalymap.com
 - `PORT` est injecté automatiquement par Railway ;
 - `DIRECT_URL` n’est pas utilisée au runtime actuel ;
 - `JWT_SECRET` est seulement un ancien alias de compatibilité, utiliser `AUTH_TOKEN_SECRET`.
+- `REDIS_URL` peut être ajoutée automatiquement comme référence après avoir créé un service Redis dans le même projet Railway.
 
 Si plusieurs domaines web doivent être autorisés, les séparer par des virgules dans `ALLOWED_ORIGINS`. `WEB_APP_URL` doit rester l’unique URL canonique utilisée dans les liens envoyés par e-mail.
 
@@ -56,6 +58,7 @@ Générer `AUTH_TOKEN_SECRET` localement avec `openssl rand -base64 48`, puis co
 - En production, le cookie de session est émis en `HttpOnly` + `Secure` + `SameSite=Lax` avec un nom préfixé `__Secure-`.
 - Le serveur crée automatiquement la table isolée `AuthSession` avec `CREATE TABLE IF NOT EXISTS`; aucune migration Prisma legacy ne doit être lancée.
 - Une déconnexion révoque la session courante et une réinitialisation du mot de passe révoque toutes les sessions du compte.
+- Avec `REDIS_URL`, les compteurs de limitation sont partagés entre les instances ; sans Redis, le serveur conserve un repli local en mémoire.
 - `ALLOWED_ORIGINS` et `WEB_APP_URL` doivent être des URL HTTPS valides.
 - L’origine de `WEB_APP_URL` doit aussi être présente dans `ALLOWED_ORIGINS`.
 - `TRUST_PROXY=true` est requis derrière Railway pour refléter correctement le contexte HTTPS côté Express.

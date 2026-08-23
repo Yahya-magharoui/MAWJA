@@ -1,59 +1,34 @@
 import type { NextFunction, Request, Response } from 'express';
+import type { RateLimitService } from './rate-limit.service';
 
 type RateLimitOptions = {
   key: string;
   windowMs: number;
   max: number;
+  paths?: string[];
 };
-
-type RateLimitEntry = {
-  count: number;
-  resetAt: number;
-};
-
-const rateLimitStore = new Map<string, RateLimitEntry>();
 
 function getClientIp(request: Request) {
-  const forwardedFor = request.headers['x-forwarded-for'];
-  if (typeof forwardedFor === 'string' && forwardedFor.length > 0) {
-    return forwardedFor.split(',')[0]?.trim() || request.ip;
-  }
-
   return request.ip || request.socket.remoteAddress || 'unknown';
 }
 
-function cleanupExpiredEntries(now: number) {
-  for (const [key, entry] of rateLimitStore.entries()) {
-    if (entry.resetAt <= now) {
-      rateLimitStore.delete(key);
-    }
-  }
-}
-
-export function createRateLimitMiddleware(options: RateLimitOptions) {
-  return (request: Request, response: Response, next: NextFunction) => {
+export function createRateLimitMiddleware(options: RateLimitOptions, store: RateLimitService) {
+  return async (request: Request, response: Response, next: NextFunction) => {
     if (request.method === 'OPTIONS') {
       next();
       return;
     }
 
-    const now = Date.now();
-    cleanupExpiredEntries(now);
-
-    const identifier = `${options.key}:${getClientIp(request)}`;
-    const existingEntry = rateLimitStore.get(identifier);
-
-    if (!existingEntry || existingEntry.resetAt <= now) {
-      rateLimitStore.set(identifier, {
-        count: 1,
-        resetAt: now + options.windowMs,
-      });
+    if (options.paths && !options.paths.includes(request.path)) {
       next();
       return;
     }
 
-    if (existingEntry.count >= options.max) {
-      response.setHeader('Retry-After', Math.ceil((existingEntry.resetAt - now) / 1000));
+    const identifier = `${options.key}:${getClientIp(request)}`;
+    const result = await store.consume(identifier, options.windowMs, options.max);
+
+    if (!result.allowed) {
+      response.setHeader('Retry-After', result.retryAfterSeconds);
       response.status(429).json({
         statusCode: 429,
         message: 'Trop de requêtes. Réessaie dans quelques instants.',
@@ -61,8 +36,6 @@ export function createRateLimitMiddleware(options: RateLimitOptions) {
       return;
     }
 
-    existingEntry.count += 1;
-    rateLimitStore.set(identifier, existingEntry);
     next();
   };
 }

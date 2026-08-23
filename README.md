@@ -85,7 +85,7 @@ Important :
 - l’API Nest utilise encore une base PostgreSQL legacy via SQL brut ;
 - pour resynchroniser Prisma avec la base réelle, utilise `pnpm --filter server prisma:db:pull`.
 - en production, limite toujours le CORS avec `ALLOWED_ORIGINS=https://ton-web.vercel.app` ;
-- l’API applique une limitation simple des requêtes via `API_RATE_LIMIT_*` et `AUTH_RATE_LIMIT_*`.
+- l’API applique une limitation des requêtes via `API_RATE_LIMIT_*` et `AUTH_RATE_LIMIT_*` ; si `REDIS_URL` est définie, les compteurs sont partagés entre les instances.
 
 API dispo sur : [http://localhost:3000](http://localhost:3000)  
 Healthcheck : [http://localhost:3000/api/health](http://localhost:3000/api/health)
@@ -175,6 +175,7 @@ Variables minimales de production :
 DATABASE_URL=postgresql://...
 PORT=3000
 AUTH_TOKEN_SECRET=une-cle-longue-et-aleatoire
+REDIS_URL=redis://...
 TRUST_PROXY=true
 ALLOWED_ORIGINS=https://ton-web.vercel.app,https://ton-domaine.com
 WEB_APP_URL=https://ton-web.vercel.app

@@ -11,11 +11,13 @@ import {
   securityHeadersMiddleware,
 } from './security';
 import { assertRuntimeConfig } from './runtime-config';
+import { RateLimitService } from './rate-limit.service';
 
 async function bootstrap() {
   assertRuntimeConfig();
   const app = await NestFactory.create(AppModule, { cors: false });
   const expressApp = app.getHttpAdapter().getInstance();
+  const rateLimitService = app.get(RateLimitService);
   const isProduction = process.env.NODE_ENV === 'production';
   const allowedOrigins = parseAllowedOrigins();
   const apiRateLimitWindowMs = Number(process.env.API_RATE_LIMIT_WINDOW_MS || 60_000);
@@ -35,20 +37,36 @@ async function bootstrap() {
   app.use(securityHeadersMiddleware);
   app.use(json({ limit: '1mb' }));
   app.use(
-    createRateLimitMiddleware({
-      key: 'api',
-      windowMs: Number.isFinite(apiRateLimitWindowMs) ? apiRateLimitWindowMs : 60_000,
-      max: Number.isFinite(apiRateLimitMax) ? apiRateLimitMax : 120,
-    })
+    createRateLimitMiddleware(
+      {
+        key: 'api',
+        windowMs: Number.isFinite(apiRateLimitWindowMs) ? apiRateLimitWindowMs : 60_000,
+        max: Number.isFinite(apiRateLimitMax) ? apiRateLimitMax : 120,
+      },
+      rateLimitService
+    )
   );
   app.use(
     '/api/auth',
     authNoStoreMiddleware,
-    createRateLimitMiddleware({
-      key: 'auth',
-      windowMs: Number.isFinite(authRateLimitWindowMs) ? authRateLimitWindowMs : 15 * 60_000,
-      max: Number.isFinite(authRateLimitMax) ? authRateLimitMax : 30,
-    })
+    createRateLimitMiddleware(
+      {
+        key: 'auth',
+        windowMs: Number.isFinite(authRateLimitWindowMs) ? authRateLimitWindowMs : 15 * 60_000,
+        max: Number.isFinite(authRateLimitMax) ? authRateLimitMax : 30,
+        paths: [
+          '/signup',
+          '/register',
+          '/check-email',
+          '/verify-email',
+          '/forgot-password',
+          '/reset-password',
+          '/login',
+          '/account',
+        ],
+      },
+      rateLimitService
+    )
   );
   app.setGlobalPrefix('api');
   const port = process.env.PORT || 3000;
