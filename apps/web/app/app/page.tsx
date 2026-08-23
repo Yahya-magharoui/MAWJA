@@ -216,22 +216,21 @@ export default function AppHome() {
     router.push(href as Route);
   }
 
-  async function finalizeLogout() {
-    try {
-      await fetch(buildApiUrl('/auth/logout'), {
-        method: 'POST',
-        credentials: 'include',
-      });
-    } catch {
-      // Best effort local cleanup.
-    }
+  function finalizeLogout() {
+    void fetch(buildApiUrl('/auth/logout'), {
+      method: 'POST',
+      credentials: 'include',
+      keepalive: true,
+    }).catch(() => {
+      // La session locale doit rester supprimée même si le réseau mobile est indisponible.
+    });
 
     clearSession();
     setOpenAssignmentModal(false);
     setOpenSettings(false);
     setOpenLogoutCheckin(false);
     setLogoutBusy(false);
-    window.location.replace('/login');
+    router.replace('/login');
   }
 
   async function tryLogLogoutState(state: HistoryState) {
