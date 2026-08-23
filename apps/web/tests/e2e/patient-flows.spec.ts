@@ -98,6 +98,24 @@ test.describe('patient app flows', () => {
     await expect(page.getByRole('heading', { name: 'Comment tu te sens maintenant ?' })).toHaveCount(0);
   });
 
+  test('temporary session validation failure does not log out the patient', async ({ page }) => {
+    await seedAuthenticatedSession(page, 'PATIENT');
+    await page.unroute('**/api/auth/me');
+    await page.route('**/api/auth/me', async (route) => {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Service temporairement indisponible' }),
+      });
+    });
+
+    await page.goto('/app');
+
+    await expect(page).toHaveURL(/\/app$/);
+    await expect(page.getByRole('heading', { name: 'Comment te sens-tu maintenant ?' })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('accountStatus'))).toBe('registered');
+  });
+
   test('authenticated patient can logout from the logout popup with later', async ({ page }) => {
     await seedAuthenticatedSession(page, 'PATIENT');
     await page.goto('/app');

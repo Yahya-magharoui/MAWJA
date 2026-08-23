@@ -51,7 +51,7 @@ export async function seedAuthenticatedSession(page: Page, role: SessionRole, em
         return;
       }
 
-      window.localStorage.setItem('authToken', seededToken);
+      window.localStorage.setItem('kalymapAuthToken', seededToken);
       window.localStorage.setItem('accountStatus', 'registered');
       window.localStorage.setItem(
         'guestProfile',
@@ -83,7 +83,7 @@ export async function seedGuestSession(page: Page) {
     }
 
     const guestId = 'guest-e2e';
-    window.localStorage.removeItem('authToken');
+    window.localStorage.removeItem('kalymapAuthToken');
     window.localStorage.setItem('accountStatus', 'guest');
     window.localStorage.setItem('guestId', guestId);
     window.localStorage.setItem(

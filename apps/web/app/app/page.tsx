@@ -121,8 +121,16 @@ export default function AppHome() {
         });
 
         const payload = await response.json().catch(() => ({}));
+        if (response.status === 401 || response.status === 403) {
+          if (!cancelled) {
+            clearSession();
+            window.location.replace('/login');
+          }
+          return;
+        }
+
         if (!response.ok || !payload?.user) {
-          throw new Error('Session invalide');
+          return;
         }
 
         if (cancelled) {
@@ -138,12 +146,7 @@ export default function AppHome() {
           loggedInAt: currentProfile?.loggedInAt,
         }, getAuthToken());
       } catch {
-        if (cancelled) {
-          return;
-        }
-
-        clearSession();
-        window.location.replace('/login');
+        // Une indisponibilité réseau temporaire ne doit pas déconnecter l'utilisateur.
       }
     }
 
