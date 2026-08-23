@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import BackLink from '../../../components/BackLink';
 
 type Card = { label: string; href: string; icon: string };
@@ -37,12 +38,11 @@ export default function SBAHome() {
             className="tile"
           >
             <div style={iconWrap}>
-              <img
+              <Image
                 src={c.icon}
                 alt={c.label}
                 width={44}
                 height={44}
-                loading="lazy"
                 style={{ display:'block', objectFit:'contain' }}
               />
             </div>

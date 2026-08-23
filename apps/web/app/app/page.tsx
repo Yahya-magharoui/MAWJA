@@ -679,11 +679,11 @@ function Card({
   return (
     <article
       aria-label={title}
-      aria-disabled={disabled}
       style={{ ...styles.card, ...(disabled ? styles.cardDisabled : null), ...styleExtra }}
     >
       <div
         role="button"
+        aria-disabled={disabled}
         tabIndex={disabled ? -1 : 0}
         style={styles.cardInner}
         onClick={disabled ? undefined : onClick}
