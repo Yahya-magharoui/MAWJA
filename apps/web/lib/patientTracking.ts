@@ -1,10 +1,23 @@
 'use client';
 
 import { buildApiUrl } from './api';
-import { getSessionProfile, isPatientSession } from './session';
+import { getAuthHeaders, getSessionProfile, isPatientSession } from './session';
 const LAST_HISTORY_ID_KEY = 'mawja-last-history-id';
 const LOCAL_FAVORITE_KEYS_PREFIX = 'mawja-favorite-exercise-keys';
 const FAVORITES_EVENT = 'mawja-favorites-changed';
+
+function authenticatedFetch(path: string, init: RequestInit = {}) {
+  const headers = new Headers(init.headers);
+  for (const [name, value] of Object.entries(getAuthHeaders())) {
+    headers.set(name, value);
+  }
+
+  return fetch(buildApiUrl(path), {
+    ...init,
+    credentials: 'include',
+    headers,
+  });
+}
 
 export type HistoryState = 'HYPER' | 'TOLERANCE' | 'HYPO';
 export type ActivityCategory =
@@ -172,7 +185,7 @@ export function removeLocalFavoriteKey(key: string) {
 export async function postHistoryEntry(state: HistoryState) {
   if (!isPatientSession()) return null;
 
-  const response = await fetch(buildApiUrl('/histories'), {
+  const response = await authenticatedFetch('/histories', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -200,7 +213,7 @@ export async function postHistoryEntry(state: HistoryState) {
 export async function fetchPatientHistories(): Promise<PatientHistory[]> {
   if (!isPatientSession()) return [];
 
-  const response = await fetch(buildApiUrl('/histories/me'), {
+  const response = await authenticatedFetch('/histories/me', {
     credentials: 'include',
     cache: 'no-store',
   });
@@ -216,7 +229,7 @@ export async function fetchPatientHistories(): Promise<PatientHistory[]> {
 export async function fetchPatientGoals(): Promise<PatientGoal[]> {
   if (!isPatientSession()) return [];
 
-  const response = await fetch(buildApiUrl('/goals/me'), {
+  const response = await authenticatedFetch('/goals/me', {
     credentials: 'include',
     cache: 'no-store',
   });
@@ -234,7 +247,7 @@ export async function createPatientGoal(goal: GoalPayload): Promise<PatientGoal>
     throw new Error('Connecte-toi pour enregistrer un objectif.');
   }
 
-  const response = await fetch(buildApiUrl('/goals'), {
+  const response = await authenticatedFetch('/goals', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -256,7 +269,7 @@ export async function updatePatientGoal(goalId: number, goal: GoalPayload): Prom
     throw new Error('Connecte-toi pour modifier un objectif.');
   }
 
-  const response = await fetch(buildApiUrl(`/goals/${goalId}`), {
+  const response = await authenticatedFetch(`/goals/${goalId}`, {
     method: 'PUT',
     credentials: 'include',
     headers: {
@@ -278,7 +291,7 @@ export async function deletePatientGoal(goalId: number) {
     throw new Error('Connecte-toi pour supprimer un objectif.');
   }
 
-  const response = await fetch(buildApiUrl(`/goals/${goalId}`), {
+  const response = await authenticatedFetch(`/goals/${goalId}`, {
     method: 'DELETE',
     credentials: 'include',
   });
@@ -294,7 +307,7 @@ export async function deletePatientGoal(goalId: number) {
 export async function fetchPatientNotes(): Promise<PatientNote[]> {
   if (!isPatientSession()) return [];
 
-  const response = await fetch(buildApiUrl('/notes/me'), {
+  const response = await authenticatedFetch('/notes/me', {
     credentials: 'include',
     cache: 'no-store',
   });
@@ -312,7 +325,7 @@ export async function createPatientNote(note: NotePayload): Promise<PatientNote>
     throw new Error('Connecte-toi pour enregistrer une note.');
   }
 
-  const response = await fetch(buildApiUrl('/notes'), {
+  const response = await authenticatedFetch('/notes', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -334,7 +347,7 @@ export async function updatePatientNote(noteId: number, note: NotePayload): Prom
     throw new Error('Connecte-toi pour modifier une note.');
   }
 
-  const response = await fetch(buildApiUrl(`/notes/${noteId}`), {
+  const response = await authenticatedFetch(`/notes/${noteId}`, {
     method: 'PUT',
     credentials: 'include',
     headers: {
@@ -356,7 +369,7 @@ export async function deletePatientNote(noteId: number) {
     throw new Error('Connecte-toi pour supprimer une note.');
   }
 
-  const response = await fetch(buildApiUrl(`/notes/${noteId}`), {
+  const response = await authenticatedFetch(`/notes/${noteId}`, {
     method: 'DELETE',
     credentials: 'include',
   });
@@ -372,7 +385,7 @@ export async function deletePatientNote(noteId: number) {
 export async function fetchPatientFavorites(): Promise<PatientFavorite[]> {
   if (!isPatientSession()) return [];
 
-  const response = await fetch(buildApiUrl('/favorites/me'), {
+  const response = await authenticatedFetch('/favorites/me', {
     credentials: 'include',
     cache: 'no-store',
   });
@@ -390,7 +403,7 @@ export async function createPatientFavorite(favorite: FavoritePayload): Promise<
     throw new Error('Connecte-toi pour enregistrer un favori.');
   }
 
-  const response = await fetch(buildApiUrl('/favorites'), {
+  const response = await authenticatedFetch('/favorites', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -412,7 +425,7 @@ export async function deletePatientFavorite(favoriteId: number) {
     throw new Error('Connecte-toi pour supprimer un favori.');
   }
 
-  const response = await fetch(buildApiUrl(`/favorites/${favoriteId}`), {
+  const response = await authenticatedFetch(`/favorites/${favoriteId}`, {
     method: 'DELETE',
     credentials: 'include',
   });
@@ -448,7 +461,7 @@ export async function logActivity(activity: ActivityPayload) {
     throw new Error('Aucun historique récent disponible pour lier l’activité.');
   }
 
-  const response = await fetch(buildApiUrl('/activities'), {
+  const response = await authenticatedFetch('/activities', {
     method: 'POST',
     credentials: 'include',
     headers: {
