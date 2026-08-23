@@ -248,7 +248,8 @@ export default function BreathingTube() {
   }
 
   return (
-    <main style={page}>
+    <main style={page} className="coherence-page">
+      <style>{css}</style>
       <header style={hdr}>
         <BackLink href="/hyperactivation" style={back} />
         <h1 style={{ margin: 0, fontSize: 18, color: '#4B5563' }}>Cohérence cardiaque</h1>
@@ -262,8 +263,8 @@ export default function BreathingTube() {
         </button>
       </header>
 
-      <section style={scene}>
-        <div ref={trackRef} style={tube}>
+      <section style={scene} className="coherence-scene">
+        <div ref={trackRef} style={tube} className="coherence-tube">
           <div
             style={{
               ...fill,
@@ -294,7 +295,7 @@ export default function BreathingTube() {
         </div>
       </section>
 
-      <footer style={controls}>
+      <footer style={controls} className="coherence-controls">
         {isIdle && <button onClick={start} style={btnPrimary}>Démarrer</button>}
         {isPreparing && <button onClick={stop} style={btnDanger}>Arrêter</button>}
         {isRun && <button onClick={pause} style={btn}>Pause</button>}
@@ -302,7 +303,7 @@ export default function BreathingTube() {
         {!isIdle && !isPreparing && <button onClick={stop} style={btnDanger}>Arrêter</button>}
       </footer>
 
-      <section style={protocolCard}>
+      <section style={protocolCard} className="coherence-protocol-card">
         <div style={protocolTitle}>Protocole 3-6-5</div>
         <ul style={protocolList}>
           <li>3 fois par jour</li>
@@ -462,3 +463,37 @@ const btnDanger: React.CSSProperties = {
   borderColor: 'rgba(220,38,38,.24)',
   boxShadow: '0 8px 18px rgba(15,23,42,.06)',
 };
+
+const css = `
+  @media (max-width: 640px) {
+    .coherence-page {
+      overflow-x: clip;
+    }
+
+    .coherence-scene {
+      padding: 4px 12px 0 !important;
+      gap: 18px !important;
+    }
+
+    .coherence-tube {
+      width: min(84px, 28vw) !important;
+      height: min(50vh, 420px) !important;
+      min-height: 260px !important;
+    }
+
+    .coherence-controls {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+
+    .coherence-controls button {
+      width: min(100%, 320px);
+      min-width: 0 !important;
+    }
+
+    .coherence-protocol-card {
+      width: calc(100% - 24px) !important;
+      margin-bottom: 16px !important;
+    }
+  }
+`;

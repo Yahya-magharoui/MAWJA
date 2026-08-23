@@ -6,30 +6,31 @@
 - Root directory : `apps/web`
 - Build command : `pnpm build`
 - Output directory : `.next`
+- Node.js : `22.x` (déclaré dans `apps/web/package.json`)
 
-## Variables requises
+## Variable à saisir dans Vercel
 
-- `NEXT_PUBLIC_API_URL`
-
-Exemple :
+Remplacer `API_PUBLIC_URL` par l’URL HTTPS publique Railway, en conservant obligatoirement le suffixe `/api`.
 
 ```env
-NEXT_PUBLIC_API_URL=https://server-production-d277.up.railway.app/api
+NEXT_PUBLIC_API_URL=API_PUBLIC_URL/api
 ```
 
-## Variables API minimales côté backend
+Ajouter cette variable aux environnements Vercel utilisés :
+
+- `Production` avec l’URL publique définitive de Railway ;
+- `Preview` avec la même API uniquement si les previews Vercel sont ajoutées explicitement à `ALLOWED_ORIGINS` côté Railway ;
+- `Development` n’est pas nécessaire pour le développement local, qui utilise `apps/web/.env`.
+
+Ne pas ajouter dans Vercel les secrets du serveur (`DATABASE_URL`, `AUTH_TOKEN_SECRET`, `RESEND_API_KEY`) : ils appartiennent uniquement à Railway.
+
+## Valeurs correspondantes dans Railway
 
 ```env
 NODE_ENV=production
 TRUST_PROXY=true
-ALLOWED_ORIGINS=https://votre-app.vercel.app,https://votre-domaine.com
+ALLOWED_ORIGINS=https://votre-app.vercel.app
 WEB_APP_URL=https://votre-app.vercel.app
-```
-
-Variables frontend utiles selon l’environnement :
-
-```env
-NEXT_PUBLIC_API_URL=https://votre-api.railway.app/api
 ```
 
 ## Points sensibles cookies / session

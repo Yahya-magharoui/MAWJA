@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import BackLink from '../../components/BackLink';
 
 export default function PrivacyPage() {
@@ -11,49 +10,79 @@ export default function PrivacyPage() {
       </div>
       <section style={card}>
         <h1 style={{ fontSize: 26, marginBottom: 12 }}>Politique de confidentialité</h1>
+        <p style={updatedAt}>Dernière mise à jour : 23 août 2026</p>
         <p style={{ marginBottom: 10 }}>
-          Kalymap est éditée par le Dr Kalyma (psychiatre). Contact : <a href="mailto:support@kallymap.com">support@kallymap.com</a>.
-          Les données sont hébergées dans l’Union Européenne et font l’objet d’une protection conforme au RGPD.
+          Kalymap est éditée par Dr Yasmine Bendani. Contact : <a href="mailto:contact@kalymap.fr">contact@kalymap.fr</a>.
+          Les données sont hébergées via des prestataires techniques et font l’objet de mesures destinées à en assurer
+          la confidentialité, l’intégrité et la disponibilité.
         </p>
         <h2 style={subtitle}>Données collectées</h2>
-        <p>Nous recueillons uniquement les informations nécessaires à l’accompagnement :</p>
+        <p>Nous recueillons les informations nécessaires au fonctionnement de l’application :</p>
         <ul style={list}>
-          <li>Adresse e-mail et mot de passe pour la création de compte et la connexion sécurisée.</li>
-          <li>Préférences locales (thème, exercices favoris, notes) stockées sur votre appareil.</li>
-          <li>Éventuelles entrées personnelles (journal émotionnel, routines) que vous saisissez volontairement.</li>
+          <li>Adresse e-mail, nom éventuel, mot de passe conservé sous forme hachée et informations de session pour la création de compte et la connexion.</li>
+          <li>Contenus saisis volontairement : notes, objectifs, favoris, historique d’utilisation et états émotionnels si vous les renseignez.</li>
+          <li>Préférences locales ou techniques stockées sur votre appareil, comme certains réglages d’interface.</li>
+          <li>Données techniques nécessaires à la sécurité et au fonctionnement, notamment le cookie d’authentification et les données utilisées pour limiter les requêtes abusives.</li>
         </ul>
 
-        <h2 style={subtitle}>Pourquoi ces données ?</h2>
+        <h2 style={subtitle}>Finalités et bases légales</h2>
         <p>
-          Base légale : exécution du service et consentement explicite de l’utilisateur. Les informations sont utilisées pour :
+          Les informations sont traitées principalement pour exécuter le service demandé, sécuriser la plateforme et gérer
+          la relation avec l’utilisateur. Elles sont utilisées pour :
         </p>
         <ul style={list}>
-          <li>Authentifier votre accès, synchroniser vos exercices et enregistrer vos progrès.</li>
-          <li>Personnaliser votre parcours bien-être.</li>
-          <li>Assurer la stabilité et la sécurité de la plateforme.</li>
+          <li>Créer et administrer votre compte, vous authentifier et vous permettre d’utiliser Kalymap.</li>
+          <li>Enregistrer vos données d’accompagnement, votre routine et certains éléments de suivi si vous choisissez de les renseigner.</li>
+          <li>Assurer la stabilité, la maintenance, la sécurité et la prévention des abus.</li>
+          <li>Envoyer des e-mails techniques liés au compte, notamment l’activation ou la réinitialisation du mot de passe lorsque ces fonctions sont activées.</li>
         </ul>
 
-        <h2 style={subtitle}>Partage et conservation</h2>
+        <h2 style={subtitle}>Prestataires techniques</h2>
         <p>
-          Les données ne sont jamais vendues ni communiquées à des tiers non autorisés. Elles peuvent être traitées
-          par des sous-traitants techniques (hébergeur, service d’e-mail) soumis à des clauses de confidentialité.
-          Elles sont conservées tant que votre compte reste actif ; en cas d’inactivité prolongée ou sur demande,
-          les informations sont archivées puis supprimées de manière sécurisée.
+          Les données ne sont pas vendues. Elles peuvent être traitées uniquement pour fournir le service par Supabase
+          (base de données), Railway (API), Vercel (application web) et Resend (e-mails d’activation et de réinitialisation).
+          Ces prestataires agissent dans le cadre de leurs services techniques respectifs.
         </p>
 
-        <h2 style={subtitle}>Vos droits (RGPD)</h2>
+        <h2 style={subtitle}>Durées de conservation</h2>
+        <ul style={list}>
+          <li>Les données du compte et les contenus associés sont conservés tant que le compte existe.</li>
+          <li>Une demande d’inscription non finalisée expire après 24 heures par défaut.</li>
+          <li>Une demande de réinitialisation du mot de passe expire après 2 heures par défaut.</li>
+          <li>Les demandes expirées sont supprimées automatiquement au démarrage du serveur puis périodiquement, toutes les 6 heures par défaut.</li>
+          <li>Les jetons déjà utilisés peuvent être conservés jusqu’à 24 heures afin de détecter leur réutilisation, puis sont supprimés automatiquement.</li>
+          <li>Les préférences enregistrées uniquement dans le navigateur restent présentes jusqu’à leur effacement depuis le navigateur ou la suppression de ses données locales.</li>
+        </ul>
+
+        <h2 style={subtitle}>Export et suppression du compte</h2>
+        <p>
+          Un utilisateur connecté peut, depuis les paramètres, télécharger un export JSON de son profil et de ses
+          données associées : historique, activités, objectifs, notes et favoris. Le mot de passe, les cookies et les jetons
+          de sécurité ne figurent pas dans cet export.
+        </p>
+        <p>
+          Un utilisateur connecté peut également supprimer définitivement son compte depuis les paramètres après une
+          confirmation explicite. Cette opération supprime le compte, le profil utilisateur et les historiques, activités,
+          objectifs, notes, favoris et demandes temporaires qui lui sont associés. Elle est irréversible.
+        </p>
+
+        <h2 style={subtitle}>Vos autres droits (RGPD)</h2>
         <p>
           Vous disposez des droits d’accès, de rectification, d’effacement, de limitation, d’opposition et de portabilité.
-          Pour exercer ces droits ou retirer votre consentement, envoyez une demande à
-          <a href="mailto:support@kallymap.com"> support@kallymap.com</a> depuis l’adresse liée à votre compte.
-          Votre requête sera traitée sous 30 jours.
+          L’export et l’effacement sont accessibles directement dans les paramètres du compte utilisateur. Pour toute autre
+          demande, difficulté ou exercice d’un droit qui ne serait pas disponible dans l’application, écrivez à
+          <a href="mailto:contact@kalymap.fr"> contact@kalymap.fr</a> depuis l’adresse liée à votre compte.
+          Vous disposez également du droit de saisir l’autorité de contrôle compétente.
         </p>
 
-        <h2 style={subtitle}>Sécurité et responsabilité médicale</h2>
+        <h2 style={subtitle}>Données sensibles, sécurité et responsabilité</h2>
         <p>
           Kalymap n’est pas un dispositif médical et ne remplace pas une consultation individuelle avec un médecin
-          ou un psychologue. En cas d’urgence ou de risque immédiat, contactez les services adaptés (SOS, SAMU, etc.).
-          Des mesures techniques (chiffrement TLS, contrôle d’accès) protègent vos informations.
+          ou un psychologue. Certaines informations que vous saisissez peuvent révéler des éléments très personnels relatifs
+          à votre bien-être émotionnel ou psychique. Nous recommandons donc de ne renseigner que les informations nécessaires
+          à votre usage. Des mesures techniques et organisationnelles sont mises en place pour protéger les informations, sans
+          qu’aucun dispositif ne puisse garantir un risque nul. En cas d’urgence ou de danger immédiat, contactez les numéros
+          d’urgence, SOS Amitié, le 3114 ou un professionnel adapté.
         </p>
 
       </section>
@@ -93,4 +122,10 @@ const subtitle: React.CSSProperties = {
   fontSize: 18,
   marginTop: 18,
   marginBottom: 8,
+};
+
+const updatedAt: React.CSSProperties = {
+  margin: '-4px 0 18px',
+  color: '#64748b',
+  fontSize: 13,
 };

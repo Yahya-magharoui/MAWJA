@@ -1,9 +1,17 @@
 'use client';
 import Image from 'next/image';
+import localFont from 'next/font/local';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryParam } from '../hooks/useQueryParam';
 import { isAuthenticatedSession, persistGuestSession } from '../lib/session';
+
+const sourGummy = localFont({
+  src: './fonts/SourGummy-variable.ttf',
+  display: 'swap',
+  fallback: ['system-ui', 'sans-serif'],
+  weight: '100 900',
+});
 
 /* —— slides —— */
 type Slide = {
@@ -65,7 +73,7 @@ function ArcTitle({ text }: { text: string }) {
   const curve = 8; // degree spacing
 
   return (
-    <div style={styles.titleArch} aria-hidden>
+    <div className={sourGummy.className} style={styles.titleArch} aria-hidden>
       {chars.map((char, idx) => (
         <span key={`${char}-${idx}`} style={{ padding:'0 1px' }}>
           {char === ' ' ? '\u00A0' : char}
@@ -148,7 +156,8 @@ export default function Home() {
   const slide = SLIDES[i];
 
   return (
-    <main style={styles.page}>
+    <main className="landing-page-shell" style={styles.page}>
+      <style>{css}</style>
       <header style={styles.langRow}>
         <div />
         <div style={styles.langs}>
@@ -178,7 +187,7 @@ export default function Home() {
           <Image src={slide.img} alt={slide.alt} fill sizes="(max-width: 520px) 90vw, 520px" style={{objectFit:'contain'}} />
         </div>
 
-        <div style={styles.textBlock}>
+        <div className={sourGummy.className} style={styles.textBlock}>
           {slide.lines.map((t, k) => (
             <p key={k} style={styles.p}>{t}</p>
           ))}
@@ -204,7 +213,7 @@ export default function Home() {
         <button onClick={startGuest} style={styles.btnGhost}>Commencer sans compte</button>
       </section>
 
-      <footer style={styles.footer}>
+      <footer className="landing-footer" style={styles.footer}>
         <a href="/sos" style={styles.footerLink}>Numéros d’urgence</a>
         <span style={{opacity:.4}}> • </span>
         <a href="/privacy" style={styles.footerLink}>Confidentialité</a>
@@ -223,7 +232,6 @@ const styles: Record<string, React.CSSProperties> = {
     gridTemplateRows:'auto 1fr auto auto',
     gap:10,
     background:'#F6F7FE',
-    fontFamily:'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
     color:'#0f172a',
   },
   langRow: {
@@ -294,3 +302,21 @@ const styles: Record<string, React.CSSProperties> = {
     textDecoration:'underline'
   }
 };
+
+const css = `
+  @media (max-width: 760px) {
+    .landing-footer {
+      flex-wrap: wrap;
+      justify-content: center;
+      text-align: center;
+      padding: 0 12px;
+      row-gap: 6px;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .landing-page-shell {
+      overflow-x: clip;
+    }
+  }
+`;

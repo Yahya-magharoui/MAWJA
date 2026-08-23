@@ -62,7 +62,7 @@ export class NotesController {
     const patientId = user.patientProfileId;
 
     if (!patientId) {
-      throw new HttpException('Profil patient introuvable.', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Profil utilisateur introuvable.', HttpStatus.BAD_REQUEST);
     }
 
     const rows = await this.prisma.$queryRaw<

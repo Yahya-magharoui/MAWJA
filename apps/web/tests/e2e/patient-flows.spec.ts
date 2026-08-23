@@ -120,6 +120,57 @@ test.describe('patient app flows', () => {
     await expect(page.getByRole('heading', { name: 'Se connecter' })).toBeVisible();
   });
 
+  test('authenticated patient must explicitly confirm account deletion', async ({ page }) => {
+    await seedAuthenticatedSession(page, 'PATIENT');
+    let deletionRequested = false;
+    await page.route('**/api/auth/account', async (route) => {
+      deletionRequested = route.request().method() === 'DELETE';
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true }),
+      });
+    });
+    await page.goto('/app');
+
+    await page.getByRole('button', { name: 'Plus tard' }).click();
+    await page.getByRole('button', { name: 'Paramètres' }).click();
+    await page.getByRole('button', { name: 'Supprimer mon compte' }).click();
+
+    const deleteButton = page.getByRole('button', { name: 'Supprimer définitivement' });
+    await expect(deleteButton).toBeDisabled();
+    await page.getByLabel(/Saisis SUPPRIMER/).fill('SUPPRIMER');
+    await expect(deleteButton).toBeEnabled();
+    await deleteButton.click();
+
+    await page.waitForURL(/\/$/);
+    expect(deletionRequested).toBe(true);
+  });
+
+  test('authenticated patient can download a JSON account export', async ({ page }) => {
+    await seedAuthenticatedSession(page, 'PATIENT');
+    await page.route('**/api/auth/account/export', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'Content-Disposition': 'attachment; filename="kalymap-donnees-test.json"',
+          'Access-Control-Expose-Headers': 'Content-Disposition',
+        },
+        body: JSON.stringify({ formatVersion: 1, account: { role: 'PATIENT' } }),
+      });
+    });
+    await page.goto('/app');
+
+    await page.getByRole('button', { name: 'Plus tard' }).click();
+    await page.getByRole('button', { name: 'Paramètres' }).click();
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Exporter mes données' }).click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toBe('kalymap-donnees-test.json');
+  });
+
   test('doctor account only sees the placeholder screen', async ({ page }) => {
     await seedAuthenticatedSession(page, 'DOCTOR');
     await page.goto('/app');

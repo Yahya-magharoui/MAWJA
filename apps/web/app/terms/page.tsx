@@ -11,9 +11,10 @@ export default function TermsPage() {
       </div>
       <section style={card}>
         <h1 style={title}>Conditions générales d’utilisation</h1>
+        <p style={updatedAt}>Dernière mise à jour : 23 août 2026</p>
 
         <p>
-          Kalymap est éditée par le Dr Kalyma (psychiatre). En utilisant l’application, vous acceptez les présentes
+          Kalymap est éditée par Dr Yasmine Bendani. En utilisant l’application, vous acceptez les présentes
           conditions ainsi que la <Link href="/privacy" style={link}>Politique de confidentialité</Link>.
         </p>
 
@@ -21,7 +22,7 @@ export default function TermsPage() {
         <p>
           Kalymap propose des outils de psychoéducation, des exercices de régulation émotionnelle et un espace pour
           rédiger des notes personnelles. Le service n’est pas un dispositif médical et ne remplace pas un suivi
-          thérapeutique. En cas de détresse, contactez les services d’urgence.
+          thérapeutique. En cas de détresse, contactez les numéros d’urgence, SOS Amitié, le 3114 ou un professionnel adapté.
         </p>
 
         <h2 style={subtitle}>Création et gestion du compte</h2>
@@ -40,13 +41,13 @@ export default function TermsPage() {
 
         <h2 style={subtitle}>Disponibilité du service</h2>
         <p>
-          Nous fournissons Kalymap 24h/24 sous réserve d’opérations de maintenance. Des évolutions techniques peuvent
-          être déployées sans préavis, mais nous nous engageons à préserver la continuité et la sécurité des données.
+          Nous faisons nos meilleurs efforts pour assurer l’accessibilité du service, sous réserve d’opérations de maintenance,
+          d’évolutions techniques, d’incidents ou de contraintes externes. Des interruptions temporaires peuvent survenir.
         </p>
 
         <h2 style={subtitle}>Responsabilité</h2>
         <p>
-          L’application est fournie « en l’état ». Le Dr Kalyma ne peut être tenu responsable d’un usage inapproprié
+          L’application est fournie « en l’état ». Dr Yasmine Bendani ne peut être tenue responsable d’un usage inapproprié
           ni des conséquences liées à l’absence de suivi médical personnalisé. Les informations proposées sont des
           outils d’accompagnement et ne constituent pas un avis médical.
         </p>
@@ -59,9 +60,18 @@ export default function TermsPage() {
 
         <h2 style={subtitle}>Résiliation</h2>
         <p>
-          Vous pouvez clôturer votre compte à tout moment via les paramètres ou en écrivant à
-          <a href="mailto:support@kallymap.com"> support@kallymap.com</a>. Nous nous réservons le droit de suspendre un
-          compte en cas de non-respect des CGU.
+          Vous pouvez supprimer définitivement votre compte depuis les paramètres de l’application après une confirmation
+          explicite. Cette action entraîne la suppression du compte et des données qui lui sont associées et ne peut pas être
+          annulée. En cas de difficulté, vous pouvez écrire à
+          <a href="mailto:contact@kalymap.fr"> contact@kalymap.fr</a>. Nous nous réservons le droit de suspendre un compte
+          en cas de non-respect des CGU.
+        </p>
+
+        <h2 style={subtitle}>Récupération des données</h2>
+        <p>
+          Avant de supprimer votre compte, vous pouvez télécharger depuis les paramètres un export JSON des données de votre
+          compte utilisateur. Cet export contient le profil et les contenus associés disponibles dans Kalymap, mais aucun mot de
+          passe, cookie ou jeton de sécurité.
         </p>
 
       </section>
@@ -96,3 +106,4 @@ const title: React.CSSProperties = { fontSize: 26, marginBottom: 12 };
 const subtitle: React.CSSProperties = { fontSize: 18, marginTop: 18, marginBottom: 6 };
 const list: React.CSSProperties = { paddingLeft: 20, marginTop: 6 };
 const link: React.CSSProperties = { color: '#4f46e5', fontWeight: 600 };
+const updatedAt: React.CSSProperties = { margin: '-4px 0 18px', color: '#64748b', fontSize: 13 };

@@ -97,9 +97,13 @@ export function authNoStoreMiddleware(
 export function parseAllowedOrigins() {
   const rawOrigins = process.env.ALLOWED_ORIGINS;
   const webAppUrl = process.env.WEB_APP_URL?.trim();
+  const developmentOrigins =
+    process.env.NODE_ENV !== 'production'
+      ? ['http://localhost:3001', 'http://127.0.0.1:3001']
+      : [];
 
   if (!rawOrigins || rawOrigins.trim().length === 0) {
-    const fallbackOrigins = [webAppUrl, process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : null]
+    const fallbackOrigins = [webAppUrl, ...developmentOrigins]
       .filter((origin): origin is string => Boolean(origin))
       .map((origin) => origin.trim())
       .filter(Boolean);
@@ -110,7 +114,7 @@ export function parseAllowedOrigins() {
   return rawOrigins
     .split(',')
     .map((origin) => origin.trim())
-    .concat(webAppUrl ? [webAppUrl] : [])
+    .concat(webAppUrl ? [webAppUrl] : [], developmentOrigins)
     .filter(Boolean)
     .filter((origin, index, origins) => origins.indexOf(origin) === index);
 }

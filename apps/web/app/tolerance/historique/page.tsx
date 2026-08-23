@@ -159,7 +159,7 @@ export default function HistoryPage() {
         <div />
       </header>
 
-      <div style={{ padding: '0 20px', maxWidth: 980, margin: '0 auto 40px' }}>
+      <div className="history-page-shell" style={{ padding: '0 20px', maxWidth: 980, margin: '0 auto 40px' }}>
         {session && !authenticated ? <AuthRequiredNotice subject="ton historique" /> : null}
         {authenticated ? (
         <>
@@ -276,6 +276,10 @@ const infoCard = {
 
 const css = `
   @media (max-width: 760px) {
+    .history-page-shell {
+      padding: 0 12px !important;
+    }
+
     .history-table-head {
       display: none !important;
     }
@@ -302,6 +306,16 @@ const css = `
 
     .history-cell-right {
       justify-items: start;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .history-toolbar {
+      align-items: stretch !important;
+    }
+
+    .history-toolbar button {
+      width: 100%;
     }
   }
 `;

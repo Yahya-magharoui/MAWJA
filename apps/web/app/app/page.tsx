@@ -40,9 +40,17 @@ export default function AppHome() {
   const session = useSessionInfo();
   const validatedSessionKeyRef = useRef<string | null>(null);
   const [color, setColor] = useState(PRESET[0]);
+  const [showStateExplanations, setShowStateExplanations] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
+  const [settingsReturnTo, setSettingsReturnTo] = useState<string | null>(null);
   const [openAssignmentModal, setOpenAssignmentModal] = useState(false);
   const [openLogoutCheckin, setOpenLogoutCheckin] = useState(false);
+  const [openDeleteAccount, setOpenDeleteAccount] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [selectionBusy, setSelectionBusy] = useState(false);
   const [logoutBusy, setLogoutBusy] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
@@ -73,6 +81,17 @@ export default function AppHome() {
   useEffect(() => { window.localStorage.setItem('readingEnabled', String(readingEnabled)); }, [readingEnabled]);
   useEffect(() => { window.localStorage.setItem('hapticsEnabled', String(hapticsEnabled)); }, [hapticsEnabled]);
   useEffect(() => { window.localStorage.setItem('soundEnabled', String(soundEnabled)); }, [soundEnabled]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('settings') !== 'open') return;
+
+    const requestedReturnTo = params.get('returnTo');
+    if (requestedReturnTo?.startsWith('/') && !requestedReturnTo.startsWith('//')) {
+      setSettingsReturnTo(requestedReturnTo);
+    }
+    setOpenSettings(true);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -225,6 +244,74 @@ export default function AppHome() {
     void finalizeLogout();
   }
 
+  function showDeleteAccountConfirmation() {
+    setOpenSettings(false);
+    setDeleteConfirmation('');
+    setDeleteError(null);
+    setOpenDeleteAccount(true);
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteBusy || deleteConfirmation !== 'SUPPRIMER') return;
+
+    setDeleteBusy(true);
+    setDeleteError(null);
+
+    try {
+      const response = await fetch(buildApiUrl('/auth/account'), {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload?.message || 'Impossible de supprimer le compte.');
+      }
+
+      clearSession();
+      window.location.replace('/');
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Impossible de supprimer le compte.');
+      setDeleteBusy(false);
+    }
+  }
+
+  async function handleExportAccount() {
+    if (exportBusy) return;
+
+    setExportBusy(true);
+    setExportError(null);
+
+    try {
+      const response = await fetch(buildApiUrl('/auth/account/export'), {
+        credentials: 'include',
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.message || "Impossible d'exporter les données.");
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get('content-disposition') || '';
+      const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+      const filename = filenameMatch?.[1] || `kalymap-donnees-${new Date().toISOString().slice(0, 10)}.json`;
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "Impossible d'exporter les données.");
+    } finally {
+      setExportBusy(false);
+    }
+  }
+
   return (
     <main className="app-home-page" style={styles.page(theme.bg)}>
       <style>{css}</style>
@@ -260,26 +347,39 @@ export default function AppHome() {
           <section className="fade-in app-home-stack" style={styles.stack}>
             <Card
               title="Hyperactivation"
-              caption="Fuite/lutte, rythme cardiaque rapide, irritabilité, respiration rapide, tension musculaire, sueurs, palpitations, colère, anxiété, agitation, hypervigilance"
+              caption="Fuite/lutte, rythme cardiaque rapide, irritabilité, respiration rapide, tension musculaire, sueurs, palpitations, colère, anxiété, agitation, hypervigilance."
+              showCaption={showStateExplanations}
               styleExtra={{ ...styles.top, background: theme.hyper.bg, boxShadow: theme.hyper.shadow }}
               disabled={selectionBusy}
               onClick={() => handleStateSelection('/hyperactivation')}
             />
             <Card
               title="Fenêtre de tolérance"
-              caption="Fenêtre d’activation optimale, équilibre, calme, attentif"
+              caption="Fenêtre d’activation optimale, équilibre, calme, attentif."
+              showCaption={showStateExplanations}
               styleExtra={{ background: theme.window.bg, boxShadow: theme.window.shadow }}
               disabled={selectionBusy}
               onClick={() => handleStateSelection('/tolerance')}
             />
             <Card
               title="Hypoactivation"
-              caption="Paralysie, sensation de déconnexion, d’engourdissement, digestion perturbée, respiration impactée, déréalisation, apathie, retrait, confusion"
+              caption="Paralysie, sensation de déconnexion, d’engourdissement, digestion perturbée, respiration impactée, déréalisation, apathie, retrait, confusion."
+              showCaption={showStateExplanations}
               styleExtra={{ ...styles.bottom, background: theme.hypo.bg, boxShadow: theme.hypo.shadow }}
               disabled={selectionBusy}
               onClick={() => handleStateSelection('/hypoactivation')}
             />
           </section>
+
+          <div className="float-up app-home-explanations" style={styles.explanationsRow}>
+            <button
+              type="button"
+              style={styles.globalExplainButton}
+              onClick={() => setShowStateExplanations((value) => !value)}
+            >
+              {showStateExplanations ? 'Masquer les explications' : 'Explications'}
+            </button>
+          </div>
 
           <nav className="float-up app-home-actions" style={styles.actions}>
             <button style={styles.secondary} onClick={() => (window.location.href = '/sos?from=app')}>
@@ -326,7 +426,19 @@ export default function AppHome() {
       {openSettings && (
         <div className="settings-overlay" style={styles.settingsOverlay} role="dialog" aria-modal="true">
           <div className="settings-card" style={styles.settingsCard}>
-            <button onClick={() => setOpenSettings(false)} style={styles.closeBtn} aria-label="Fermer">✕</button>
+            <button
+              onClick={() => {
+                if (settingsReturnTo) {
+                  window.location.replace(settingsReturnTo);
+                  return;
+                }
+                setOpenSettings(false);
+              }}
+              style={styles.closeBtn}
+              aria-label="Fermer"
+            >
+              ✕
+            </button>
 
             <button
               className="settings-row"
@@ -338,8 +450,8 @@ export default function AppHome() {
                 <div style={{ fontWeight: 600 }}>{accountName ?? 'Compte'}</div>
                 <div style={{ fontSize: 12, opacity: 0.6 }}>
                   {accountStatus === 'registered'
-                    ? [role === 'DOCTOR' ? 'Docteur' : 'Patient', accountEmail].filter(Boolean).join(' · ')
-                    : 'Mode invite patient'}
+                    ? [role === 'DOCTOR' ? 'Docteur' : 'Utilisateur', accountEmail].filter(Boolean).join(' · ')
+                    : 'Mode invité'}
                 </div>
               </div>
               <span style={{ fontSize: 13, opacity: 0.7 }}>
@@ -348,12 +460,28 @@ export default function AppHome() {
             </button>
 
             {accountStatus === 'registered' && (
-              <button className="settings-row" style={{ ...styles.settingRow, color: '#b91c1c' }} onClick={handleLogout}>
-                <span style={styles.settingIcon}>🚪</span>
-                <div style={{ flex: 1 }}>Se déconnecter</div>
-                <span aria-hidden>›</span>
-              </button>
+              <>
+                {isAuthenticatedPatient && (
+                  <button className="settings-row" style={styles.settingRow} onClick={() => void handleExportAccount()} disabled={exportBusy}>
+                    <span style={styles.settingIcon}>📥</span>
+                    <div style={{ flex: 1 }}>{exportBusy ? 'Préparation de l’export…' : 'Exporter mes données'}</div>
+                    <span aria-hidden>›</span>
+                  </button>
+                )}
+                <button className="settings-row" style={{ ...styles.settingRow, color: '#b91c1c' }} onClick={handleLogout}>
+                  <span style={styles.settingIcon}>🚪</span>
+                  <div style={{ flex: 1 }}>Se déconnecter</div>
+                  <span aria-hidden>›</span>
+                </button>
+                <button className="settings-row" style={{ ...styles.settingRow, color: '#991b1b' }} onClick={showDeleteAccountConfirmation}>
+                  <span style={styles.settingIcon}>🗑️</span>
+                  <div style={{ flex: 1 }}>Supprimer mon compte</div>
+                  <span aria-hidden>›</span>
+                </button>
+              </>
             )}
+
+            {exportError ? <p role="alert" style={styles.settingsError}>{exportError}</p> : null}
 
             {DOCTOR_EXPERIENCE_ENABLED && isAuthenticatedPatient && (
               <button
@@ -424,7 +552,7 @@ export default function AppHome() {
 
       {DOCTOR_EXPERIENCE_ENABLED && openAssignmentModal && isAuthenticatedPatient && (
         <div style={styles.settingsOverlay} role="dialog" aria-modal="true" aria-labelledby="assignment-modal-title">
-          <div style={styles.assignmentModalCard}>
+          <div className="assignment-modal-card" style={styles.assignmentModalCard}>
             <button onClick={() => setOpenAssignmentModal(false)} style={styles.closeBtn} aria-label="Fermer">✕</button>
             <div style={{ marginBottom: 10 }}>
               <p style={styles.assignmentEyebrow}>Suivi</p>
@@ -440,9 +568,58 @@ export default function AppHome() {
         </div>
       )}
 
+      {openDeleteAccount && accountStatus === 'registered' && (
+        <div style={styles.settingsOverlay} role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+          <div className="delete-account-card" style={styles.deleteAccountCard}>
+            <button
+              onClick={() => setOpenDeleteAccount(false)}
+              style={styles.closeBtn}
+              aria-label="Fermer"
+              disabled={deleteBusy}
+            >
+              ✕
+            </button>
+            <p style={styles.assignmentEyebrow}>Action définitive</p>
+            <h2 id="delete-account-title" style={styles.assignmentTitle}>Supprimer mon compte</h2>
+            <p style={styles.deleteAccountDescription}>
+              Ton compte et les données qui lui sont liées seront supprimés définitivement. Cette action est irréversible.
+            </p>
+            <label style={styles.deleteAccountLabel}>
+              Saisis <strong>SUPPRIMER</strong> pour confirmer
+              <input
+                type="text"
+                value={deleteConfirmation}
+                onChange={(event) => setDeleteConfirmation(event.currentTarget.value)}
+                autoComplete="off"
+                disabled={deleteBusy}
+                style={styles.deleteAccountInput}
+              />
+            </label>
+            {deleteError ? <p role="alert" style={styles.logoutError}>{deleteError}</p> : null}
+            <div style={styles.deleteAccountActions}>
+              <button type="button" onClick={() => setOpenDeleteAccount(false)} disabled={deleteBusy} style={styles.logoutLaterButton}>
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDeleteAccount()}
+                disabled={deleteBusy || deleteConfirmation !== 'SUPPRIMER'}
+                style={{
+                  ...styles.deleteAccountButton,
+                  opacity: deleteBusy || deleteConfirmation !== 'SUPPRIMER' ? 0.5 : 1,
+                  cursor: deleteBusy || deleteConfirmation !== 'SUPPRIMER' ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {deleteBusy ? 'Suppression…' : 'Supprimer définitivement'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {openLogoutCheckin && isAuthenticatedPatient && (
         <div style={styles.settingsOverlay} role="dialog" aria-modal="true" aria-labelledby="logout-checkin-title">
-          <div style={styles.logoutModalCard}>
+          <div className="logout-modal-card" style={styles.logoutModalCard}>
             <button onClick={() => setOpenLogoutCheckin(false)} style={styles.closeBtn} aria-label="Fermer">✕</button>
             <div style={{ marginBottom: 8 }}>
               <p style={styles.assignmentEyebrow}>Avant la déconnexion</p>
@@ -487,35 +664,41 @@ export default function AppHome() {
 function Card({
   title,
   caption,
+  showCaption = false,
   styleExtra,
   disabled = false,
   onClick,
 }: {
   title: string;
-  caption: string;
+  caption?: string;
+  showCaption?: boolean;
   styleExtra?: React.CSSProperties;
   disabled?: boolean;
   onClick?: () => void;
 }) {
   return (
     <article
-      role="button"
-      tabIndex={disabled ? -1 : 0}
       aria-label={title}
       aria-disabled={disabled}
       style={{ ...styles.card, ...(disabled ? styles.cardDisabled : null), ...styleExtra }}
-      onClick={disabled ? undefined : onClick}
-      onKeyDown={(e) => {
-        if (disabled) return;
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.();
-        }
-      }}
     >
-      <div style={styles.cardInner}>
+      <div
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        style={styles.cardInner}
+        onClick={disabled ? undefined : onClick}
+        onKeyDown={(e) => {
+          if (disabled) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick?.();
+          }
+        }}
+      >
         <h2 style={styles.cardTitle}>{title}</h2>
-        <p style={styles.cardCaption}>{caption}</p>
+        {caption ? (
+          <p style={{ ...styles.cardCaption, visibility: showCaption ? 'visible' : 'hidden' }}>{caption}</p>
+        ) : null}
       </div>
     </article>
   );
@@ -603,9 +786,41 @@ const styles = {
   } as React.CSSProperties,
   top: { borderTopLeftRadius: 120, borderTopRightRadius: 120 } as React.CSSProperties,
   bottom: { borderBottomLeftRadius: 120, borderBottomRightRadius: 120 } as React.CSSProperties,
-  cardInner: { padding: '26px 18px', textAlign: 'center' } as React.CSSProperties,
+  cardInner: {
+    padding: '26px 18px',
+    textAlign: 'center',
+    outline: 'none',
+    minHeight: 154,
+    display: 'grid',
+    alignContent: 'center',
+    gap: 10,
+  } as React.CSSProperties,
   cardTitle: { margin: 0, fontWeight: 700, fontSize: 16, letterSpacing: 0.4 } as React.CSSProperties,
-  cardCaption: { margin: '6px 0 2px', fontSize: 13, opacity: 0.7 } as React.CSSProperties,
+  cardCaption: {
+    margin: 0,
+    fontSize: 13,
+    lineHeight: 1.5,
+    color: 'rgba(15,23,42,.78)',
+  } as React.CSSProperties,
+  explanationsRow: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '6px 0 10px',
+    maxWidth: 520,
+    margin: '0 auto',
+    width: '100%',
+  } as React.CSSProperties,
+  globalExplainButton: {
+    border: '1px solid rgba(15,23,42,.12)',
+    background: 'linear-gradient(180deg, #B779F2 0%, #A855F7 100%)',
+    color: '#111827',
+    borderRadius: 999,
+    padding: '10px 20px',
+    fontSize: 14,
+    fontWeight: 500,
+    cursor: 'pointer',
+    boxShadow: '0 8px 18px rgba(124,58,237,.28)',
+  } as React.CSSProperties,
   actions: { display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', maxWidth: 520, margin: '4px auto 10px', padding: 0, width: '100%' } as React.CSSProperties,
   secondary: {
     padding: '12px 16px',
@@ -626,6 +841,7 @@ const styles = {
   settingsCard: { width: 'min(420px,100%)', background: '#fff', borderRadius: 24, padding: '22px 12px 12px', boxShadow: '0 24px 40px rgba(15,23,42,.25)', display: 'grid', gap: 4, position: 'relative' } as React.CSSProperties,
   assignmentModalCard: { width: 'min(520px,100%)', background: '#fff', borderRadius: 24, padding: '22px 18px 18px', boxShadow: '0 24px 40px rgba(15,23,42,.25)', display: 'grid', gap: 4, position: 'relative' } as React.CSSProperties,
   logoutModalCard: { width: 'min(560px,100%)', background: '#fff', borderRadius: 24, padding: '22px 18px 18px', boxShadow: '0 24px 40px rgba(15,23,42,.25)', display: 'grid', gap: 4, position: 'relative' } as React.CSSProperties,
+  deleteAccountCard: { width: 'min(520px,100%)', background: '#fff', borderRadius: 24, padding: '24px 20px 20px', boxShadow: '0 24px 40px rgba(15,23,42,.25)', display: 'grid', gap: 14, position: 'relative' } as React.CSSProperties,
   closeBtn: { position: 'absolute', right: 12, top: 12, border: 'none', background: 'transparent', fontSize: 20, cursor: 'pointer' } as React.CSSProperties,
   settingRow: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', background: 'transparent', padding: '10px 8px', borderRadius: 12, cursor: 'pointer', textAlign: 'left', width: '100%', maxWidth: '100%' } as React.CSSProperties,
   settingIcon: { width: 28, textAlign: 'center', fontSize: 18 } as React.CSSProperties,
@@ -658,6 +874,12 @@ const styles = {
     fontWeight: 600,
   } as React.CSSProperties,
   logoutError: { margin: '14px 0 0', color: '#b91c1c', fontSize: 14 } as React.CSSProperties,
+  settingsError: { margin: '4px 8px 8px', color: '#b91c1c', fontSize: 13, lineHeight: 1.4 } as React.CSSProperties,
+  deleteAccountDescription: { margin: 0, fontSize: 15, lineHeight: 1.6, color: '#475569' } as React.CSSProperties,
+  deleteAccountLabel: { display: 'grid', gap: 8, fontSize: 14, color: '#334155' } as React.CSSProperties,
+  deleteAccountInput: { width: '100%', border: '1px solid #cbd5e1', borderRadius: 12, padding: '11px 12px', fontSize: 16 } as React.CSSProperties,
+  deleteAccountActions: { display: 'flex', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' } as React.CSSProperties,
+  deleteAccountButton: { border: 'none', background: '#b91c1c', color: '#fff', borderRadius: 999, padding: '10px 16px', fontWeight: 700 } as React.CSSProperties,
   langRow: { display: 'flex', gap: 8 } as React.CSSProperties,
   langBtn: { flex: 1, padding: '8px 10px', borderRadius: 12, border: '1px solid rgba(0,0,0,.08)', fontWeight: 600, cursor: 'pointer' } as React.CSSProperties,
 } as const;
@@ -715,6 +937,8 @@ const css = `
 
     .settings-card{
       padding: 20px 12px 12px !important;
+      max-height: min(88dvh, 720px);
+      overflow-y: auto;
     }
 
     .settings-row{
@@ -724,6 +948,34 @@ const css = `
 
     .settings-lang-row{
       flex-wrap: wrap;
+    }
+
+    .assignment-modal-card,
+    .delete-account-card,
+    .logout-modal-card{
+      width: 100% !important;
+      max-height: min(88dvh, 760px);
+      overflow-y: auto;
+      padding: 20px 14px 16px !important;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .app-home-header{
+      grid-template-columns: 40px minmax(0, 1fr) 40px !important;
+      gap: 6px !important;
+    }
+
+    .app-home-actions{
+      grid-template-columns: 1fr !important;
+    }
+
+    .logout-modal-card h2,
+    .delete-account-card h2,
+    .assignment-modal-card h2{
+      font-size: 22px !important;
+      line-height: 1.15 !important;
+      overflow-wrap: anywhere;
     }
   }
 `;

@@ -198,6 +198,7 @@ export default function AbdominalBreathing() {
 
   return (
     <main
+      className="abdominal-page"
       style={{
         minHeight: '100dvh',
         background: 'radial-gradient(1200px 800px at 50% -10%, rgba(var(--theme-color-rgb),0.13) 0%, #F6F7FE 55%)',
@@ -210,7 +211,9 @@ export default function AbdominalBreathing() {
         gap: 20,
       }}
     >
+      <style>{css}</style>
       <header
+        className="abdominal-header"
         style={{
           display: 'grid',
           gridTemplateColumns: 'auto 1fr',
@@ -233,7 +236,7 @@ export default function AbdominalBreathing() {
         </div>
       </header>
 
-      <section style={instructionWrap} aria-live="polite">
+      <section className="abdominal-instruction-wrap" style={instructionWrap} aria-live="polite">
         <p style={instructionTitle}>{statusCopy.title}</p>
         <p style={instructionMeta}>
           {isRunning ? `${countdownLabel} seconde${secondsLeft > 1 ? 's' : ''}` : countdownLabel}
@@ -244,13 +247,13 @@ export default function AbdominalBreathing() {
       </section>
 
       <section style={sceneSection}>
-        <div style={sceneLayout}>
-          <div style={imageCard}>
+        <div className="abdominal-scene-layout" style={sceneLayout}>
+          <div className="abdominal-image-card" style={imageCard}>
             <Image src="/abdo/base.png" alt="" width={720} height={720} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
 
-          <div style={meterColumn} aria-hidden>
-            <div style={meterRail}>
+          <div className="abdominal-meter-column" style={meterColumn} aria-hidden>
+            <div className="abdominal-meter-rail" style={meterRail}>
               <div style={meterGlow} />
               <div
                 style={{
@@ -265,8 +268,8 @@ export default function AbdominalBreathing() {
         </div>
       </section>
 
-      <section style={controlsPanel}>
-        <div style={controlsRow}>
+      <section className="abdominal-controls-panel" style={controlsPanel}>
+        <div className="abdominal-controls-row" style={controlsRow}>
           <button
             type="button"
             onClick={() => {
@@ -436,3 +439,57 @@ const secondaryButton: React.CSSProperties = {
   color: '#20103F',
   boxShadow: '0 8px 18px rgba(15,23,42,0.06)',
 };
+
+const css = `
+  @media (max-width: 720px) {
+    .abdominal-scene-layout{
+      grid-template-columns: 1fr !important;
+      justify-items: center;
+      align-items: center !important;
+    }
+
+    .abdominal-meter-column{
+      width: 100%;
+      padding-bottom: 0 !important;
+    }
+
+    .abdominal-meter-rail{
+      width: min(100%, 280px) !important;
+      height: 220px !important;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .abdominal-page{
+      gap: 16px !important;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+    }
+
+    .abdominal-header{
+      padding: 0 4px !important;
+    }
+
+    .abdominal-instruction-wrap{
+      width: 100% !important;
+    }
+
+    .abdominal-image-card{
+      border-radius: 20px !important;
+    }
+
+    .abdominal-controls-panel{
+      width: 100% !important;
+    }
+
+    .abdominal-controls-row{
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+    }
+
+    .abdominal-controls-row button{
+      width: 100%;
+      min-width: 0 !important;
+    }
+  }
+`;

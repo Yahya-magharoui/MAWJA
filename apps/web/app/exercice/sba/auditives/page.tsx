@@ -249,7 +249,7 @@ export default function SBAAuditivesPage() {
   }
 
   return (
-    <main style={wrap}>
+    <main style={wrap} className="sba-auditives-page">
       <header style={hdr}>
         <BackLink href="/exercice/sba" style={back} />
         <div>
@@ -266,7 +266,7 @@ export default function SBAAuditivesPage() {
         Vitesse&nbsp;: {bpm} bpm
       </p>
 
-      <section style={grid}>
+      <section style={grid} className="sba-auditives-grid">
         {INSTRS.map(i => {
           const active = playing && current === i.key;
           return (
@@ -353,4 +353,15 @@ const iconWrap: React.CSSProperties = {
 const css = `
   .bubble:active { transform:scale(.98); filter:brightness(.98) }
   .mini:active { transform:scale(.98) }
+
+  @media (max-width: 640px) {
+    .sba-auditives-page {
+      padding: 16px 12px 24px !important;
+    }
+
+    .sba-auditives-grid {
+      grid-template-columns: 1fr !important;
+      max-width: 100% !important;
+    }
+  }
 `;

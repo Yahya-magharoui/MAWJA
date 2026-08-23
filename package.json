@@ -2,6 +2,9 @@
   "name": "galini",
   "private": true,
   "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": "22.x"
+  },
   "workspaces": [
     "apps/*",
     "packages/*",

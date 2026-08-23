@@ -151,7 +151,7 @@ model Exercice {
   createdAt   DateTime   @default(now())
   favorites   Favorite[]
 
-  @@map("Exercice")
+  @@map("Exercise")
 }
 
 model PendingSignup {

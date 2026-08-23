@@ -1,12 +1,12 @@
 # 🌊 MAWJA – Application Bien-être
 
-Bienvenue dans **MAWJA**, une application web & mobile basée sur le concept de la *fenêtre de tolérance* pour aider les patients à réguler leurs états émotionnels.
+Bienvenue dans **MAWJA**, une application web & mobile basée sur le concept de la *fenêtre de tolérance* pour aider les utilisateurs à mieux comprendre et réguler leurs états émotionnels.
 
 ---
 
 ## 📦 Prérequis
 
-- [Node.js](https://nodejs.org/) v18+  
+- [Node.js](https://nodejs.org/) v22
 - [pnpm](https://pnpm.io/) v9+  
 - [PostgreSQL 16](https://www.postgresql.org/) (via Homebrew ou Docker)  
 - (optionnel) [Expo Go](https://expo.dev/client) sur mobile ou émulateur iOS/Android  

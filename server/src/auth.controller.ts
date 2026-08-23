@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpException,
@@ -116,6 +117,8 @@ type EmailCheckBody = z.infer<typeof emailCheckBodySchema>;
 type VerifyEmailBody = z.infer<typeof verifyEmailBodySchema>;
 type ForgotPasswordBody = z.infer<typeof forgotPasswordBodySchema>;
 type ResetPasswordBody = z.infer<typeof resetPasswordBodySchema>;
+
+const APP_BRAND_NAME = 'Kalymap';
 
 @Controller('auth')
 export class AuthController {
@@ -336,11 +339,11 @@ export class AuthController {
     const verificationLink = this.buildVerificationLink(token);
     await this.sendResendEmail({
       to: email,
-      subject: 'Confirme ton compte Mawja',
+      subject: `Confirme ton compte ${APP_BRAND_NAME}`,
       missingConfigMessage: "La configuration de l'e-mail de confirmation est incomplète.",
       html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
-            <h2 style="margin-bottom: 16px;">Bienvenue sur Mawja</h2>
+            <h2 style="margin-bottom: 16px;">Bienvenue sur ${APP_BRAND_NAME}</h2>
             <p>Confirme ton adresse e-mail pour finaliser la création de ton compte.</p>
             <p style="margin: 24px 0;">
               <a
@@ -362,12 +365,12 @@ export class AuthController {
     const resetLink = this.buildPasswordResetLink(token);
     await this.sendResendEmail({
       to: email,
-      subject: 'Réinitialise ton mot de passe Mawja',
+      subject: `Réinitialise ton mot de passe ${APP_BRAND_NAME}`,
       missingConfigMessage: "La configuration de l'e-mail de réinitialisation est incomplète.",
       html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
             <h2 style="margin-bottom: 16px;">Réinitialisation du mot de passe</h2>
-            <p>Tu as demandé à définir un nouveau mot de passe pour ton compte Mawja.</p>
+            <p>Tu as demandé à définir un nouveau mot de passe pour ton compte ${APP_BRAND_NAME}.</p>
             <p style="margin: 24px 0;">
               <a
                 href="${resetLink}"
@@ -406,6 +409,18 @@ export class AuthController {
       return `Le mot de passe doit contenir au maximum ${MAX_PASSWORD_LENGTH} caractères.`;
     }
 
+    if (!/[A-ZÀ-ÖØ-Ý]/.test(normalizedPassword)) {
+      return 'Le mot de passe doit contenir au moins une majuscule.';
+    }
+
+    if (!/\d/.test(normalizedPassword)) {
+      return 'Le mot de passe doit contenir au moins un chiffre.';
+    }
+
+    if (!/[^A-Za-zÀ-ÖØ-öø-ÿ0-9]/.test(normalizedPassword)) {
+      return 'Le mot de passe doit contenir au moins un caractère spécial.';
+    }
+
     if (COMMON_PASSWORDS.has(loweredPassword)) {
       return 'Choisis un mot de passe moins courant.';
     }
@@ -414,7 +429,7 @@ export class AuthController {
       return "Le mot de passe ne doit pas contenir ton adresse e-mail.";
     }
 
-    if (loweredPassword.includes('mawja')) {
+    if (loweredPassword.includes('kalymap')) {
       return "Le mot de passe ne doit pas contenir le nom de l'application.";
     }
 
@@ -827,9 +842,176 @@ export class AuthController {
     };
   }
 
+  @Get('account/export')
+  async exportAccountData(
+    @Headers('authorization') authorization: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const user = await requireAuthenticatedUser(this.prisma, authorization, cookieHeader);
+
+    if (user.role !== 'PATIENT') {
+      throw new HttpException(
+        "L'export n'est pas disponible pour ce type de compte.",
+        HttpStatus.NOT_IMPLEMENTED,
+      );
+    }
+
+    const patient = await this.prisma.patient.findUnique({
+      where: { userId: user.id },
+      include: {
+        histories: {
+          orderBy: { createdAt: 'asc' },
+        },
+        activityLogs: {
+          orderBy: { createdAt: 'asc' },
+        },
+        goals: {
+          orderBy: { createdAt: 'asc' },
+        },
+        notes: {
+          orderBy: { createdAt: 'asc' },
+        },
+        favorites: {
+          orderBy: { createdAt: 'asc' },
+          include: { exercise: true },
+        },
+      },
+    });
+
+    const exportedAt = new Date();
+    const dateSuffix = exportedAt.toISOString().slice(0, 10);
+    response.setHeader('Content-Type', 'application/json; charset=utf-8');
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="kalymap-donnees-${dateSuffix}.json"`,
+    );
+
+    return {
+      formatVersion: 1,
+      exportedAt: exportedAt.toISOString(),
+      account: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: 'PATIENT',
+        createdAt: user.createdAt,
+      },
+      profile: patient
+        ? {
+            id: patient.id,
+            currentSituation: patient.currentSituation,
+            createdAt: patient.createdAt,
+          }
+        : null,
+      histories: patient?.histories ?? [],
+      activities: patient?.activityLogs ?? [],
+      goals: patient?.goals ?? [],
+      notes: patient?.notes ?? [],
+      favorites: patient?.favorites ?? [],
+    };
+  }
+
   @Post('logout')
   async logout(@Res({ passthrough: true }) response: Response) {
     this.clearAuthCookie(response);
+    return {
+      ok: true,
+    };
+  }
+
+  @Delete('account')
+  async deleteAccount(
+    @Headers('authorization') authorization: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const user = await requireAuthenticatedUser(this.prisma, authorization, cookieHeader);
+
+    if (user.role === 'DOCTOR') {
+      const doctor = await this.prisma.doctor.findUnique({
+        where: { userId: user.id },
+      });
+
+      if (doctor) {
+        const assignedPatients = await this.prisma.patient.count({
+          where: { doctorId: doctor.id },
+        });
+
+        if (assignedPatients > 0) {
+          throw new HttpException(
+            'Impossible de supprimer ce compte tant que des patients y sont rattachés.',
+            HttpStatus.CONFLICT,
+          );
+        }
+      }
+
+      await this.prisma.$transaction(async (tx) => {
+        if (doctor) {
+          await tx.user.update({
+            where: { id: user.id },
+            data: { doctorProfileId: null },
+          });
+          await tx.doctor.delete({
+            where: { id: doctor.id },
+          });
+        }
+
+        await tx.pendingSignup.deleteMany({
+          where: { email: user.email },
+        });
+        await tx.pendingPasswordReset.deleteMany({
+          where: { email: user.email },
+        });
+        await tx.user.delete({
+          where: { id: user.id },
+        });
+      });
+    } else {
+      const patient = await this.prisma.patient.findUnique({
+        where: { userId: user.id },
+      });
+
+      await this.prisma.$transaction(async (tx) => {
+        if (patient) {
+          await tx.user.update({
+            where: { id: user.id },
+            data: { patientProfileId: null },
+          });
+          await tx.activityLog.deleteMany({
+            where: { patientId: patient.id },
+          });
+          await tx.history.deleteMany({
+            where: { patientId: patient.id },
+          });
+          await tx.goal.deleteMany({
+            where: { patientId: patient.id },
+          });
+          await tx.note.deleteMany({
+            where: { patientId: patient.id },
+          });
+          await tx.favorite.deleteMany({
+            where: { patientId: patient.id },
+          });
+          await tx.patient.delete({
+            where: { id: patient.id },
+          });
+        }
+
+        await tx.pendingSignup.deleteMany({
+          where: { email: user.email },
+        });
+        await tx.pendingPasswordReset.deleteMany({
+          where: { email: user.email },
+        });
+        await tx.user.delete({
+          where: { id: user.id },
+        });
+      });
+    }
+
+    this.clearAuthCookie(response);
+
     return {
       ok: true,
     };

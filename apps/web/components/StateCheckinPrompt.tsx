@@ -273,6 +273,8 @@ const css = `
     .state-checkin-card{
       padding: 20px 16px !important;
       border-radius: 24px !important;
+      max-height: min(88dvh, 760px);
+      overflow-y: auto;
     }
 
     .state-checkin-header{
@@ -283,6 +285,11 @@ const css = `
     .state-checkin-title{
       font-size: clamp(22px, 6vw, 28px) !important;
       overflow-wrap: anywhere;
+    }
+
+    .state-checkin-header button,
+    .state-checkin-card button{
+      width: 100%;
     }
   }
 `;

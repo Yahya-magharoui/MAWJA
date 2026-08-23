@@ -1,4 +1,5 @@
 import StateCheckinPrompt from "../components/StateCheckinPrompt";
+import SettingsNavigationBridge from "../components/SettingsNavigationBridge";
 import AppSplashScreen, { SplashBootstrapScript } from "../components/splash/AppSplashScreen";
 import { ThemeBootstrapScript, ThemeColorSync } from "../components/theme";
 import type { Viewport } from "next";
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SplashBootstrapScript />
         <ThemeColorSync />
         <AppSplashScreen />
+        <SettingsNavigationBridge />
         {children}
         <StateCheckinPrompt />
       </body>

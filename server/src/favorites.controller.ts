@@ -62,7 +62,7 @@ export class FavoritesController {
         e.title,
         e.description
       FROM "Favorite" f
-      INNER JOIN "Exercice" e ON e.id = f."exerciseId"
+      INNER JOIN "Exercise" e ON e.id = f."exerciseId"
       WHERE f."patientId" = ${patientId}
       ORDER BY f."createdAt" DESC
     `;
@@ -92,7 +92,7 @@ export class FavoritesController {
     const title = validatedBody.title?.trim();
 
     if (!patientId) {
-      throw new HttpException('Profil patient introuvable.', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Profil utilisateur introuvable.', HttpStatus.BAD_REQUEST);
     }
 
     if (!title) {
@@ -103,7 +103,7 @@ export class FavoritesController {
       Array<{ id: number; title: string; description: string | null }>
     >`
       SELECT id, title, description
-      FROM "Exercice"
+      FROM "Exercise"
       WHERE title = ${title}
       LIMIT 1
     `;
@@ -116,7 +116,7 @@ export class FavoritesController {
         await this.prisma.$queryRaw<
           Array<{ id: number; title: string; description: string | null }>
         >`
-          INSERT INTO "Exercice" (title, description)
+          INSERT INTO "Exercise" (title, description)
           VALUES (${title}, ${validatedBody.description?.trim() || null})
           RETURNING id, title, description
         `

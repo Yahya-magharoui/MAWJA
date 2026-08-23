@@ -1,13 +1,12 @@
 'use client';
 
-import Image from 'next/image';
 import BackLink from '../../../components/BackLink';
 
 type Card = { label: string; href: string; icon: string };
 
 const CARDS: Card[] = [
   { label: 'SBA Auditives', href: '/exercice/sba/auditives', icon: '/icons/auditive.svg' },
-  { label: 'SBA Visuelles', href: '/exercice/sba/visuelles', icon: '/icons/sba.png' },
+  { label: 'SBA Visuelles', href: '/exercice/sba/visuelles', icon: '/icons/sba.svg' },
   { label: 'SBA Tactiles',  href: '/exercice/sba/tactiles',  icon: '/icons/tactile.svg' },
 ];
 
@@ -38,11 +37,12 @@ export default function SBAHome() {
             className="tile"
           >
             <div style={iconWrap}>
-              <Image
+              <img
                 src={c.icon}
-                alt={c.label}            // si décoratif -> alt="" et aria-hidden="true"
+                alt={c.label}
                 width={44}
                 height={44}
+                loading="lazy"
                 style={{ display:'block', objectFit:'contain' }}
               />
             </div>

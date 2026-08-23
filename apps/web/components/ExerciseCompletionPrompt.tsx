@@ -63,7 +63,7 @@ export default function ExerciseCompletionPrompt({
   return (
     <div style={styles.overlay} role="dialog" aria-modal="true" aria-labelledby="exercise-completion-title">
       <style>{css}</style>
-      <div style={styles.card}>
+      <div className="exercise-completion-card" style={styles.card}>
         <div style={styles.glow} aria-hidden="true" />
         <div style={styles.sparklesLayer} aria-hidden="true">
           {sparkles.map((sparkle) => (
@@ -112,7 +112,7 @@ export default function ExerciseCompletionPrompt({
               Déplace le curseur pour actualiser ton niveau d’activation actuel, puis valide pour poursuivre.
             </p>
 
-            <div style={styles.sliderWrap}>
+            <div className="exercise-completion-slider-wrap" style={styles.sliderWrap}>
               <input
                 aria-label="Niveau d’activation"
                 type="range"
@@ -123,14 +123,14 @@ export default function ExerciseCompletionPrompt({
                 onChange={(event) => setValue(Number(event.currentTarget.value))}
                 style={sliderStyle}
               />
-              <div style={styles.sliderLabels}>
+              <div className="exercise-completion-slider-labels" style={styles.sliderLabels}>
                 <span style={styles.sliderEdge}>Hypoactivation</span>
                 <span style={styles.sliderCenter}>Fenêtre de tolérance</span>
                 <span style={styles.sliderEdge}>Hyperactivation</span>
               </div>
             </div>
 
-            <div style={styles.actions}>
+            <div className="exercise-completion-actions" style={styles.actions}>
               <button type="button" onClick={() => go('/app')} style={styles.secondaryBtn}>
                 {redirecting ? 'Redirection…' : 'Arrêter pour le moment'}
               </button>
@@ -145,7 +145,7 @@ export default function ExerciseCompletionPrompt({
             </div>
           </>
         ) : (
-          <div style={styles.actionsColumn}>
+          <div className="exercise-completion-actions-column" style={styles.actionsColumn}>
             <p style={styles.textSecondary}>Merci d’avoir actualisé ton état.</p>
             <button
               type="button"
@@ -397,6 +397,26 @@ const css = `
   }
 
   @media (max-width: 640px) {
+    .exercise-completion-card{
+      padding: 22px 16px 18px !important;
+      border-radius: 24px !important;
+    }
+
+    .exercise-completion-slider-labels{
+      grid-template-columns: 1fr !important;
+      gap: 6px !important;
+    }
+
+    .exercise-completion-actions,
+    .exercise-completion-actions-column{
+      grid-template-columns: 1fr !important;
+    }
+
+    .exercise-completion-actions button,
+    .exercise-completion-actions-column button{
+      width: 100%;
+    }
+
     input[type="range"] { -webkit-tap-highlight-color: transparent; }
   }
 

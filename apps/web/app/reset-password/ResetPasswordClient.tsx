@@ -46,6 +46,18 @@ function validatePassword(rawPassword: string, rawEmail = '') {
     return `Le mot de passe doit contenir au maximum ${MAX_PASSWORD_LENGTH} caractères.`;
   }
 
+  if (!/[A-ZÀ-ÖØ-Ý]/.test(normalizedPassword)) {
+    return 'Le mot de passe doit contenir au moins une majuscule.';
+  }
+
+  if (!/\d/.test(normalizedPassword)) {
+    return 'Le mot de passe doit contenir au moins un chiffre.';
+  }
+
+  if (!/[^A-Za-zÀ-ÖØ-öø-ÿ0-9]/.test(normalizedPassword)) {
+    return 'Le mot de passe doit contenir au moins un caractère spécial.';
+  }
+
   if (COMMON_PASSWORDS.has(loweredPassword)) {
     return 'Choisis un mot de passe moins courant.';
   }
@@ -54,7 +66,7 @@ function validatePassword(rawPassword: string, rawEmail = '') {
     return "Le mot de passe ne doit pas contenir ton adresse e-mail.";
   }
 
-  if (loweredPassword.includes('mawja')) {
+  if (loweredPassword.includes('kalymap')) {
     return "Le mot de passe ne doit pas contenir le nom de l'application.";
   }
 
