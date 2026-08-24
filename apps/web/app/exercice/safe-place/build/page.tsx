@@ -73,7 +73,7 @@ export default function BuildSafePlace() {
     vibe();
     try {
       const place = await createSafePlace({
-        name: normalizedAnswers[7]?.answer || 'Mon lieu sûr',
+        name: normalizedAnswers[4]?.answer || 'Mon lieu sûr',
         answers: normalizedAnswers,
       });
       try {

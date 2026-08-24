@@ -92,9 +92,9 @@ test.describe('patient app flows', () => {
 
     await expect(page.getByRole('heading', { name: 'Construction de mon lieu sûr' })).toBeVisible();
     const answers = page.getByPlaceholder('Écris ta réponse ici…');
-    await expect(answers).toHaveCount(9);
+    await expect(answers).toHaveCount(7);
     await answers.nth(0).fill('Une plage calme au coucher du soleil');
-    await answers.nth(7).fill('Mon refuge');
+    await answers.nth(4).fill('Mon refuge');
     await page.getByRole('button', { name: 'Enregistrer mon lieu sûr' }).click();
 
     await page.waitForURL('**/exercice/safe-place/visit?highlight=*');
@@ -104,7 +104,7 @@ test.describe('patient app flows', () => {
 
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByText('Une plage calme au coucher du soleil')).toBeVisible();
-    await expect(page.getByText('Quel mot ou quelle expression pourrait représenter cet endroit sécurisant ?')).toBeVisible();
+    await expect(page.getByText('Est-ce qu’un mot ou une expression pourrait représenter cet endroit sécurisant ?')).toBeVisible();
     await expect(page.getByRole('dialog').getByRole('paragraph').filter({ hasText: 'Mon refuge' })).toBeVisible();
   });
 

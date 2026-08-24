@@ -22,7 +22,9 @@ export default function SafePlaceHub() {
         <button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button>
       </header>
 
-      <p style={styles.subtitle}>Choisis</p>
+      <p style={styles.subtitle}>
+        Le lieu sûr, c’est un lieu imaginaire où tu te sens en sécurité et où tu peux aller te promener en imagination.
+      </p>
 
      <section style={styles.grid}>
       <a

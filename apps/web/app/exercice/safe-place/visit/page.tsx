@@ -5,6 +5,13 @@ import BackLink from '../../../../components/BackLink';
 import { logActivity } from '../../../../lib/patientTracking';
 import { deleteSafePlace, fetchSafePlaces, type SafePlace } from '../../../../lib/safePlaces';
 
+const VISIT_STEPS = [
+  'Peux-tu le visualiser ?',
+  'Promène-toi visuellement dans ton lieu sûr.',
+  'Note ce que tu entends, ce que tu ressens, ce que tu penses dans cet endroit sécurisant.',
+  'Concentre-toi sur tout cela et essaie de situer où tu ressens cela dans ton corps.',
+] as const;
+
 function vibe(ms = 12) {
   try { navigator.vibrate?.(ms); } catch {}
 }
@@ -74,6 +81,9 @@ export default function VisitSafePlace() {
       </header>
 
       {error ? <p role="alert" style={errorStyle}>{error}</p> : null}
+      <section className="safe-place-journey" style={journeyStyle}>
+        <article className="safe-place-step" style={journeyStepStyle}>Pense à ton lieu sûr :</article>
+
       {loading ? (
         <p style={statusStyle}>Chargement de tes lieux sûrs…</p>
       ) : items.length === 0 ? (
@@ -107,6 +117,11 @@ export default function VisitSafePlace() {
         </section>
       )}
 
+        {VISIT_STEPS.map((step) => (
+          <article key={step} className="safe-place-step" style={journeyStepStyle}>{step}</article>
+        ))}
+      </section>
+
       {selected ? (
         <div className="safe-place-modal" role="presentation" onClick={() => setOpenId(null)}>
           <section className="safe-place-sheet" role="dialog" aria-modal="true" aria-labelledby="safe-place-detail-title" onClick={(event) => event.stopPropagation()}>
@@ -136,6 +151,8 @@ const pageStyle: React.CSSProperties = { minHeight: '100dvh', background: '#F6F7
 const headerStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr) auto', alignItems: 'center', gap: 10, width: 'min(860px, 100%)', margin: '0 auto 20px' };
 const titleStyle: React.CSSProperties = { margin: 0, fontSize: 'clamp(19px, 4vw, 24px)', textAlign: 'center' };
 const newButtonStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 12, background: 'var(--theme-color)', color: '#fff', textDecoration: 'none', fontWeight: 700 };
+const journeyStyle: React.CSSProperties = { position: 'relative', width: 'min(860px, 100%)', margin: '0 auto', display: 'grid', justifyItems: 'center', gap: 18, padding: '4px 0 24px' };
+const journeyStepStyle: React.CSSProperties = { position: 'relative', zIndex: 1, width: 'min(620px, 100%)', padding: '20px 18px', borderRadius: 20, background: '#eeebff', border: '1px solid #e2dcff', color: '#37305f', textAlign: 'center', fontSize: 'clamp(16px, 2.4vw, 19px)', fontWeight: 650, lineHeight: 1.45, boxShadow: '0 8px 18px rgba(76,29,149,.06)' };
 const statusStyle: React.CSSProperties = { maxWidth: 860, margin: '24px auto', textAlign: 'center', color: '#64748b' };
 const errorStyle: React.CSSProperties = { maxWidth: 860, margin: '0 auto 16px', padding: '12px 14px', borderRadius: 12, background: '#fef2f2', color: '#b91c1c' };
 const emptyStyle: React.CSSProperties = { maxWidth: 700, margin: '24px auto', padding: 20, borderRadius: 18, background: '#fff', textAlign: 'center', boxShadow: '0 8px 18px rgba(0,0,0,.06)' };
@@ -162,6 +179,9 @@ const css = `
   @keyframes safe-place-pulse { 50% { transform: scale(1.01); } }
   .safe-place-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(15,23,42,.42); backdrop-filter: blur(5px); }
   .safe-place-sheet { width: min(760px, 100%); max-height: min(86dvh, 900px); overflow: auto; padding: 20px; border-radius: 22px; background: #fff; box-shadow: 0 24px 60px rgba(15,23,42,.25); }
+  .safe-place-journey::before { content: ''; position: absolute; top: 34px; bottom: 48px; left: 50%; width: 3px; border-radius: 999px; background: linear-gradient(180deg, rgba(var(--theme-color-rgb),.2), rgba(var(--theme-color-rgb),.55), rgba(var(--theme-color-rgb),.2)); transform: translateX(-50%); }
+  .safe-place-step::before { content: ''; position: absolute; z-index: -1; inset: -6px -8px; border-radius: 24px; background: #F6F7FE; }
+  .safe-place-card, .safe-place-journey > section, .safe-place-journey > p { position: relative; z-index: 1; }
   button:disabled { opacity: .6; cursor: wait; }
   @media (max-width: 540px) { .safe-place-sheet { padding: 15px; } }
 `;

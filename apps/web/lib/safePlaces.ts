@@ -4,15 +4,13 @@ import { buildApiUrl } from './api';
 import { isPatientSession } from './session';
 
 export const SAFE_PLACE_QUESTIONS = [
-  'Pense à un lieu réel ou imaginaire où tu as été et où tu t’es senti en sécurité. Quel est ce lieu ?',
-  'Peux-tu le visualiser ?',
-  'Quand tu t’y promènes mentalement, qu’est-ce qui attire ton attention ?',
+  'Pense à un lieu réel ou imaginaire où tu as été et où tu t’es senti en sécurité.',
   'Est-ce qu’une image pourrait représenter cet endroit ?',
-  'Que vois-tu dans ce lieu ?',
-  'Qu’entends-tu, que ressens-tu et que penses-tu dans cet endroit sécurisant ?',
-  'Où ressens-tu cette sensation de sécurité dans ton corps ?',
-  'Quel mot ou quelle expression pourrait représenter cet endroit sécurisant ?',
-  'Quelles sensations ressens-tu lorsque tu penses à ce mot ou à cette expression ?',
+  'Essaie de décrire ce que tu vois. Note ce que tu entends, ce que tu ressens, ce que tu penses dans cet endroit sécurisant.',
+  'Concentre-toi sur tout cela et essaie de situer où tu ressens cela dans ton corps.',
+  'Est-ce qu’un mot ou une expression pourrait représenter cet endroit sécurisant ?',
+  'Pense à ce mot ou à cette expression et note les sensations que tu ressens quand tu y penses.',
+  'Maintenant, tu peux effectuer cet exercice aussi souvent que nécessaire.',
 ] as const;
 
 export type SafePlaceAnswer = { question: string; answer: string };
@@ -32,7 +30,7 @@ function normalizeAnswers(value: unknown): SafePlaceAnswer[] {
   if (value.every((entry) => typeof entry === 'string')) {
     const legacyAnswers = value as string[];
     if (legacyAnswers.length === 1) {
-      return [{ question: SAFE_PLACE_QUESTIONS[7], answer: legacyAnswers[0] ?? '' }];
+      return [{ question: SAFE_PLACE_QUESTIONS[4], answer: legacyAnswers[0] ?? '' }];
     }
     return legacyAnswers.map((answer, index) => ({
       question: SAFE_PLACE_QUESTIONS[index] ?? `Question ${index + 1}`,

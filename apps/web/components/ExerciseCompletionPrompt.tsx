@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { activationValueToRoute, classifyActivationValue } from '../lib/activationFlow';
+import { getRandomExerciseEncouragement } from '../lib/exerciseEncouragements';
 import { postHistoryEntry } from '../lib/patientTracking';
 
 type Props = {
@@ -9,6 +10,12 @@ type Props = {
   onClose?: () => void;
   open: boolean;
 };
+
+function ExerciseEncouragementTitle() {
+  const [encouragement] = useState(getRandomExerciseEncouragement);
+
+  return <h2 id="exercise-completion-title" style={styles.title}>{encouragement}</h2>;
+}
 
 export default function ExerciseCompletionPrompt({
   open,
@@ -103,7 +110,7 @@ export default function ExerciseCompletionPrompt({
         </div>
 
         <p style={styles.eyebrow}>Fin d’exercice</p>
-        <h2 id="exercise-completion-title" style={styles.title}>Merci</h2>
+        <ExerciseEncouragementTitle />
         <p style={styles.text}>{message}</p>
 
         {step === 'gradient' ? (
