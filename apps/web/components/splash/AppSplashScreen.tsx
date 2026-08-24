@@ -152,7 +152,7 @@ export default function AppSplashScreen() {
           <div className={`mawja-splash-logo-shell ${canBreathe ? 'is-breathing' : ''}`}>
             <div className="mawja-splash-halo" />
             <Image
-              src="/brand/mawja-splash-hero.jpg"
+              src="/brand/kalymap-splash-hero.png"
               alt="Mascotte Kalymap"
               width={360}
               height={360}
