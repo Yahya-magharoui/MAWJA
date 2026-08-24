@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import HomeButton from '../../../../components/HomeButton';
 import { logActivity } from '../../../../lib/patientTracking';
 
 /**
@@ -64,7 +65,7 @@ export default function SBATactiles() {
             Croise les bras sur tes épaules. Le point apparaît alternativement sur chaque épaule.
           </p>
         </div>
-        <button aria-label="Paramètres" style={gear}>⚙️</button>
+        <div style={{ display:'flex', gap:8, justifySelf:'end' }}><HomeButton /><button aria-label="Paramètres" style={gear}>⚙️</button></div>
       </header>
 
       <section style={stage}>
@@ -113,7 +114,7 @@ const wrap: React.CSSProperties = {
   gridTemplateRows:'auto 1fr auto',
   gap:10
 };
-const hdr:  React.CSSProperties = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center', marginBottom:6 };
+const hdr:  React.CSSProperties = { display:'grid', gridTemplateColumns:'40px minmax(0, 1fr) auto', alignItems:'center', gap:8, marginBottom:6 };
 const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { justifySelf:'end', border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'6px 8px', cursor:'pointer' };
 const stage: React.CSSProperties = { display:'grid', placeItems:'center', padding:'4px 0', minHeight:0 };

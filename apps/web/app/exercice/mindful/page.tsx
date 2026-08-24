@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../components/BackLink';
+import HomeButton from '../../../components/HomeButton';
 import ExerciseCompletionPrompt from '../../../components/ExerciseCompletionPrompt';
 import { logActivity } from '../../../lib/patientTracking';
 
@@ -133,7 +134,7 @@ export default function MindfulAudiosPage() {
       <header style={styles.header}>
         <BackLink href="/hyperactivation" style={styles.back} />
         <h1 style={styles.h1}>Audios de pleine conscience</h1>
-        <button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button>
+        <div style={{ display:'flex', gap:8, justifySelf:'end' }}><HomeButton /><button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button></div>
       </header>
 
       <p style={styles.subtitle}>
@@ -198,7 +199,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#0f172a',
     padding: '16px 20px 28px',
   },
-  header: { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center' },
+  header: { display:'grid', gridTemplateColumns:'40px minmax(0, 1fr) auto', alignItems:'center', gap:8 },
   back: { justifySelf: 'start' },
   h1: { margin:0, fontSize:20, fontWeight:800, textAlign:'center' },
   gear: {

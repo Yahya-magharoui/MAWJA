@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import BackLink from '../../../components/BackLink';
+import HomeButton from '../../../components/HomeButton';
 
 function vibe() { try { (navigator as any)?.vibrate?.(15); } catch {} }
 
@@ -11,7 +12,7 @@ export default function AnchoringHub() {
       <header style={hdr}>
         <BackLink href="/hyperactivation" style={back} />
         <h1 style={{ margin:0, fontSize:20 }}>Ancrage sensoriel</h1>
-        <button aria-label="Paramètres" title="Paramètres" style={gear}>⚙️</button>
+        <div style={{ display:'flex', gap:8, justifySelf:'end' }}><HomeButton /><button aria-label="Paramètres" title="Paramètres" style={gear}>⚙️</button></div>
       </header>
 
       <p style={{ opacity:.7, fontSize:14, margin:'8px 0 20px' }}>
@@ -62,7 +63,7 @@ export default function AnchoringHub() {
 }
 
 const wrap: React.CSSProperties = { minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 20px' };
-const hdr: React.CSSProperties  = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center' };
+const hdr: React.CSSProperties  = { display:'grid', gridTemplateColumns:'40px minmax(0, 1fr) auto', alignItems:'center', gap:8 };
 const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer' };
 

@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../components/BackLink';
+import HomeButton from '../../components/HomeButton';
 import { tintColor, useThemeColor, withAlpha } from '../../components/theme';
 import { HYPO_EXERCISES } from '../../lib/exerciseCatalog';
 import {
@@ -156,7 +157,7 @@ export default function HypoactivationPage() {
           <h1 className="zone-title" style={{ margin:0, fontSize:20 }}>Exercices hypoactivation</h1>
           <p style={{ margin:'4px 0 0', fontSize:13, opacity:.7 }}>Sélectionne un exercice pour revenir à ta fenêtre de tolérance</p>
         </div>
-        <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button>
+        <div style={headerActions}><HomeButton /><button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button></div>
       </header>
 
       <section style={grid}>
@@ -207,6 +208,7 @@ export default function HypoactivationPage() {
 }
 
 const gearBtn: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer' };
+const headerActions: React.CSSProperties = { display:'flex', gap:8, justifySelf:'end' };
 const grid: React.CSSProperties = { display:'grid', gap:16, gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', maxWidth:900, margin:'8px auto 0', padding:'0 20px' };
 const tile = (color:string): React.CSSProperties => ({
   borderRadius:22,

@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../components/BackLink';
+import HomeButton from '../../components/HomeButton';
 import { tintColor, useThemeColor, withAlpha } from '../../components/theme';
 import { HYPER_EXERCISES } from '../../lib/exerciseCatalog';
 import {
@@ -136,7 +137,7 @@ export default function HyperactivationPage() {
       <header className="zone-header" style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
         <BackLink href="/app" style={{ justifySelf: 'start' }} />
         <h1 className="zone-title" style={{ margin:0, fontSize:20, textAlign:'center' }}>Exercices hyperactivation</h1>
-        <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button>
+        <div style={headerActions}><HomeButton /><button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button></div>
       </header>
 
       <p className="zone-intro" style={{ margin:'0 auto 12px', opacity:.7, fontSize:16, textAlign:'center', maxWidth:700, padding:'0 20px' }}>
@@ -196,6 +197,7 @@ export default function HyperactivationPage() {
 }
 
 const gearBtn: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer' };
+const headerActions: React.CSSProperties = { display:'flex', gap:8, justifySelf:'end' };
 const grid: React.CSSProperties = { display:'grid', gap:16, gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', maxWidth:900, margin:'10px auto 0', padding:'0 20px' };
 const tile = (color:string): React.CSSProperties => ({
   borderRadius:22,

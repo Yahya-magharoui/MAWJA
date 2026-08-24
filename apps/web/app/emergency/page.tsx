@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 import BackLink from '../../components/BackLink';
+import HomeButton from '../../components/HomeButton';
 
 type PageSearchParams = {
   from?: string | string[];
@@ -33,7 +34,7 @@ export default function EmergencyPage({ searchParams }: { searchParams?: PageSea
       <header style={styles.header}>
         <BackLink href={backHref} style={styles.back} />
         <h1 style={styles.h1}>J’ai besoin d’aide</h1>
-        <button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button>
+        <div style={{ display:'flex', gap:8, justifySelf:'end' }}><HomeButton /><button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button></div>
       </header>
 
       <p style={styles.subtitle}>On va traverser cela ensemble</p>
@@ -92,7 +93,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   header: {
     display: 'grid',
-    gridTemplateColumns: '40px 1fr 40px',
+    gridTemplateColumns: '40px minmax(0, 1fr) auto',
     alignItems: 'center',
   },
   back: { justifySelf: 'start' },

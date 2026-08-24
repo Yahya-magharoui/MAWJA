@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BackLink from '../../../../components/BackLink';
+import HomeButton from '../../../../components/HomeButton';
 import { logActivity } from '../../../../lib/patientTracking';
 import { createSafePlace, SAFE_PLACE_QUESTIONS, type SafePlaceAnswer } from '../../../../lib/safePlaces';
 
@@ -94,7 +95,7 @@ export default function BuildSafePlace() {
       <header style={headerStyle}>
         <BackLink href="/exercice/safe-place" style={{ justifySelf: 'start' }} />
         <h1 style={titleStyle}>Construction de mon lieu sûr</h1>
-        <button aria-label="Paramètres" title="Paramètres" style={gearButtonStyle}>⚙️</button>
+        <div style={headerActionsStyle}><HomeButton /><button aria-label="Paramètres" title="Paramètres" style={gearButtonStyle}>⚙️</button></div>
       </header>
 
       <section style={introStyle}>
@@ -136,9 +137,10 @@ export default function BuildSafePlace() {
 }
 
 const pageStyle: React.CSSProperties = { minHeight: '100dvh', color: '#0f172a', padding: 'max(16px, env(safe-area-inset-top)) 14px max(32px, env(safe-area-inset-bottom))' };
-const headerStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr) 40px', alignItems: 'center', gap: 10, width: 'min(720px, 100%)', margin: '0 auto 18px' };
+const headerStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr) auto', alignItems: 'center', gap: 10, width: 'min(720px, 100%)', margin: '0 auto 18px' };
 const titleStyle: React.CSSProperties = { margin: 0, fontSize: 'clamp(18px, 4vw, 24px)', textAlign: 'center' };
 const gearButtonStyle: React.CSSProperties = { border: '1px solid #e5e7eb', background: '#fff', borderRadius: 12, padding: 8, cursor: 'pointer' };
+const headerActionsStyle: React.CSSProperties = { display: 'flex', gap: 8, justifySelf: 'end' };
 const introStyle: React.CSSProperties = { width: 'min(680px, 100%)', margin: '0 auto 16px', padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,.78)', color: '#475569', lineHeight: 1.5 };
 const formStyle: React.CSSProperties = { width: 'min(680px, 100%)', margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 16 };
 const cardStyle: React.CSSProperties = { display: 'grid', gap: 10, padding: 18, borderRadius: 20, background: 'rgba(255,255,255,.94)', border: '1px solid rgba(167,139,250,.22)', boxShadow: '0 10px 24px rgba(76,29,149,.07)' };

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../components/BackLink';
+import HomeButton from '../../../components/HomeButton';
 import ExerciseCompletionPrompt from '../../../components/ExerciseCompletionPrompt';
 import { useQueryParam } from '../../../hooks/useQueryParam';
 import { logActivity } from '../../../lib/patientTracking';
@@ -138,7 +139,7 @@ export default function StimulatingBreathPage() {
       <header style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
         <BackLink href={backHref} style={{ justifySelf: 'start' }} />
         <h1 style={{ margin:0, fontSize:20 }}>Respiration stimulante</h1>
-        <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button>
+        <div style={{ display:'flex', gap:8, justifySelf:'end' }}><HomeButton /><button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button></div>
       </header>
 
       {/* INTRO */}

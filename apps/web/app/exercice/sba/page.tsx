@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import BackLink from '../../../components/BackLink';
+import HomeButton from '../../../components/HomeButton';
 
 type Card = { label: string; href: string; icon: string };
 
@@ -21,7 +22,7 @@ export default function SBAHome() {
         <h1 style={{ margin:0, fontSize:20, textAlign:'center' }}>
           Stimulation Bilatérale Alternée
         </h1>
-        <button style={gear} aria-label="Paramètres">⚙️</button>
+        <div style={{ display:'flex', gap:8, justifySelf:'end' }}><HomeButton /><button style={gear} aria-label="Paramètres">⚙️</button></div>
       </header>
 
       <p style={{ opacity:.7, fontSize:14, margin:'8px 0 18px', textAlign:'center' }}>
@@ -65,7 +66,7 @@ const page: React.CSSProperties = {
   color:'#0f172a',
   padding:'16px 20px'
 };
-const hdr: React.CSSProperties  = { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center' };
+const hdr: React.CSSProperties  = { display:'grid', gridTemplateColumns:'40px minmax(0, 1fr) auto', alignItems:'center', gap:8 };
 const back: React.CSSProperties = { justifySelf: 'start' };
 const gear: React.CSSProperties = { border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer', justifySelf:'end' };
 const grid: React.CSSProperties  = { display:'grid', gap:16, gridTemplateColumns:'1fr', maxWidth:420, margin:'0 auto' };

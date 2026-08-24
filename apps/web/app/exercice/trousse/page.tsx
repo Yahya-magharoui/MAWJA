@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import BackLink from '../../../components/BackLink';
+import HomeButton from '../../../components/HomeButton';
 import { useQueryParam } from '../../../hooks/useQueryParam';
 
 type KitSection = {
@@ -74,9 +75,10 @@ export default function SafetyKitPage() {
       <header style={header}>
         <BackLink href={backHref} style={{ justifySelf: 'start' }} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Trousse de sécurité émotionnelle</h1>
-        <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>
-          ⚙️
-        </button>
+        <div style={{ display:'flex', gap:8, justifySelf:'end' }}>
+          <HomeButton />
+          <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button>
+        </div>
       </header>
 
       <section style={intro}>

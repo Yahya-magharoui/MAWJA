@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { useCallback, useMemo } from 'react';
 import BackLink from '../../../components/BackLink';
+import HomeButton from '../../../components/HomeButton';
 import { useThemeColor, withAlpha } from '../../../components/theme';
 
 export default function SafePlaceHub() {
@@ -19,7 +20,7 @@ export default function SafePlaceHub() {
       <header style={styles.header}>
         <BackLink href="/hyperactivation" style={styles.back} />
         <h1 style={styles.h1}>Sécurisation lieu sûr</h1>
-        <button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button>
+        <div style={styles.headerActions}><HomeButton /><button aria-label="Paramètres" title="Paramètres" style={styles.gear}>⚙️</button></div>
       </header>
 
       <p style={styles.subtitle}>
@@ -89,10 +90,11 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#0f172a',
     padding: '16px 20px 90px',
   },
-  header: { display:'grid', gridTemplateColumns:'40px 1fr 40px', alignItems:'center' },
+  header: { display:'grid', gridTemplateColumns:'40px minmax(0, 1fr) auto', alignItems:'center', gap:8 },
   back: { justifySelf: 'start' },
   h1: { margin:0, fontSize:20, fontWeight:800 },
   gear: { justifySelf:'end', border:'1px solid #e5e7eb', background:'#fff', borderRadius:12, padding:'8px 10px', cursor:'pointer' },
+  headerActions: { display:'flex', gap:8, justifySelf:'end' },
   subtitle: { margin:'8px 0 22px', opacity:.7, fontSize:14 },
   grid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:18, maxWidth:520, margin:'16px auto 0' },
   card: {

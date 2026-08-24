@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { tintColor, useThemeColor } from '../../components/theme';
 import BackLink from '../../components/BackLink';
+import HomeButton from '../../components/HomeButton';
 
 /** — thème — */
 /** — sections du plan — */
@@ -103,7 +104,7 @@ export default function CrisisPlanPage({ searchParams }: { searchParams?: PageSe
           <h1 style={{ margin: 0, fontSize: 20 }}>Plan de crise/sécurité</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, opacity: 0.7 }}>Tu peux le compléter ou l’actualiser !</p>
         </div>
-        <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button>
+        <div style={{ display:'flex', gap:8, justifySelf:'end' }}><HomeButton /><button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button></div>
       </header>
 
       {/* sections */}

@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { useMemo } from 'react';
 import BackLink from '../../../components/BackLink';
+import HomeButton from '../../../components/HomeButton';
 import { useQueryParam } from '../../../hooks/useQueryParam';
 
 function useOrigin() {
@@ -29,7 +30,7 @@ export default function WakeBodyHome() {
       <header style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
         <BackLink href={backHref} style={{ justifySelf: 'start' }} />
         <h1 style={{ margin:0, fontSize:20 }}>Exercices pour réveiller le corps</h1>
-        <button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button>
+        <div style={{ display:'flex', gap:8, justifySelf:'end' }}><HomeButton /><button aria-label="Paramètres" title="Paramètres" style={gearBtn}>⚙️</button></div>
       </header>
 
       <p style={{ margin:'6px 20px 14px', opacity:.7, fontSize:14 }}>Sélectionne un exercice</p>

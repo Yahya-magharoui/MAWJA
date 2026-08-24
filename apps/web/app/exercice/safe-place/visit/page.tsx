@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import HomeButton from '../../../../components/HomeButton';
 import { logActivity } from '../../../../lib/patientTracking';
 import { deleteSafePlace, fetchSafePlaces, type SafePlace } from '../../../../lib/safePlaces';
 
@@ -77,7 +78,10 @@ export default function VisitSafePlace() {
       <header style={headerStyle}>
         <BackLink href="/exercice/safe-place" style={{ justifySelf: 'start' }} />
         <h1 style={titleStyle}>Accès à mon lieu sûr</h1>
-        <a href="/exercice/safe-place/build" style={newButtonStyle} onMouseDown={() => vibe()}>+ Nouveau</a>
+        <div style={headerActionsStyle}>
+          <HomeButton />
+          <a href="/exercice/safe-place/build" style={newButtonStyle} onMouseDown={() => vibe()}>+ Nouveau</a>
+        </div>
       </header>
 
       {error ? <p role="alert" style={errorStyle}>{error}</p> : null}
@@ -151,6 +155,7 @@ const pageStyle: React.CSSProperties = { minHeight: '100dvh', background: '#F6F7
 const headerStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr) auto', alignItems: 'center', gap: 10, width: 'min(860px, 100%)', margin: '0 auto 20px' };
 const titleStyle: React.CSSProperties = { margin: 0, fontSize: 'clamp(19px, 4vw, 24px)', textAlign: 'center' };
 const newButtonStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 12, background: 'var(--theme-color)', color: '#fff', textDecoration: 'none', fontWeight: 700 };
+const headerActionsStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, justifySelf: 'end' };
 const journeyStyle: React.CSSProperties = { position: 'relative', width: 'min(860px, 100%)', margin: '0 auto', display: 'grid', justifyItems: 'center', gap: 18, padding: '4px 0 24px' };
 const journeyStepStyle: React.CSSProperties = { position: 'relative', zIndex: 1, width: 'min(620px, 100%)', padding: '20px 18px', borderRadius: 20, background: '#eeebff', border: '1px solid #e2dcff', color: '#37305f', textAlign: 'center', fontSize: 'clamp(16px, 2.4vw, 19px)', fontWeight: 650, lineHeight: 1.45, boxShadow: '0 8px 18px rgba(76,29,149,.06)' };
 const statusStyle: React.CSSProperties = { maxWidth: 860, margin: '24px auto', textAlign: 'center', color: '#64748b' };
