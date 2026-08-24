@@ -79,8 +79,21 @@ model Patient {
   notes            Note[]
   favorites        Favorite[]
   activityLogs     ActivityLog[]
+  safePlaces       SafePlace[]
 
   @@map("Patient")
+}
+
+model SafePlace {
+  id        Int      @id @default(autoincrement())
+  name      String
+  answers   Json
+  patientId Int
+  createdAt DateTime @default(now())
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, createdAt])
+  @@map("SafePlace")
 }
 
 model Doctor {

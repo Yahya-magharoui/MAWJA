@@ -906,6 +906,9 @@ export class AuthController {
           orderBy: { createdAt: 'asc' },
           include: { exercise: true },
         },
+        safePlaces: {
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
 
@@ -939,6 +942,7 @@ export class AuthController {
       goals: patient?.goals ?? [],
       notes: patient?.notes ?? [],
       favorites: patient?.favorites ?? [],
+      safePlaces: patient?.safePlaces ?? [],
     };
   }
 
@@ -1042,6 +1046,9 @@ export class AuthController {
             where: { patientId: patient.id },
           });
           await tx.favorite.deleteMany({
+            where: { patientId: patient.id },
+          });
+          await tx.safePlace.deleteMany({
             where: { patientId: patient.id },
           });
           await tx.patient.delete({

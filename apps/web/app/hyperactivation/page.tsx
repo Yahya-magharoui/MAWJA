@@ -140,7 +140,7 @@ export default function HyperactivationPage() {
       </header>
 
       <p className="zone-intro" style={{ margin:'0 auto 12px', opacity:.7, fontSize:16, textAlign:'center', maxWidth:700, padding:'0 20px' }}>
-        Choisis un exercice pour retrouver ton équilibre.
+        Sélectionne un exercice pour qu’on revienne à ta fenêtre de tolérance.
       </p>
 
       <section style={grid}>

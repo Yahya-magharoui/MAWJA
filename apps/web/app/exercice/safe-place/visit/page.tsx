@@ -3,192 +3,165 @@
 import { useEffect, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import { logActivity } from '../../../../lib/patientTracking';
+import { deleteSafePlace, fetchSafePlaces, type SafePlace } from '../../../../lib/safePlaces';
 
-type SafePlace = { id:string; name:string; answers:string[]; createdAt:number };
-
-const LS_KEY = 'safePlacesV1';
-
-function vibe(ms=12){ try { (navigator as any)?.vibrate?.(ms) } catch {} }
+function vibe(ms = 12) {
+  try { navigator.vibrate?.(ms); } catch {}
+}
 
 export default function VisitSafePlace() {
   const [items, setItems] = useState<SafePlace[]>([]);
   const [highlight, setHighlight] = useState<string | null>(null);
-  const [openId, setOpenId] = useState<string | null>(null); // modale détails
+  const [openId, setOpenId] = useState<string | number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | number | null>(null);
 
-  /* charge */
   useEffect(() => {
-    try { setItems(JSON.parse(localStorage.getItem(LS_KEY) || '[]')); } catch {}
-    const url = new URL(window.location.href);
-    const h = url.searchParams.get('highlight');
-    if (h) setHighlight(h);
+    let cancelled = false;
+    setHighlight(new URL(window.location.href).searchParams.get('highlight'));
+    void fetchSafePlaces()
+      .then((safePlaces) => {
+        if (!cancelled) setItems(safePlaces);
+      })
+      .catch((loadError) => {
+        if (!cancelled) setError(loadError instanceof Error ? loadError.message : 'Impossible de charger tes lieux sûrs.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, []);
 
-  /* scroll vers le dernier ajouté si besoin */
   useEffect(() => {
-    if (!highlight) return;
-    const el = document.getElementById(`sp-${highlight}`);
-    if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
-  }, [highlight, items.length]);
+    if (!highlight || loading) return;
+    document.getElementById(`sp-${highlight}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlight, loading]);
 
-  function saveToLS(next: SafePlace[]) {
-    localStorage.setItem(LS_KEY, JSON.stringify(next));
-  }
-
-  function remove(id: string) {
+  async function remove(item: SafePlace) {
     vibe();
-    const ok = confirm('Supprimer ce lieu sûr ? Cette action est définitive.');
-    if (!ok) return;
-    setItems(prev => {
-      const next = prev.filter(x => x.id !== id);
-      saveToLS(next);
-      return next;
-    });
+    if (!window.confirm('Supprimer ce lieu sûr ? Cette action est définitive.')) return;
+    setDeletingId(item.id);
+    setError(null);
+    try {
+      await deleteSafePlace(item.id);
+      setItems((current) => current.filter((entry) => String(entry.id) !== String(item.id)));
+      if (String(openId) === String(item.id)) setOpenId(null);
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Impossible de supprimer ce lieu sûr.');
+    } finally {
+      setDeletingId(null);
+    }
   }
 
-  const selected = openId ? items.find(i => i.id === openId) : null;
+  async function openDetails(item: SafePlace) {
+    vibe();
+    setOpenId(item.id);
+    try {
+      await logActivity({ category: 'SAFE_PLACE', subType: 'Visite', detail: item.name });
+    } catch {}
+  }
+
+  const selected = openId == null ? null : items.find((item) => String(item.id) === String(openId));
 
   return (
-    <main style={wrap}>
+    <main style={pageStyle}>
       <style>{css}</style>
-
-      <header style={hdr}>
-        <BackLink href="/exercice/safe-place" style={back} />
-        <h1 style={{ margin:0, fontSize:20 }}>Mon lieu sûr</h1>
-        <a href="/exercice/safe-place/build" style={newBtn} onMouseDown={()=>vibe()}>+ Nouveau</a>
+      <header style={headerStyle}>
+        <BackLink href="/exercice/safe-place" style={{ justifySelf: 'start' }} />
+        <h1 style={titleStyle}>Accès à mon lieu sûr</h1>
+        <a href="/exercice/safe-place/build" style={newButtonStyle} onMouseDown={() => vibe()}>+ Nouveau</a>
       </header>
 
-      {items.length === 0 ? (
-        <section style={{ maxWidth:780, margin:'18px auto', padding:'0 20px' }}>
-          <div style={emptyCard}>
-            <p style={{ margin:'0 0 10px', fontWeight:700 }}>Tu n’as pas encore créé de lieu sûr.</p>
-            <a href="/exercice/safe-place/build" style={primary}>Créer mon premier lieu</a>
-          </div>
+      {error ? <p role="alert" style={errorStyle}>{error}</p> : null}
+      {loading ? (
+        <p style={statusStyle}>Chargement de tes lieux sûrs…</p>
+      ) : items.length === 0 ? (
+        <section style={emptyStyle}>
+          <p style={{ margin: '0 0 12px', fontWeight: 700 }}>Tu n’as pas encore créé de lieu sûr.</p>
+          <a href="/exercice/safe-place/build" style={primaryButtonStyle}>Créer mon premier lieu</a>
         </section>
       ) : (
-        <section style={{ maxWidth:900, margin:'6px auto 24px', padding:'0 16px', display:'grid', gap:16 }}>
-          {items.map((sp) => (
-            <article
-              key={sp.id}
-              id={`sp-${sp.id}`}
-              className={sp.id === highlight ? 'card pulse' : 'card'}
-              style={card(sp.id === highlight)}
-            >
-              <div style={headerRow}>
-                <div style={circle}>{(sp.name || 'L').slice(0,2).toUpperCase()}</div>
-                <div style={{flex:1}}>
-                  <div style={{ fontWeight:800, lineHeight:1.2 }}>{sp.name || 'Mon lieu sûr'}</div>
-                  <div style={{ opacity:.6, fontSize:12 }}>
-                    {new Date(sp.createdAt).toLocaleString()}
+        <section style={listStyle}>
+          {items.map((item) => {
+            const isHighlighted = String(item.id) === highlight;
+            const answeredCount = item.answers.filter((entry) => entry.answer.trim()).length;
+            return (
+              <article key={item.id} id={`sp-${item.id}`} className={isHighlighted ? 'safe-place-card pulse' : 'safe-place-card'} style={cardStyle(isHighlighted)}>
+                <div style={cardHeaderStyle}>
+                  <div style={circleStyle}>{(item.name || 'L').slice(0, 2).toUpperCase()}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h2 style={cardTitleStyle}>{item.name || 'Mon lieu sûr'}</h2>
+                    <p style={metaStyle}>{new Date(item.createdAt).toLocaleString('fr-FR')} · {answeredCount} réponse{answeredCount > 1 ? 's' : ''}</p>
                   </div>
                 </div>
-
-                {/* actions à droite */}
-                <div style={{ display:'flex', gap:8 }}>
-                  <button
-                    style={ghost}
-                    onClick={async ()=>{
-                      vibe();
-                      setOpenId(sp.id);
-                      try {
-                        await logActivity({
-                          category: 'SAFE_PLACE',
-                          subType: 'Visite',
-                          detail: sp.name,
-                        });
-                      } catch (error) {
-                        console.error(error);
-                      }
-                    }}
-                    title="Voir les détails"
-                  >
-                    Voir les détails
-                  </button>
-                  <button
-                    style={danger}
-                    onClick={()=>remove(sp.id)}
-                    title="Supprimer"
-                  >
-                    Supprimer
+                <div style={actionsStyle}>
+                  <button type="button" style={detailsButtonStyle} onClick={() => openDetails(item)}>Voir le détail</button>
+                  <button type="button" style={deleteButtonStyle} disabled={deletingId === item.id} onClick={() => remove(item)}>
+                    {deletingId === item.id ? 'Suppression…' : 'Supprimer'}
                   </button>
                 </div>
-              </div>
-
-              {/* chips récap rapides */}
-              <div style={chipsWrap}>
-                {sp.answers?.map((a, i) => a?.trim()
-                  ? <span key={i} style={chip}>{a.trim()}</span>
-                  : null)}
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </section>
       )}
 
-      {/* modale détails */}
-      {selected && (
-        <div className="modal" onClick={()=>setOpenId(null)}>
-          <div className="sheet" onClick={(e)=>e.stopPropagation()}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-              <h2 style={{ margin:0, fontSize:18 }}>{selected.name || 'Mon lieu sûr'}</h2>
-              <button style={ghost} onClick={()=>setOpenId(null)}>Fermer</button>
+      {selected ? (
+        <div className="safe-place-modal" role="presentation" onClick={() => setOpenId(null)}>
+          <section className="safe-place-sheet" role="dialog" aria-modal="true" aria-labelledby="safe-place-detail-title" onClick={(event) => event.stopPropagation()}>
+            <div style={detailHeaderStyle}>
+              <div>
+                <p style={eyebrowStyle}>Mon lieu sûr</p>
+                <h2 id="safe-place-detail-title" style={{ margin: 0 }}>{selected.name}</h2>
+              </div>
+              <button type="button" style={detailsButtonStyle} onClick={() => setOpenId(null)}>Fermer</button>
             </div>
-            <div style={{ display:'grid', gap:10, maxHeight:'60vh', overflow:'auto' }}>
-              {selected.answers?.map((a,i)=>(
-                <div key={i} style={qa}>
-                  <div style={q}>Réponse {i+1}</div>
-                  <div style={aTxt}>{a || '—'}</div>
-                </div>
+            <div style={answersStyle}>
+              {selected.answers.map((entry, index) => (
+                <article key={`${entry.question}-${index}`} style={answerCardStyle}>
+                  <h3 style={questionStyle}><span style={numberStyle}>{index + 1}</span>{entry.question}</h3>
+                  <p style={answerStyle}>{entry.answer.trim() || 'Aucune réponse renseignée.'}</p>
+                </article>
               ))}
             </div>
-          </div>
+          </section>
         </div>
-      )}
+      ) : null}
     </main>
   );
 }
 
-/* styles */
-const wrap:React.CSSProperties={ minHeight:'100dvh', background:'#F6F7FE', fontFamily:'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', color:'#0f172a', padding:'16px 20px' };
-const hdr:React.CSSProperties={ display:'grid', gridTemplateColumns:'40px 1fr auto', alignItems:'center' };
-const back:React.CSSProperties={ justifySelf:'start' };
-
-const newBtn:React.CSSProperties={ padding:'8px 12px', borderRadius:12, background:'var(--theme-color)', color:'#fff', textDecoration:'none', fontWeight:700, border:'1px solid rgba(0,0,0,.08)', boxShadow:'0 6px 14px rgba(0,0,0,.12)' };
-
-const emptyCard:React.CSSProperties={ border:'1px solid rgba(0,0,0,.06)', borderRadius:18, padding:'16px', background:'#fff', boxShadow:'0 8px 18px rgba(0,0,0,.06)' };
-const primary:React.CSSProperties={ padding:'10px 14px', borderRadius:12, background:'var(--theme-color)', color:'#fff', textDecoration:'none', fontWeight:700 };
-
-const card = (hl:boolean):React.CSSProperties => ({
-  border:'1px solid rgba(0,0,0,.06)', borderRadius:22, background:'#fff',
-  boxShadow: hl ? '0 12px 26px rgba(var(--theme-color-rgb),.35)' : '0 8px 18px rgba(0,0,0,.06)',
-  padding:'14px 14px 12px'
-});
-const headerRow:React.CSSProperties={ display:'flex', alignItems:'center', gap:12, marginBottom:10 };
-const circle:React.CSSProperties={ width:44, height:44, borderRadius:'50%', display:'grid', placeItems:'center', background:'rgba(var(--theme-color-rgb),0.2)', fontWeight:800 };
-
-const chipsWrap:React.CSSProperties={ display:'flex', flexWrap:'wrap', gap:8 };
-const chip:React.CSSProperties={ padding:'8px 10px', borderRadius:999, background:'#F1F0FF', border:'1px solid #E6E3FF', fontSize:13 };
-
-const ghost:React.CSSProperties={ padding:'8px 12px', borderRadius:12, border:'1px solid #e5e7eb', background:'#fff', fontWeight:600, cursor:'pointer' };
-const danger:React.CSSProperties={ padding:'8px 12px', borderRadius:12, border:'1px solid #ef4444', background:'#fff', color:'#b91c1c', fontWeight:700, cursor:'pointer' };
-
-const qa:React.CSSProperties={ border:'1px solid #e5e7eb', borderRadius:12, padding:'10px 12px', background:'#fff' };
-const q:React.CSSProperties={ fontSize:12, opacity:.6, marginBottom:4 };
-const aTxt:React.CSSProperties={ whiteSpace:'pre-wrap' };
+const pageStyle: React.CSSProperties = { minHeight: '100dvh', background: '#F6F7FE', color: '#0f172a', padding: 'max(16px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom))' };
+const headerStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr) auto', alignItems: 'center', gap: 10, width: 'min(860px, 100%)', margin: '0 auto 20px' };
+const titleStyle: React.CSSProperties = { margin: 0, fontSize: 'clamp(19px, 4vw, 24px)', textAlign: 'center' };
+const newButtonStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 12, background: 'var(--theme-color)', color: '#fff', textDecoration: 'none', fontWeight: 700 };
+const statusStyle: React.CSSProperties = { maxWidth: 860, margin: '24px auto', textAlign: 'center', color: '#64748b' };
+const errorStyle: React.CSSProperties = { maxWidth: 860, margin: '0 auto 16px', padding: '12px 14px', borderRadius: 12, background: '#fef2f2', color: '#b91c1c' };
+const emptyStyle: React.CSSProperties = { maxWidth: 700, margin: '24px auto', padding: 20, borderRadius: 18, background: '#fff', textAlign: 'center', boxShadow: '0 8px 18px rgba(0,0,0,.06)' };
+const primaryButtonStyle: React.CSSProperties = { display: 'inline-block', padding: '10px 14px', borderRadius: 12, background: 'var(--theme-color)', color: '#fff', textDecoration: 'none', fontWeight: 700 };
+const listStyle: React.CSSProperties = { maxWidth: 860, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: 16 };
+const cardStyle = (highlighted: boolean): React.CSSProperties => ({ padding: 18, borderRadius: 22, background: '#fff', border: highlighted ? '2px solid var(--theme-color)' : '1px solid #e5e7eb', boxShadow: highlighted ? '0 12px 28px rgba(var(--theme-color-rgb),.22)' : '0 8px 18px rgba(0,0,0,.06)' });
+const cardHeaderStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 };
+const circleStyle: React.CSSProperties = { width: 46, height: 46, flex: '0 0 46px', borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'rgba(var(--theme-color-rgb),.18)', fontWeight: 800 };
+const cardTitleStyle: React.CSSProperties = { margin: 0, fontSize: 18, overflowWrap: 'anywhere' };
+const metaStyle: React.CSSProperties = { margin: '5px 0 0', color: '#64748b', fontSize: 12 };
+const actionsStyle: React.CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 8 };
+const detailsButtonStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 12, border: '1px solid #d8d3ee', background: '#fff', color: '#312e81', fontWeight: 700, cursor: 'pointer' };
+const deleteButtonStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 12, border: '1px solid #fecaca', background: '#fff', color: '#b91c1c', fontWeight: 700, cursor: 'pointer' };
+const detailHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 16 };
+const eyebrowStyle: React.CSSProperties = { margin: '0 0 5px', color: '#7c3aed', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em' };
+const answersStyle: React.CSSProperties = { display: 'grid', gap: 12 };
+const answerCardStyle: React.CSSProperties = { padding: 14, borderRadius: 16, border: '1px solid #e7e5f3', background: '#fafaff' };
+const questionStyle: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', gap: 9, margin: '0 0 8px', color: '#312e81', fontSize: 15, lineHeight: 1.4 };
+const numberStyle: React.CSSProperties = { flex: '0 0 24px', width: 24, height: 24, display: 'grid', placeItems: 'center', borderRadius: 99, background: '#ede9fe', color: '#6d28d9', fontSize: 12 };
+const answerStyle: React.CSSProperties = { margin: 0, paddingLeft: 33, whiteSpace: 'pre-wrap', color: '#334155', lineHeight: 1.55 };
 
 const css = `
-  .pulse{ animation: pulse 1.2s ease 2; }
-  @keyframes pulse{
-    0%{ transform:scale(1); box-shadow:0 12px 26px rgba(167,139,250,.0) }
-    50%{ transform:scale(1.01); box-shadow:0 14px 30px rgba(167,139,250,.45) }
-    100%{ transform:scale(1); box-shadow:0 12px 26px rgba(167,139,250,.0) }
-  }
-  .modal{
-    position: fixed; inset: 0; background: rgba(15,23,42,.35);
-    display: grid; place-items: center; padding: 16px; z-index: 50;
-  }
-  .sheet{
-    width: min(720px, 96vw); background: #fff; border-radius: 16px;
-    border: 1px solid rgba(0,0,0,.08); box-shadow: 0 20px 40px rgba(0,0,0,.18);
-    padding: 14px;
-  }
+  .pulse { animation: safe-place-pulse 1.2s ease 2; }
+  @keyframes safe-place-pulse { 50% { transform: scale(1.01); } }
+  .safe-place-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(15,23,42,.42); backdrop-filter: blur(5px); }
+  .safe-place-sheet { width: min(760px, 100%); max-height: min(86dvh, 900px); overflow: auto; padding: 20px; border-radius: 22px; background: #fff; box-shadow: 0 24px 60px rgba(15,23,42,.25); }
+  button:disabled { opacity: .6; cursor: wait; }
+  @media (max-width: 540px) { .safe-place-sheet { padding: 15px; } }
 `;

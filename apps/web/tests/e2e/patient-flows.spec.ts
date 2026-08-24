@@ -86,6 +86,28 @@ test.describe('patient app flows', () => {
     await expect(page.getByRole('heading', { name: 'Comment te sens-tu maintenant ?' })).toBeVisible();
   });
 
+  test('guest can build a safe place and read every saved answer', async ({ page }) => {
+    await seedGuestSession(page);
+    await page.goto('/exercice/safe-place/build');
+
+    await expect(page.getByRole('heading', { name: 'Construction de mon lieu sûr' })).toBeVisible();
+    const answers = page.getByPlaceholder('Écris ta réponse ici…');
+    await expect(answers).toHaveCount(9);
+    await answers.nth(0).fill('Une plage calme au coucher du soleil');
+    await answers.nth(7).fill('Mon refuge');
+    await page.getByRole('button', { name: 'Enregistrer mon lieu sûr' }).click();
+
+    await page.waitForURL('**/exercice/safe-place/visit?highlight=*');
+    await expect(page.getByRole('heading', { name: 'Accès à mon lieu sûr' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Mon refuge' })).toBeVisible();
+    await page.getByRole('button', { name: 'Voir le détail' }).click();
+
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByText('Une plage calme au coucher du soleil')).toBeVisible();
+    await expect(page.getByText('Quel mot ou quelle expression pourrait représenter cet endroit sécurisant ?')).toBeVisible();
+    await expect(page.getByRole('dialog').getByRole('paragraph').filter({ hasText: 'Mon refuge' })).toBeVisible();
+  });
+
   test('authenticated patient sees the initial check-in popup once', async ({ page }) => {
     await seedAuthenticatedSession(page, 'PATIENT');
     await page.goto('/app');
