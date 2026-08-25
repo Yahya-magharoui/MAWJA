@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 
 type QA = { id: string; q: string };
 
@@ -85,7 +86,7 @@ export default function GuidedQuestionsPage() {
             Quelques questions pour y voir plus clair
           </p>
         </div>
-        <div />
+        <PageHeaderActions />
       </header>
 
       {/* Grille de cartes */}

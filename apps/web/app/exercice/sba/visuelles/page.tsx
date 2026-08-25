@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 import { logActivity } from '../../../../lib/patientTracking';
 
 export default function SBAVisuelles() {
@@ -82,7 +83,7 @@ export default function SBAVisuelles() {
             Suis le point sans bouger la tête, seulement les yeux.
           </p>
         </div>
-        <button style={gear}>⚙️</button>
+        <PageHeaderActions />
       </header>
 
       <div ref={containerRef} style={track}>

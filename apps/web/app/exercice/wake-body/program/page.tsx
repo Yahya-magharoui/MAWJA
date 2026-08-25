@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 import { useQueryParam } from '../../../../hooks/useQueryParam';
 
 type Step = { key: string; label: string; icon: string; seconds: number };
@@ -145,7 +146,7 @@ export default function WakeProgram() {
       >
         <a href={chooserHref} style={{ textDecoration: 'none', color: '#111', fontSize: 20 }}>←</a>
         <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Programme complet</h1>
-        <div />
+        <PageHeaderActions />
       </header>
 
       <div style={{ maxWidth: 560, margin: '8px auto 0', padding: '0 20px' }}>

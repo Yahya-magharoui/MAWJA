@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useMemo } from 'react';
 import AuthRequiredNotice from '../../components/AuthRequiredNotice';
 import BackLink from '../../components/BackLink';
-import HomeButton from '../../components/HomeButton';
+import PageHeaderActions from '../../components/PageHeaderActions';
 import { useThemeColor, withAlpha } from '../../components/theme';
 import { useSessionInfo } from '../../lib/session';
 
@@ -25,7 +25,7 @@ export default function ToleranceHome() {
       <header style={hdr}>
         <BackLink href="/app" style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Fenêtre de tolérance</h1>
-        <HomeButton style={{ justifySelf: 'end' }} />
+        <PageHeaderActions />
       </header>
 
       <p style={{ margin:'6px auto 14px', opacity:.7, maxWidth:720, padding:'0 20px', textAlign:'center' }}>

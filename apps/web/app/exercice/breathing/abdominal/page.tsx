@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { useQueryParam } from '../../../../hooks/useQueryParam';
 import { logActivity } from '../../../../lib/patientTracking';
@@ -216,7 +217,7 @@ export default function AbdominalBreathing() {
         className="abdominal-header"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'auto 1fr',
+          gridTemplateColumns: 'auto 1fr auto',
           alignItems: 'start',
           width: '100%',
           gap: 8,
@@ -234,6 +235,7 @@ export default function AbdominalBreathing() {
             uniquement avec le ventre.
           </p>
         </div>
+        <PageHeaderActions />
       </header>
 
       <section className="abdominal-instruction-wrap" style={instructionWrap} aria-live="polite">

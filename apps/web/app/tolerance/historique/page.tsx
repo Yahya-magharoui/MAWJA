@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import BackLink from '../../../components/BackLink';
+import PageHeaderActions from '../../../components/PageHeaderActions';
 import { useThemeColor, withAlpha } from '../../../components/theme';
 import { fetchPatientHistories, setLastHistoryId, type HistoryState, type PatientHistory } from '../../../lib/patientTracking';
 import { useSessionInfo } from '../../../lib/session';
@@ -156,7 +157,7 @@ export default function HistoryPage() {
       <header style={hdr}>
         <BackLink href="/tolerance" style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Mon historique</h1>
-        <div />
+        <PageHeaderActions />
       </header>
 
       <div className="history-page-shell" style={{ padding: '0 20px', maxWidth: 980, margin: '0 auto 40px' }}>

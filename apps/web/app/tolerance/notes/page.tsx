@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import { useThemeColor } from '../../../components/theme';
 import BackLink from '../../../components/BackLink';
+import PageHeaderActions from '../../../components/PageHeaderActions';
 import { useSessionInfo } from '../../../lib/session';
 import {
   createPatientNote,
@@ -126,7 +127,7 @@ export default function NotesPage() {
       <header style={hdr}>
         <BackLink href="/tolerance" style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Mes Notes</h1>
-        <div />
+        <PageHeaderActions />
       </header>
 
       <p style={{ margin: '0 20px 10px', opacity: 0.7 }}>Écris ce dont tu souhaites te souvenir ou que tu as remarqué</p>

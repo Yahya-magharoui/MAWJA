@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import BackLink from '../../../components/BackLink';
+import PageHeaderActions from '../../../components/PageHeaderActions';
 import { useThemeColor, withAlpha } from '../../../components/theme';
 import { useSessionInfo } from '../../../lib/session';
 import {
@@ -244,7 +245,7 @@ export default function ObjectifsPage() {
           <h1 style={{ margin: 0, fontSize: 20 }}>Mes Objectifs</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, opacity: 0.7 }}>Note quelques objectifs sur lesquels tu souhaites travailler</p>
         </div>
-        <div />
+        <PageHeaderActions />
       </header>
 
       <div style={{ maxWidth: 720, margin: '6px auto 0', padding: '0 20px' }}>

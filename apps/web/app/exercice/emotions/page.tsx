@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../../components/BackLink';
+import PageHeaderActions from '../../../components/PageHeaderActions';
 
 /** données */
 const EMOTIONS = [
@@ -47,7 +48,7 @@ export default function EmotionWheel({ searchParams }: { searchParams?: PageSear
       <header style={styles.header}>
         <BackLink href={backHref} style={styles.backLink} />
         <h1 style={styles.h1}>Roue des émotions</h1>
-        <div />
+        <PageHeaderActions />
       </header>
 
       <p style={styles.subtitle}>

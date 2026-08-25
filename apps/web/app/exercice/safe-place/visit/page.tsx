@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
-import HomeButton from '../../../../components/HomeButton';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 import { logActivity } from '../../../../lib/patientTracking';
 import { deleteSafePlace, fetchSafePlaces, type SafePlace } from '../../../../lib/safePlaces';
 
@@ -78,10 +78,9 @@ export default function VisitSafePlace() {
       <header style={headerStyle}>
         <BackLink href="/exercice/safe-place" style={{ justifySelf: 'start' }} />
         <h1 style={titleStyle}>Accès à mon lieu sûr</h1>
-        <div style={headerActionsStyle}>
-          <HomeButton />
+        <PageHeaderActions style={headerActionsStyle}>
           <a href="/exercice/safe-place/build" style={newButtonStyle} onMouseDown={() => vibe()}>+ Nouveau</a>
-        </div>
+        </PageHeaderActions>
       </header>
 
       {error ? <p role="alert" style={errorStyle}>{error}</p> : null}

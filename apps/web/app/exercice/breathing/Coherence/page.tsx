@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { logActivity } from '../../../../lib/patientTracking';
 
@@ -253,14 +254,16 @@ export default function BreathingTube() {
       <header style={hdr}>
         <BackLink href="/hyperactivation" style={back} />
         <h1 style={{ margin: 0, fontSize: 18, color: '#4B5563' }}>Cohérence cardiaque</h1>
-        <button
-          aria-label={muted ? 'Activer le son' : 'Couper le son'}
-          title={muted ? 'Activer le son' : 'Couper le son'}
-          onClick={() => setMuted((value) => !value)}
-          style={muteBtn}
-        >
-          {muted ? '🔇' : '🔊'}
-        </button>
+        <PageHeaderActions>
+          <button
+            aria-label={muted ? 'Activer le son' : 'Couper le son'}
+            title={muted ? 'Activer le son' : 'Couper le son'}
+            onClick={() => setMuted((value) => !value)}
+            style={muteBtn}
+          >
+            {muted ? '🔇' : '🔊'}
+          </button>
+        </PageHeaderActions>
       </header>
 
       <section style={scene} className="coherence-scene">

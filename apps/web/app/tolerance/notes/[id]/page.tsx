@@ -3,6 +3,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import AuthRequiredNotice from '../../../../components/AuthRequiredNotice';
 import BackLink from '../../../../components/BackLink';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 import { deletePatientNote, fetchPatientNotes, type PatientNote } from '../../../../lib/patientTracking';
 import { useSessionInfo } from '../../../../lib/session';
 
@@ -86,7 +87,9 @@ export default function NoteDetail() {
       <header style={hdr}>
         <BackLink href="/tolerance/notes" style={backBtn} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Note</h1>
-        <button onClick={() => void removeNote()} title="Supprimer" style={trashBtn}>🗑️</button>
+        <PageHeaderActions>
+          <button onClick={() => void removeNote()} title="Supprimer" style={trashBtn}>🗑️</button>
+        </PageHeaderActions>
       </header>
 
       <div style={{ padding: '0 20px', maxWidth: 700, margin: '0 auto' }}>

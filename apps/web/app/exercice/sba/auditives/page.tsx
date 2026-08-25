@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 
 /** Un petit moteur SBA audio gauche↔︎droite via Web Audio */
@@ -258,7 +259,7 @@ export default function SBAAuditivesPage() {
             Mets un casque ou des écouteurs (pas de haut-parleur) pour bien avoir le mode binaural.
           </p>
         </div>
-        <button style={gear}>⚙️</button>
+        <PageHeaderActions />
       </header>
 
       <p style={{ margin:'6px 0 14px', opacity:.7, fontSize:13 }}>

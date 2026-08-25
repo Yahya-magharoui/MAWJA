@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../components/BackLink';
+import PageHeaderActions from '../../components/PageHeaderActions';
 
 type Emergency = {
   id: string;
@@ -187,7 +188,7 @@ export default function EmergencyPage({ searchParams }: { searchParams?: PageSea
       <header style={styles.header}>
         <BackLink href={backHref} style={styles.back} />
         <h1 style={styles.h1}>Numéros d’urgence</h1>
-        <button style={styles.gear} title="Paramètres">⚙️</button>
+        <PageHeaderActions />
       </header>
 
       <p style={styles.subtitle}>

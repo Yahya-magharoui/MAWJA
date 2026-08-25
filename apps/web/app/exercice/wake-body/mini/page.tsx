@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import BackLink from '../../../../components/BackLink';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { useQueryParam } from '../../../../hooks/useQueryParam';
 
@@ -133,7 +134,7 @@ export default function MiniWake() {
       <header style={{ display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', padding:'16px 20px' }}>
         <BackLink href={chooserHref} style={{ justifySelf: 'start' }} />
         <h1 style={{ margin:0, fontSize:20, fontWeight:700 }}>Mini exercices</h1>
-        <div />
+        <PageHeaderActions />
       </header>
 
       <section style={grid}>

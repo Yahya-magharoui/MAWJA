@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 import { logActivity, postHistoryEntry } from '../../../../lib/patientTracking';
 import {
   activationValueToRoute,
@@ -297,7 +298,7 @@ export default function EmotionDetailPage({
       <header style={styles.header}>
         <BackLink href={backHref} style={styles.back} />
         <h1 style={styles.h1}>{title}</h1>
-        <div />
+        <PageHeaderActions />
       </header>
 
       <nav style={styles.crumbs}>

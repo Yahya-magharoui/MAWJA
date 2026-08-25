@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import AuthRequiredNotice from '../../../components/AuthRequiredNotice';
 import BackLink from '../../../components/BackLink';
+import PageHeaderActions from '../../../components/PageHeaderActions';
 import { useThemeColor, withAlpha } from '../../../components/theme';
 import { useSessionInfo } from '../../../lib/session';
 import { EXERCISE_CATALOG, findExerciseCardByLabel, type ExerciseCard } from '../../../lib/exerciseCatalog';
@@ -86,7 +87,7 @@ export default function RoutinePage(){
       <header style={hdr}>
         <BackLink href="/tolerance" style={backBtn} />
         <h1 style={{ margin:0, fontSize:20 }}>Ma routine</h1>
-        <div />
+        <PageHeaderActions />
       </header>
 
       <p style={{ margin:'0 20px 10px', opacity:.7 }}>Pratique les exercices que tu as ajoutés en favoris</p>

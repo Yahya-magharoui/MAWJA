@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import BackLink from '../../../../components/BackLink';
+import PageHeaderActions from '../../../../components/PageHeaderActions';
 import ExerciseCompletionPrompt from '../../../../components/ExerciseCompletionPrompt';
 import { logActivity } from '../../../../lib/patientTracking';
 
@@ -96,7 +97,9 @@ export default function FiveFourThreeTwoOne() {
       <header style={hdr}>
         <BackLink href="/exercice/anchoring" style={back} />
         <h1 style={{ margin: 0, fontSize: 20 }}>Ancrage sensoriel 5-4-3-2-1</h1>
-        <button onClick={resetAll} style={resetBtn}>Recommencer</button>
+        <PageHeaderActions>
+          <button onClick={resetAll} style={resetBtn}>Recommencer</button>
+        </PageHeaderActions>
       </header>
 
       <section style={{ maxWidth: 760, margin: '8px auto 0', display: 'grid', gap: 16, padding: '0 12px' }}>
