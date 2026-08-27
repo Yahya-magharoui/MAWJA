@@ -2,10 +2,32 @@ import StateCheckinPrompt from "../components/StateCheckinPrompt";
 import SettingsNavigationBridge from "../components/SettingsNavigationBridge";
 import AppSplashScreen, { SplashBootstrapScript } from "../components/splash/AppSplashScreen";
 import { ThemeBootstrapScript, ThemeColorSync } from "../components/theme";
-import type { Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 
-export const metadata = { title: "Kalymap", description: "Fenêtre de tolérance" }
+const siteDescription = "Kalymap est une application de santé mentale dédiée à la régulation émotionnelle, fondée sur le concept de la fenêtre de tolérance et proposant des exercices adaptés à l’état du moment.";
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://kalymap.com"),
+  title: "Kalymap | Régulation émotionnelle & fenêtre de tolérance",
+  description: siteDescription,
+  alternates: {
+    canonical: "https://kalymap.com/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    siteName: "Kalymap",
+    url: "https://kalymap.com/",
+    title: "Kalymap | Régulation émotionnelle",
+    description: siteDescription,
+  },
+  twitter: {
+    card: "summary",
+    title: "Kalymap | Régulation émotionnelle",
+    description: siteDescription,
+  },
+};
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -15,6 +37,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const nonce = headers().get("x-nonce") ?? undefined;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Kalymap",
+    url: "https://kalymap.com",
+    applicationCategory: "HealthApplication",
+    description: "Application de santé mentale dédiée à la régulation émotionnelle et fondée sur le concept de la fenêtre de tolérance.",
+  };
 
   return (
     <html lang="fr">
@@ -22,6 +52,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <style>{globalStyles}</style>
         <ThemeBootstrapScript nonce={nonce} />
         <SplashBootstrapScript nonce={nonce} />
+        <script
+          nonce={nonce}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
         <ThemeColorSync />
         <AppSplashScreen />
         <SettingsNavigationBridge />

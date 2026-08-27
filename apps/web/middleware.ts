@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
+const indexablePaths = new Set(['/', '/privacy', '/terms']);
 
 function getApiOrigin() {
   const rawApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
@@ -64,6 +65,9 @@ export function middleware(request: NextRequest) {
     },
   });
   response.headers.set('Content-Security-Policy', contentSecurityPolicy);
+  if (!indexablePaths.has(request.nextUrl.pathname)) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
 
   return response;
 }

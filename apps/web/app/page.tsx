@@ -147,6 +147,12 @@ export default function Home() {
   return (
     <main className="landing-page-shell" style={styles.page}>
       <style>{css}</style>
+      <section className="landing-seo-intro" style={styles.seoIntro}>
+        <h1 style={styles.seoH1}>Kalymap, une application dédiée à la régulation émotionnelle</h1>
+        <p style={styles.seoLead}>
+          Fondée sur le concept de la fenêtre de tolérance, Kalymap aide à mieux identifier son état émotionnel et propose des exercices adaptés aux besoins du moment.
+        </p>
+      </section>
       <header style={styles.langRow}>
         <div />
         <div style={styles.langs}>
@@ -202,6 +208,38 @@ export default function Home() {
         <button onClick={startGuest} style={styles.btnGhost}>Commencer sans compte</button>
       </section>
 
+      <section className="landing-seo-content" style={styles.seoContent} aria-labelledby="how-kalymap-works">
+        <div style={styles.seoCard}>
+          <h2 id="how-kalymap-works" style={styles.seoH2}>Comment fonctionne Kalymap ?</h2>
+          <ol style={styles.seoList}>
+            <li>Repérer l’état du moment</li>
+            <li>Identifier son niveau d’activation</li>
+            <li>Accéder à des exercices adaptés</li>
+            <li>Réévaluer son état après l’exercice</li>
+          </ol>
+        </div>
+
+        <div style={styles.seoCard}>
+          <h2 style={styles.seoH2}>Un soutien complémentaire au quotidien</h2>
+          <p style={styles.seoParagraph}>
+            Kalymap a été pensée comme un outil complémentaire au suivi en santé mentale. Elle facilite l’utilisation quotidienne des outils proposés en séance et favorise leur appropriation, sans jamais se substituer à un accompagnement professionnel.
+          </p>
+          <p style={styles.seoParagraph}>
+            Selon le niveau d’hyperactivation ou d’hypoactivation identifié, l’application donne accès à des exercices de régulation émotionnelle comme l’ancrage, la respiration et la pleine conscience.
+          </p>
+        </div>
+
+        <div style={styles.seoCard}>
+          <h2 style={styles.seoH2}>À quoi sert Kalymap ?</h2>
+          <ul style={styles.seoList}>
+            <li>Soutenir la régulation émotionnelle grâce à des exercices adaptés à l’état du moment.</li>
+            <li>Favoriser l’engagement dans les exercices proposés en séance et leur mise en pratique.</li>
+            <li>Faciliter leur utilisation au quotidien grâce à un support numérique simple et accessible.</li>
+            <li>Compléter le suivi professionnel sans jamais s’y substituer.</li>
+          </ul>
+        </div>
+      </section>
+
       <footer className="landing-footer" style={styles.footer}>
         <a href="/sos" style={styles.footerLink}>Numéros d’urgence</a>
         <span style={{opacity:.4}}> • </span>
@@ -218,11 +256,20 @@ const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight:'100dvh',
     display:'grid',
-    gridTemplateRows:'auto 1fr auto auto',
+    gridTemplateRows:'auto auto 1fr auto auto auto',
     gap:10,
     background:'#F6F7FE',
     color:'#0f172a',
   },
+  seoIntro: {
+    maxWidth: 760,
+    width: '100%',
+    justifySelf: 'center',
+    padding: '20px 20px 0',
+    textAlign: 'center',
+  },
+  seoH1: { margin: 0, fontSize: 'clamp(24px, 5vw, 38px)', lineHeight: 1.15 },
+  seoLead: { margin: '12px auto 0', maxWidth: 680, lineHeight: 1.6, color: '#334155' },
   langRow: {
     display:'grid',
     gridTemplateColumns:'1fr auto 1fr',
@@ -282,6 +329,24 @@ const styles: Record<string, React.CSSProperties> = {
     padding:'12px 16px', borderRadius:12, border:'1px solid rgba(0,0,0,.1)', background:'#fff',
     cursor:'pointer', fontWeight:700, boxShadow:'0 6px 14px rgba(0,0,0,.05)'
   },
+  seoContent: {
+    display: 'grid',
+    gap: 16,
+    maxWidth: 900,
+    width: '100%',
+    justifySelf: 'center',
+    padding: '30px 20px 12px',
+  },
+  seoCard: {
+    background: 'rgba(255,255,255,.72)',
+    border: '1px solid #e9e5f5',
+    borderRadius: 20,
+    padding: '22px clamp(18px, 4vw, 30px)',
+    boxShadow: '0 10px 28px rgba(76,29,149,.05)',
+  },
+  seoH2: { margin: '0 0 10px', fontSize: 21, lineHeight: 1.3 },
+  seoParagraph: { margin: '8px 0 0', lineHeight: 1.65, color: '#334155' },
+  seoList: { margin: 0, paddingLeft: 22, display: 'grid', gap: 8, lineHeight: 1.55, color: '#334155' },
 
   footer: {
     justifySelf:'center', display:'flex', gap:10, margin:'6px 0 18px', fontSize:12,
@@ -306,6 +371,14 @@ const css = `
   @media (max-width: 520px) {
     .landing-page-shell {
       overflow-x: clip;
+    }
+
+    .landing-seo-intro {
+      padding-top: 14px !important;
+    }
+
+    .landing-seo-content {
+      padding-top: 22px !important;
     }
   }
 `;
